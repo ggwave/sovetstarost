@@ -123,6 +123,44 @@ input:focus,select:focus,textarea:focus{border-color:#8a9aff;box-shadow:0 0 0 3p
 .theme-dot{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0}
 .theme-dot.active{border-color:#fff;box-shadow:0 0 0 2px #425ee8}
 .theme-classic .theme-dot.active{border-color:#425ee8}
+
+@media(max-width:900px){
+  .app.show{grid-template-columns:1fr}
+  .sidebar{max-height:none;padding:8px 8px 4px;position:sticky;top:0;z-index:15;background:#151d33}
+  .nav{display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;gap:4px;padding-bottom:4px}
+  .nav button{white-space:nowrap;font-size:12px;padding:8px 10px;flex-shrink:0}
+  .navlabel,.sidebar-foot .hint{display:none}
+  .sidebar-foot{padding:4px 0}
+  .content{padding:12px 12px 80px}
+  .welcome h2{font-size:18px}
+  .form-grid{grid-template-columns:1fr}
+  .lesson-row{grid-template-columns:1fr 1fr}
+  .table{min-width:0;font-size:12px}
+  .table td,.table th{padding:8px 6px}
+  .cards{grid-template-columns:1fr}
+  .grid{grid-template-columns:1fr 1fr}
+  .meet-tabs{overflow-x:auto;flex-wrap:nowrap}
+  .meet-tabs button{flex-shrink:0}
+  .topbar{padding:0 12px;height:52px}
+  .topbar h1{font-size:14px}
+  #liveControlPanel{width:calc(100vw - 24px)!important;right:12px!important;left:12px!important;bottom:12px!important}
+  .diary-hero{padding:16px!important}
+  .diary-student-card{padding:12px!important}
+  .stat-num{font-size:20px}
+}
+.diary-hero{background:linear-gradient(135deg,#425ee8,#6b7ff4);color:#fff;border-radius:18px;padding:22px 20px;margin-bottom:14px;box-shadow:0 10px 28px #425ee833}
+.diary-hero h2{margin:0 0 4px;font-size:22px;color:#fff}
+.diary-hero p{margin:0;opacity:.85;font-size:13px}
+.diary-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.diary-stat{background:rgba(255,255,255,.15);border-radius:12px;padding:10px;text-align:center}
+.diary-stat b{display:block;font-size:20px}
+.diary-stat span{font-size:10px;opacity:.85;text-transform:uppercase;letter-spacing:.04em}
+.diary-section{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.diary-section h3{margin:0 0 12px;font-size:15px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.diary-student-card{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:#fafbfe}
+.diary-avatar{width:40px;height:40px;border-radius:12px;background:var(--blue2);color:#3349bc;display:grid;place-items:center;font-weight:800;font-size:14px;flex-shrink:0}
+.diary-student-card select{flex:1;min-width:0;max-width:160px}
+.ann-pending{border-left:3px solid var(--amber);background:#fffbf0}
 </style>
 </head>
 <body>
@@ -217,6 +255,7 @@ const firebaseConfig = {
 };
 const STORE='councilFull_v2', SESSION_KEY='councilSession_v2';
 const days=['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+const NICK_TABLE=[{"fio": "Захарова Кира Сергеевна", "phone": "+79959962060", "klass": "11Б", "nick": "ivorysks", "tg": "@ivorysks"}, {"fio": "Губерт Диана Денисовна", "phone": "89506634025", "klass": "10А", "nick": "kittenyxx", "tg": "@kittenyxx"}, {"fio": "Жильцова Арина Сергеевна", "phone": "89315360257", "klass": "10А", "nick": "", "tg": ""}, {"fio": "Муслимова Камилла Муталибовна", "phone": "+79643340718", "klass": "10В", "nick": "kxmekxdze", "tg": "@kxmekxdze"}, {"fio": "Алефиренко Михаил Андреевич", "phone": "+79313167411", "klass": "10А", "nick": "Mandarinka_755", "tg": "Mandarinka_755"}, {"fio": "Васильев Евгений Васильевич", "phone": "+79650787288", "klass": "10Б", "nick": "EvgeniyVasiliev0412", "tg": "@EvgeniyVasiliev0412"}, {"fio": "Константинова Вероника Сергеевна", "phone": "+79633214449", "klass": "6А", "nick": "Veronichka_Konst", "tg": "@Veronichka_Konst"}, {"fio": "Таль Алиса Генадьевна", "phone": "+79291075358", "klass": "7В", "nick": "aliceviva17", "tg": "@aliceviva17"}, {"fio": "Сенек Елена Александровна", "phone": "+79046431692", "klass": "9А", "nick": "", "tg": ""}, {"fio": "Догадин Александр Дмитриевич", "phone": "+79313386125", "klass": "9В", "nick": "aldogSD", "tg": "@aldogSD"}, {"fio": "Кашелкин Степан Андреевич", "phone": "+79500201961", "klass": "11В", "nick": "tepapap", "tg": "@tepapap"}, {"fio": "Картазаева Елизавета Вадимовна", "phone": "+79052010298", "klass": "7А", "nick": "", "tg": ""}];
 const COLORS=['#425ee8','#15835d','#a8640a','#c43f52','#7c4dff','#00897b','#f57c00','#5c6bc0'];
 const COLS=['polls','meetings','users','events','duties','announcements','problems','ideas','links','classlists','diary'];
 
@@ -424,7 +463,8 @@ function renderMeetingsPage(){
 }
 function openMeeting(id){detailMeetingId=id;showPage(isChair()?'meeting-detail':'s-meeting-detail')}
 function meetingTheme(){return localStorage.getItem('meetTheme')||'night'}
-function setMeetingTheme(t){localStorage.setItem('meetTheme',t);renderMeetingDetail()}
+function setMeetingTheme(t){
+  if(!isChair()){toast('Только для председателя');return}localStorage.setItem('meetTheme',t);renderMeetingDetail()}
 function meetingStartMs(m){
   if(!m.date) return null;
   const time=(m.time||'00:00').slice(0,5);
@@ -441,50 +481,45 @@ function renderMeetingDetail(){
   const m=db.meetings.find(x=>x.id===detailMeetingId);
   const c=document.getElementById('content');
   if(!m){c.innerHTML='<div class="empty"><b>Не найдено</b></div>';return}
+
+  // Староста: только обзор (без выступлений, слайдов, LIVE, тем, пульта)
+  if(!isChair()){
+    c.innerHTML=`<div class="detail-back"><button class="ghost small" onclick="showPage('s-meetings')">← Назад</button></div>
+    <div class="detail-card">
+      <div class="detail-meta">${statusPill(m.status)}</div>
+      <h2>${esc(m.title)}</h2>
+      <p class="muted">${dateLabel(m.date)}${m.time?' · '+esc(m.time):''}${m.place?' · 📍 '+esc(m.place):''}</p>
+      <div class="block-title">Повестка</div>
+      <div class="block-body">${m.agenda?esc(m.agenda):'Не указана'}</div>
+      <div class="block-title">Итоги</div>
+      <div class="block-body">${m.minutes?esc(m.minutes):'Ещё не заполнены'}</div>
+    </div>`;
+    return;
+  }
+
   const speeches=m.speeches||[];
   const slides=m.slides||[];
   const linkedIds=m.pollIds||(m.pollId?[m.pollId]:[]);
   const linkedPolls=linkedIds.map(id=>db.polls.find(p=>p.id===id)).filter(Boolean);
   const theme=meetingTheme();
   const tab=window._meetTab||'overview';
-  const startMs=meetingStartMs(m);
-  const now=Date.now();
-  let cdHtml='';
-  if(startMs){
-    const left=startMs-now;
-    if(left>0){
-      const cd=formatCountdown(left);
-      cdHtml=`<div class="countdown" id="meetCountdown">
-        ${cd.d>0?`<div class="cd-block"><div class="cd-num" data-u="d">${cd.d}</div><div class="cd-lab">дней</div></div>`:''}
-        <div class="cd-block"><div class="cd-num" data-u="h">${String(cd.h).padStart(2,'0')}</div><div class="cd-lab">часов</div></div>
-        <div class="cd-block"><div class="cd-num" data-u="m">${String(cd.m).padStart(2,'0')}</div><div class="cd-lab">минут</div></div>
-        <div class="cd-block"><div class="cd-num" data-u="s">${String(cd.sec).padStart(2,'0')}</div><div class="cd-lab">секунд</div></div>
-      </div>
-      <p class="muted-hero" id="cdHint">до начала собрания</p>`;
-    } else if(m.status==='Запланировано'||m.status==='Проведено'){
-      const ended=m.status==='Проведено';
-      cdHtml=ended?`<div class="cd-done">✓ Собрание проведено</div>`:`<div class="cd-live"><span style="width:8px;height:8px;border-radius:50%;background:#fff;display:inline-block"></span> ИДЁТ СЕЙЧАС</div>`;
-    }
-  }
-
   const themes=[['night','#0b1224'],['aurora','#2c5364'],['sunset','#4a1520'],['forest','#163526'],['classic','#e8ecf8']];
 
-  c.innerHTML=`<div class="detail-back"><button class="ghost small" onclick="showPage('${isChair()?'meetings':'s-meetings'}')">← Назад</button></div>
+  c.innerHTML=`<div class="detail-back"><button class="ghost small" onclick="showPage('meetings')">← Назад</button></div>
   <div class="meet-stage theme-${theme}" id="meetStage">
     <div class="meet-hero">
       <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center">
         <div>${statusPill(m.status)}</div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <button type="button" onclick="openMeetingLive('${m.id}')" style="background:#c43f52;color:#fff;font-size:12px;padding:8px 12px">🔴 LIVE-табло</button>
-          ${isChair()?`<button type="button" class="secondary small" onclick="openLiveControl('${m.id}')">🎛 Пульт</button>`:''}
-          <div class="theme-picker" title="Тема страницы">
+          <button type="button" class="secondary small" onclick="openLiveControl('${m.id}')">🎛 Пульт</button>
+          <div class="theme-picker" title="Тема">
             ${themes.map(([id,col])=>`<button type="button" class="theme-dot ${theme===id?'active':''}" style="background:${col}" onclick="setMeetingTheme('${id}')"></button>`).join('')}
           </div>
         </div>
       </div>
       <h2>${esc(m.title)}</h2>
       <div class="muted-hero">${dateLabel(m.date)}${m.time?' · '+esc(m.time):''}${m.place?' · 📍 '+esc(m.place):''}</div>
-      ${cdHtml}
     </div>
     <div class="meet-tabs">
       <button class="${tab==='overview'?'active':''}" onclick="window._meetTab='overview';renderMeetingDetail()">Обзор</button>
@@ -498,10 +533,10 @@ function renderMeetingDetail(){
         <div class="block-body" style="margin-bottom:14px">${m.agenda?esc(m.agenda):'—'}</div>
         <div class="block-title" style="opacity:.7">Итоги</div>
         <div class="block-body">${m.minutes?esc(m.minutes):'Ещё не заполнены'}</div>
-        ${isChair()?`<div class="card-actions" style="margin-top:16px">
+        <div class="card-actions" style="margin-top:16px">
           <button class="secondary" onclick="editMeetingMinutes('${m.id}')">Итоги</button>
           <button class="secondary" onclick="openModal('meetingEdit')">Материалы</button>
-        </div>`:''}
+        </div>
       `:''}
       ${tab==='live'?`
         ${linkedPolls.length?linkedPolls.map(p=>`<div class="poll" style="margin:10px 0;background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12)">
@@ -510,37 +545,36 @@ function renderMeetingDetail(){
               <div class="meta" style="opacity:.75">${statusPill(p.status)} · ${pollTotal(p)} голос(ов)</div></div>
             <div class="card-actions">
               <button onclick="openLive('${p.id}')">🔴 LIVE-табло</button>
-              ${isChair()&&p.status==='Открыто'?`<button class="secondary small" onclick="togglePoll('${p.id}')">Закрыть</button>`:''}
-              ${isChair()?`<button class="ghost small" onclick="unlinkPollFromMeeting('${m.id}','${p.id}')">Отвязать</button>`:''}
+              ${p.status==='Открыто'?`<button class="secondary small" onclick="togglePoll('${p.id}')">Закрыть</button>`:''}
+              <button class="ghost small" onclick="unlinkPollFromMeeting('${m.id}','${p.id}')">Отвязать</button>
             </div>
           </div>
           ${chartBars(p)}
         </div>`).join(''):'<p style="opacity:.7">Нет привязанных голосований.</p>'}
-        ${isChair()?`<div style="margin-top:12px;padding:12px;border-radius:12px;background:rgba(255,255,255,.08)">
+        <div style="margin-top:12px;padding:12px;border-radius:12px;background:rgba(255,255,255,.08)">
           <b style="font-size:13px">Привязать опрос</b>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
             <select id="linkPollSelect" style="flex:1;min-width:160px">${db.polls.map(p=>`<option value="${p.id}">${esc(p.title)}</option>`).join('')}</select>
             <button class="secondary small" onclick="linkPollToMeeting('${m.id}')">Привязать</button>
             <button class="small" onclick="openModal('poll');window._linkPollToMeeting='${m.id}'">＋ Новый</button>
           </div>
-        </div>`:''}
+        </div>
       `:''}
       ${tab==='speeches'?`
-        ${speeches.length?speeches.map((s,i)=>`<div class="card" style="margin:8px 0;background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1);animation:meetIn .4s ease ${i*0.05}s both">
-          <h4>${esc(s.title||'Выступление '+(i+1))}</h4><div class="block-body">${esc(s.text||'')}</div></div>`).join(''):'<p style="opacity:.7">Нет текстов выступлений</p>'}
-        ${isChair()?`<button class="secondary small" onclick="openModal('meetingEdit')">Редактировать</button>`:''}
+        ${speeches.length?speeches.map((s,i)=>`<div class="card" style="margin:8px 0;background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1)">
+          <h4>${esc(s.title||'Выступление '+(i+1))}</h4><div class="block-body">${esc(s.text||'')}</div></div>`).join(''):'<p style="opacity:.7">Нет текстов</p>'}
+        <button class="secondary small" onclick="openModal('meetingEdit')">Редактировать</button>
       `:''}
       ${tab==='slides'?`
         ${slides.length?`<div id="slideBox">${renderSlide(slides,0)}</div>
           <div class="card-actions"><button class="secondary small" onclick="chgSlide(-1,${slides.length})">←</button>
           <button class="secondary small" onclick="chgSlide(1,${slides.length})">→</button>
           <button class="ghost small" onclick="startSlideShow()">На весь экран</button></div>`:'<p style="opacity:.7">Нет слайдов</p>'}
-        ${isChair()?`<button class="secondary small" style="margin-top:8px" onclick="openModal('meetingEdit')">Редактировать</button>`:''}
+        <button class="secondary small" style="margin-top:8px" onclick="openModal('meetingEdit')">Редактировать</button>
       `:''}
     </div>
   </div>`;
   window._slides=slides; slideIdx=0;
-  startMeetingCountdown(m);
 }
 function startMeetingCountdown(m){
   if(window._cdTimer){clearInterval(window._cdTimer);window._cdTimer=null}
@@ -576,6 +610,7 @@ async function setLiveState(meetingId, patch){
   await ref.set({...patch, meetingId, updated:new Date().toISOString()}, {merge:true});
 }
 async function openLiveControl(meetingId){
+  if(!isChair()){toast('Только для председателя');return}
   window._liveCtrlMeeting=meetingId;
   const m=db.meetings.find(x=>x.id===meetingId);
   if(!m){toast('Собрание не найдено');return}
@@ -651,6 +686,7 @@ async function liveSlideNav(meetingId, delta){
 }
 
 function openMeetingLive(meetingId){
+  if(!isChair()){toast('Только для председателя');return}
   const m=db.meetings.find(x=>x.id===meetingId);
   if(!m){toast('Собрание не найдено');return}
   const w=window.open('', 'meetlive_'+meetingId, 'width=1280,height=800');
@@ -880,13 +916,14 @@ function pollCard(p, admin){
     <div class="meta">${esc(p.description||'')} · ${p.mode==='multi'?'несколько':'один'} · ${p.anonymous!==false?'анонимно':'именно'} · ${tot} голос(ов)${p.quorum?' · кворум '+p.quorum:''}</div>
     ${quorumBar(p)}${body}
     <div class="card-actions">
-      <button class="secondary small" onclick="openLive('${p.id}')">LIVE</button>
+      ${admin?`<button class="secondary small" onclick="openLive('${p.id}')">LIVE</button>`:''}
       <button class="secondary small" onclick="exportPollPdf('${p.id}')">PDF / печать</button>
       ${admin?`<button class="secondary small" onclick="togglePoll('${p.id}')">${p.status==='Открыто'?'Закрыть':'Открыть'}</button>
       <button class="danger small" onclick="delDoc('polls','${p.id}')">Удалить</button>`:''}
     </div></div>`;
 }
 function openLive(id){
+  if(!isChair()){toast('Только для председателя');return}
   livePollId=id;
   const p=db.polls.find(x=>x.id===id);
   if(!p){toast('Опрос не найден');return}
@@ -1191,14 +1228,49 @@ async function togglePoll(id){
 }
 
 function renderAnnPage(){
-  document.getElementById('content').innerHTML=`<div class="welcome"><div><h2>Объявления</h2></div><button onclick="openModal('ann')">＋</button></div>
-  <div class="panel">${[...db.announcements].sort((a,b)=>(b.created||'').localeCompare(a.created||'')).map(a=>`<div class="ann-item">
-    <div style="display:flex;justify-content:space-between"><h4>${esc(a.title)}</h4>${isChair()?`<button class="danger small" onclick="delDoc('announcements','${a.id}')">×</button>`:''}</div>
-    <p class="muted" style="font-size:12px">${dateLabel((a.created||'').slice(0,10))}</p><p style="margin-top:6px;white-space:pre-wrap">${esc(a.text||'')}</p>
-  </div>`).join('')||'<div class="empty"><b>Нет объявлений</b></div>'}</div>`;
+  const all=[...db.announcements].sort((a,b)=>(b.created||'').localeCompare(a.created||''));
+  const approved=all.filter(a=>a.status!=='pending'&&a.status!=='rejected');
+  const pending=all.filter(a=>a.status==='pending');
+  const list=isChair()?all:approved;
+
+  document.getElementById('content').innerHTML=`
+  <div class="welcome"><div><h2>Объявления</h2>
+    <p>${isChair()?'Публикация и модерация':'Только проверенные объявления'}</p></div>
+    ${isChair()?`<button onclick="openModal('ann')">＋ Опубликовать</button>`:
+      `<button class="secondary" onclick="openModal('annRequest')">＋ На модерацию</button>`}
+  </div>
+  ${isChair()&&pending.length?`<div class="panel" style="border-color:#f0c96a">
+    <h3 style="margin-top:0">На модерации (${pending.length})</h3>
+    ${pending.map(a=>`<div class="ann-item ann-pending">
+      <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <div><h4 style="margin:0">${esc(a.title)}</h4>
+          <p class="muted" style="font-size:12px;margin:4px 0">от ${esc(a.author||'—')} · ${dateLabel((a.created||'').slice(0,10))}</p></div>
+        <div class="card-actions">
+          <button class="small" onclick="moderateAnn('${a.id}','approved')">Одобрить</button>
+          <button class="danger small" onclick="moderateAnn('${a.id}','rejected')">Отклонить</button>
+        </div>
+      </div>
+      <p style="margin-top:6px;white-space:pre-wrap">${esc(a.text||'')}</p>
+    </div>`).join('')}
+  </div>`:''}
+  <div class="panel">${list.filter(a=>isChair()||a.status!=='pending'&&a.status!=='rejected').map(a=>{
+    if(!isChair()&&(a.status==='pending'||a.status==='rejected')) return '';
+    const st=a.status==='pending'?'<span class="pill amber">на модерации</span>':a.status==='rejected'?'<span class="pill red">отклонено</span>':'';
+    return `<div class="ann-item">
+      <div style="display:flex;justify-content:space-between;gap:8px"><h4 style="margin:0">${esc(a.title)} ${st}</h4>
+        ${isChair()?`<button class="danger small" onclick="delDoc('announcements','${a.id}')">×</button>`:''}</div>
+      <p class="muted" style="font-size:12px">${dateLabel((a.created||'').slice(0,10))}${a.author?' · '+esc(a.author):''}</p>
+      <p style="margin-top:6px;white-space:pre-wrap">${esc(a.text||'')}</p>
+    </div>`;
+  }).join('')||'<div class="empty"><b>Нет объявлений</b></div>'}</div>`;
+}
+async function moderateAnn(id, status){
+  try{
+    await firestore.collection('announcements').doc(id).update({status, moderatedAt:new Date().toISOString(), moderatedBy:currentUser.name});
+    toast(status==='approved'?'Опубликовано':'Отклонено');
+  }catch(e){toast(e.message)}
 }
 function renderSAnn(){renderAnnPage()}
-
 function renderEventsPage(){
   const now=new Date(); const y=now.getFullYear(), m=now.getMonth();
   const first=new Date(y,m,1).getDay(); const daysIn=new Date(y,m+1,0).getDate();
@@ -1617,101 +1689,155 @@ function renderSMeetings(){
 
 
 /* ===== Дневник класса (староста) ===== */
+
+/* ===== Дневник класса (общий по классу) ===== */
+function normKlass(k){return String(k||'').trim().toLowerCase().replace(/\s+/g,'')}
+function myKlass(){return (currentUser&&currentUser.klass)||''}
 function myClassList(){
-  return db.classlists.find(c=>c.ownerId===currentUser.id) || null;
+  const k=normKlass(myKlass());
+  if(!k) return db.classlists.find(c=>c.ownerId===currentUser.id)||null;
+  return db.classlists.find(c=>normKlass(c.klass)===k) || db.classlists.find(c=>c.ownerId===currentUser.id) || null;
 }
 function myStudents(){
   const cl=myClassList();
-  return (cl && cl.students) ? cl.students : [];
+  return (cl&&cl.students)?cl.students:[];
+}
+function classDiaryEntries(){
+  const k=normKlass(myKlass());
+  const cl=myClassList();
+  return (db.diary||[]).filter(d=>{
+    if(k && normKlass(d.klass)===k) return true;
+    if(cl && d.classListId===cl.id) return true;
+    if(!k && d.ownerId===currentUser.id) return true;
+    return false;
+  });
+}
+function initials(name){
+  const p=String(name||'?').trim().split(/\s+/);
+  return ((p[0]&&p[0][0]||'')+(p[1]&&p[1][0]||'')).toUpperCase()||'?';
 }
 function renderDiaryPage(){
   const cl=myClassList();
   const students=myStudents();
   const today=new Date().toISOString().slice(0,10);
-  const dateEl='diaryDate';
-  // filter diary for this owner
-  const myDiary=db.diary.filter(d=>d.ownerId===currentUser.id);
+  const klass=myKlass()||(cl&&cl.klass)||'';
+  const entries=classDiaryEntries();
+  const attToday=entries.filter(d=>d.type==='attendance'&&d.date===today);
+  const lateN=attToday.filter(d=>d.status==='late').length;
+  const absN=attToday.filter(d=>d.status==='absent').length;
+  const presentN=students.length?students.length-lateN-absN:attToday.filter(d=>d.status==='present').length;
+
   document.getElementById('content').innerHTML=`
   <div class="starost-wrap">
-    <div class="welcome"><div><h2>Дневник класса</h2><p>Список класса · посещаемость · опоздания · дисциплина</p></div></div>
-    
-    <div class="panel">
-      <div class="panel-head"><h3>Список класса ${cl&&cl.klass?'· '+esc(cl.klass):''}</h3>
-        <button class="secondary small" onclick="openModal('student')">＋ Ученик</button></div>
-      ${students.length?`<div class="table-wrap"><table class="table" style="min-width:0"><thead><tr><th>№</th><th>ФИО</th><th></th></tr></thead><tbody>
-        ${students.map((s,i)=>`<tr><td>${i+1}</td><td class="maincell">${esc(s.name)}</td>
-          <td><button class="danger small" onclick="removeStudent('${s.id}')">×</button></td></tr>`).join('')}
-      </tbody></table></div>`:'<div class="empty"><b>Список пуст</b>Добавь учеников своего класса.</div>'}
-      ${!cl?`<div style="margin-top:10px"><label>Класс (например 8А)<input id="newKlassName" placeholder="8А" value="${esc(currentUser.klass||'')}"></label>
-        <button class="secondary small" style="margin-top:8px" onclick="ensureClassList()">Создать список класса</button></div>`:
-        `<p class="muted" style="font-size:12px;margin-top:8px">Класс: <b>${esc(cl.klass||'—')}</b> · ${students.length} чел.</p>`}
+    <div class="diary-hero">
+      <h2>Дневник ${klass?esc(klass):'класса'}</h2>
+      <p>Общий журнал для всех старост класса · посещаемость и дисциплина</p>
+      <div class="diary-stats">
+        <div class="diary-stat"><b>${students.length}</b><span>учеников</span></div>
+        <div class="diary-stat"><b>${lateN}</b><span>опозданий</span></div>
+        <div class="diary-stat"><b>${absN}</b><span>пропусков</span></div>
+      </div>
     </div>
 
-    <div class="panel">
-      <div class="panel-head"><h3>Отметить день</h3></div>
-      <label>Дата<input type="date" id="diaryDate" value="${today}" onchange="renderDiaryMarks()"></label>
-      <div id="diaryMarks" style="margin-top:12px"></div>
+    ${!klass?`<div class="notice"><strong>Укажи класс</strong>В профиле аккаунта должен быть класс (например 8А) — дневник общий для всех старост этого класса.
+      <div style="margin-top:8px"><input id="setKlassInline" placeholder="8А" style="max-width:120px">
+      <button class="secondary small" onclick="saveMyKlass()">Сохранить класс</button></div></div>`:''}
+
+    <div class="diary-section">
+      <h3><span>Список класса</span>
+        <button class="secondary small" onclick="openModal('student')">＋ Ученик</button></h3>
+      ${!cl&&klass?`<button class="small" onclick="ensureClassList()">Создать общий список для ${esc(klass)}</button>`:''}
+      ${students.length?students.map((s,i)=>`
+        <div class="diary-student-card">
+          <div class="diary-avatar">${esc(initials(s.name))}</div>
+          <div style="flex:1;min-width:0"><b style="font-size:14px">${esc(s.name)}</b>
+            <div class="muted" style="font-size:11px">№ ${i+1}</div></div>
+          <button class="danger small" onclick="removeStudent('${s.id}')">×</button>
+        </div>`).join(''):'<div class="empty" style="padding:16px"><b>Список пуст</b>Добавьте учеников — их увидят все старосты класса.</div>'}
     </div>
 
-    <div class="panel">
-      <div class="panel-head"><h3>Журнал дисциплины и заметок</h3>
-        <button class="secondary small" onclick="openModal('discipline')">＋ Запись</button></div>
+    <div class="diary-section">
+      <h3><span>Посещаемость</span></h3>
+      <label class="muted" style="font-size:12px">Дата</label>
+      <input type="date" id="diaryDate" value="${today}" onchange="renderDiaryMarks()" style="max-width:180px;margin-bottom:12px">
+      <div id="diaryMarks"></div>
+    </div>
+
+    <div class="diary-section">
+      <h3><span>Дисциплина и заметки</span>
+        <button class="secondary small" onclick="openModal('discipline')">＋ Запись</button></h3>
       <div id="diaryLog"></div>
     </div>
   </div>`;
   renderDiaryMarks();
   renderDiaryLog();
 }
+async function saveMyKlass(){
+  const k=(document.getElementById('setKlassInline')?.value||'').trim();
+  if(!k){toast('Укажи класс');return}
+  try{
+    await firestore.collection('users').doc(currentUser.id).update({klass:k});
+    currentUser.klass=k;
+    sessionStorage.setItem(SESSION_KEY,JSON.stringify(currentUser));
+    toast('Класс сохранён');
+    renderDiaryPage();
+  }catch(e){toast(e.message)}
+}
 function renderDiaryMarks(){
   const box=document.getElementById('diaryMarks');
   if(!box) return;
   const students=myStudents();
   const date=(document.getElementById('diaryDate')?.value)||new Date().toISOString().slice(0,10);
-  if(!students.length){box.innerHTML='<p class="muted">Сначала добавь учеников в список класса.</p>';return}
-  const dayRecs=db.diary.filter(d=>d.ownerId===currentUser.id && d.date===date && d.type==='attendance');
-  const byStudent={};
-  dayRecs.forEach(r=>{byStudent[r.studentId]=r});
-  box.innerHTML=`<div class="table-wrap"><table class="table" style="min-width:0"><thead><tr><th>Ученик</th><th>Статус</th></tr></thead><tbody>
-    ${students.map(s=>{
-      const rec=byStudent[s.id];
-      const st=rec?rec.status:'present';
-      return `<tr><td class="maincell">${esc(s.name)}</td><td>
-        <select onchange="setAttendance('${s.id}','${esc(s.name)}','${date}',this.value)" style="padding:6px 8px">
-          <option value="present" ${st==='present'?'selected':''}>Присутствует</option>
-          <option value="late" ${st==='late'?'selected':''}>Опоздал</option>
-          <option value="absent" ${st==='absent'?'selected':''}>Отсутствует</option>
-        </select>
-      </td></tr>`;
-    }).join('')}
-  </tbody></table></div>
-  <p class="muted" style="font-size:12px;margin-top:8px">Изменения сохраняются сразу. Дата: ${dateLabel(date)}</p>`;
+  if(!students.length){box.innerHTML='<p class="muted">Сначала добавьте учеников в список.</p>';return}
+  const dayRecs=classDiaryEntries().filter(d=>d.date===date&&d.type==='attendance');
+  const byStudent={}; dayRecs.forEach(r=>{byStudent[r.studentId]=r});
+  box.innerHTML=students.map(s=>{
+    const rec=byStudent[s.id];
+    const st=rec?rec.status:'present';
+    return `<div class="diary-student-card">
+      <div class="diary-avatar">${esc(initials(s.name))}</div>
+      <div style="flex:1;min-width:0"><b style="font-size:13px">${esc(s.name)}</b></div>
+      <select onchange="setAttendance('${s.id}','${esc(s.name).replace(/'/g,"\\'")}','${date}',this.value)">
+        <option value="present" ${st==='present'?'selected':''}>✓ Был</option>
+        <option value="late" ${st==='late'?'selected':''}>⏰ Опоздал</option>
+        <option value="absent" ${st==='absent'?'selected':''}>✕ Не был</option>
+      </select>
+    </div>`;
+  }).join('')+`<p class="muted" style="font-size:12px;margin-top:8px">Общий журнал класса · ${dateLabel(date)}</p>`;
 }
 function renderDiaryLog(){
   const box=document.getElementById('diaryLog');
   if(!box) return;
-  const notes=db.diary.filter(d=>d.ownerId===currentUser.id && d.type==='discipline')
+  const notes=classDiaryEntries().filter(d=>d.type==='discipline')
     .sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.created||'').localeCompare(a.created||''));
-  if(!notes.length){box.innerHTML='<p class="muted">Записей пока нет — замечания, благодарности, поведение.</p>';return}
+  if(!notes.length){box.innerHTML='<p class="muted">Пока нет записей о поведении.</p>';return}
   box.innerHTML=notes.map(n=>`<div class="ann-item">
-    <div style="display:flex;justify-content:space-between;gap:8px">
-      <div><b>${esc(n.studentName||'Класс')}</b> · <span class="pill">${esc(n.kind||'Заметка')}</span>
-        <span class="muted" style="font-size:12px"> · ${dateLabel(n.date)}</span></div>
+    <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
+      <div><b>${esc(n.studentName||'Класс')}</b>
+        <span class="pill" style="margin-left:6px">${esc(n.kind||'Заметка')}</span>
+        <span class="muted" style="font-size:12px"> · ${dateLabel(n.date)}</span>
+        ${n.ownerName?`<span class="muted" style="font-size:11px"> · ${esc(n.ownerName)}</span>`:''}
+      </div>
       <button class="danger small" onclick="delDoc('diary','${n.id}')">×</button>
     </div>
     <p style="margin:6px 0 0;font-size:13px">${esc(n.text||'')}</p>
   </div>`).join('');
 }
 async function ensureClassList(){
-  if(myClassList()){toast('Список уже есть');return}
-  const klass=(document.getElementById('newKlassName')?.value||currentUser.klass||'').trim()||'Класс';
+  const klass=myKlass();
+  if(!klass){toast('Сначала укажи класс в аккаунте');return}
+  if(myClassList()){toast('Список класса уже есть');renderDiaryPage();return}
   try{
-    await firestore.collection('classlists').add({ownerId:currentUser.id,ownerName:currentUser.name,klass,students:[],updated:new Date().toISOString()});
-    toast('Список создан');
+    await firestore.collection('classlists').add({
+      klass, klassKey:normKlass(klass), ownerId:currentUser.id, ownerName:currentUser.name,
+      students:[], shared:true, updated:new Date().toISOString()
+    });
+    toast('Общий список класса создан');
   }catch(e){toast(e.message)}
 }
 async function removeStudent(sid){
   const cl=myClassList(); if(!cl)return;
-  if(!confirm('Удалить ученика из списка?'))return;
+  if(!confirm('Удалить ученика из общего списка класса?'))return;
   const students=(cl.students||[]).filter(s=>s.id!==sid);
   try{
     await firestore.collection('classlists').doc(cl.id).update({students,updated:new Date().toISOString()});
@@ -1720,23 +1846,24 @@ async function removeStudent(sid){
 }
 async function setAttendance(studentId, studentName, date, status){
   if(!fbEnabled){toast('Нужен Firebase');return}
+  const cl=myClassList();
+  const klass=myKlass()||(cl&&cl.klass)||'';
   try{
-    const existing=db.diary.find(d=>d.ownerId===currentUser.id && d.date===date && d.studentId===studentId && d.type==='attendance');
-    const payload={ownerId:currentUser.id,ownerName:currentUser.name,klass:(myClassList()||{}).klass||currentUser.klass||'',
-      type:'attendance',date,studentId,studentName,status,updated:new Date().toISOString()};
-    if(existing){
-      await firestore.collection('diary').doc(existing.id).update(payload);
-    } else {
-      payload.created=new Date().toISOString();
-      await firestore.collection('diary').add(payload);
-    }
+    const existing=classDiaryEntries().find(d=>d.date===date&&d.studentId===studentId&&d.type==='attendance');
+    const payload={
+      ownerId:currentUser.id, ownerName:currentUser.name, klass, klassKey:normKlass(klass),
+      classListId:cl?cl.id:null, type:'attendance', date, studentId, studentName, status,
+      updated:new Date().toISOString()
+    };
+    if(existing) await firestore.collection('diary').doc(existing.id).update(payload);
+    else { payload.created=new Date().toISOString(); await firestore.collection('diary').add(payload); }
   }catch(e){toast(e.message)}
 }
 
 /* Modals */
 function openModal(type){
   modalType=type;
-  const titles={poll:'Опрос',meeting:'Собрание',meetingEdit:'Материалы собрания',ann:'Объявление',event:'Событие',duty:'Дежурство',
+  const titles={poll:'Опрос',meeting:'Собрание',meetingEdit:'Материалы собрания',ann:'Объявление',annRequest:'Объявление на модерацию',event:'Событие',duty:'Дежурство',
     problem:'Проблема',idea:'Идея',link:'Ссылка',user:'Аккаунт',schedule:'Расписание',student:'Ученик в список',discipline:'Запись в дневник',disciplineChair:'Запись в журнал'};
   document.getElementById('modalTitle').textContent=titles[type]||'Добавить';
   document.getElementById('modalFields').innerHTML=formFor(type);
@@ -1821,15 +1948,50 @@ function genPassword6(){
   for(let i=0;i<6;i++) p+=chars[Math.floor(Math.random()*chars.length)];
   return p;
 }
+function normalizeFio(s){
+  return String(s||'').toLowerCase().replace(/ё/g,'е').replace(/\s+/g,' ').trim();
+}
+function findNickRow(name){
+  const n=normalizeFio(name);
+  if(!n) return null;
+  // exact
+  let row=NICK_TABLE.find(r=>normalizeFio(r.fio)===n);
+  if(row) return row;
+  // starts with / contains surname+name
+  const parts=n.split(' ');
+  row=NICK_TABLE.find(r=>{
+    const f=normalizeFio(r.fio);
+    if(f.startsWith(n)||n.startsWith(f)) return true;
+    if(parts.length>=2){
+      const s=parts[0], nm=parts[1];
+      return f.includes(s)&&f.includes(nm);
+    }
+    return f.includes(n)||n.includes(f);
+  });
+  return row||null;
+}
 function autoGenAccount(force){
   const nameEl=document.getElementById('userNameInput');
   const loginEl=document.getElementById('userLoginInput');
   const passEl=document.getElementById('userPassInput');
+  const klassEl=document.querySelector('#modalForm input[name="klass"]');
+  const phoneEl=document.querySelector('#modalForm input[name="phone"]');
+  const contactEl=document.querySelector('#modalForm input[name="contact"]');
   if(!nameEl||!loginEl||!passEl) return;
   const name=nameEl.value.trim();
   if(!name && !force) return;
-  if(force || !loginEl.dataset.manual){
-    loginEl.value=genLoginFromName(name||'user');
+  const row=findNickRow(name);
+  if(row){
+    if(force || !loginEl.dataset.manual){
+      loginEl.value=row.nick || genLoginFromName(name);
+    }
+    if(klassEl && (force || !klassEl.value)) klassEl.value=row.klass||'';
+    if(phoneEl && (force || !phoneEl.value)) phoneEl.value=row.phone||'';
+    if(contactEl && (force || !contactEl.value)) contactEl.value=row.tg?('@'+row.nick):'';
+  } else {
+    if(force || !loginEl.dataset.manual){
+      loginEl.value=genLoginFromName(name||'user');
+    }
   }
   if(force || !passEl.value){
     passEl.value=genPassword6();
@@ -1860,7 +2022,7 @@ function formFor(t){
     <div class="full"><div style="display:flex;justify-content:space-between"><b>Выступления</b><button type="button" class="secondary small" onclick="addSpeechRow()">＋</button></div><div id="speechBox"></div></div>
     <div class="full"><div style="display:flex;justify-content:space-between"><b>Слайды</b><button type="button" class="secondary small" onclick="addSlideRow()">＋</button></div><div id="slideBoxForm"></div></div>
   </div>`;
-  if(t==='ann') return `<div class="form-grid"><label class="full">Заголовок<input name="title" required></label><label class="full">Текст<textarea name="text" required rows="5"></textarea></label></div>`;
+  if(t==='ann'||t==='annRequest') return `<div class="form-grid"><label class="full">Заголовок<input name="title" required></label><label class="full">Текст<textarea name="text" required rows="5"></textarea></label>${t==='annRequest'?`<p class="full muted" style="font-size:12px">Отправится председателю на проверку. Старосты увидят только после одобрения.</p>`:''}</div>`;
   if(t==='event') return `<div class="form-grid">${field('Название','title','','text','required')}${field('Дата','date','','date','required')}${field('Время','time','','time')}${field('Место','place')}
     <label class="full">Описание<textarea name="description"></textarea></label></div>`;
   if(t==='duty') {
@@ -1888,8 +2050,8 @@ function formFor(t){
     <label>Класс<input name="klass" placeholder="8А"></label>
     ${field('Телефон','phone')}${field('Контакт (TG/VK)','contact')}
     <div class="full" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <button type="button" class="secondary small" onclick="autoGenAccount(true)">Сгенерировать логин и пароль</button>
-      <span class="muted" style="font-size:12px">Логин: 6 букв из имени (пробел → _). Пароль: 6 символов.</span>
+      <button type="button" class="secondary small" onclick="autoGenAccount(true)">Заполнить из таблицы / сгенерировать</button>
+      <span class="muted" style="font-size:12px">Логин из таблицы Telegram (по ФИО) или 6 букв имени. Пароль: 6 символов. Класс и телефон — из таблицы.</span>
     </div>
   </div>`;
     if(t==='disciplineChair') {
@@ -1967,9 +2129,14 @@ async function submitModal(e){
       await firestore.collection('meetings').doc(detailMeetingId).set({speeches,slides,updated:new Date().toISOString()},{merge:true});
       closeModal(); toast('Материалы сохранены'); return;
     }
-    if(modalType==='ann'){
-      await firestore.collection('announcements').add({title:v.title,text:v.text,created:new Date().toISOString()});
-      closeModal(); toast('Опубликовано'); return;
+    if(modalType==='ann'||modalType==='annRequest'){
+      if(modalType==='ann'&&!isChair()){toast('Только председатель публикует');return}
+      const status=modalType==='ann'||isChair()?'approved':'pending';
+      await firestore.collection('announcements').add({
+        title:v.title,text:v.text,created:new Date().toISOString(),
+        author:currentUser.name, authorId:currentUser.id, status
+      });
+      closeModal(); toast(status==='approved'?'Опубликовано':'Отправлено на модерацию'); return;
     }
     if(modalType==='event'){
       await firestore.collection('events').add({title:v.title,date:v.date,time:v.time||'',place:v.place||'',description:v.description||''});
@@ -2025,26 +2192,32 @@ async function submitModal(e){
     }
     if(modalType==='student'){
       let cl=myClassList();
+      const klass=myKlass()||'Класс';
       if(!cl){
-        const klass=currentUser.klass||'Класс';
-        const ref=await firestore.collection('classlists').add({ownerId:currentUser.id,ownerName:currentUser.name,klass,students:[],updated:new Date().toISOString()});
+        const ref=await firestore.collection('classlists').add({
+          ownerId:currentUser.id,ownerName:currentUser.name,klass,klassKey:normKlass(klass),
+          students:[],shared:true,updated:new Date().toISOString()
+        });
         cl={id:ref.id,students:[]};
       }
       const name=(v.name||'').trim();
       if(!name){toast('Укажи ФИО');return}
       const students=[...(cl.students||[]),{id:uid(),name}];
       await firestore.collection('classlists').doc(cl.id).update({students,updated:new Date().toISOString()});
-      closeModal(); toast('Ученик добавлен'); return;
+      closeModal(); toast('Ученик в общем списке класса'); return;
     }
     if(modalType==='discipline'){
       const sid=v.studentId||'';
       const student=myStudents().find(s=>s.id===sid);
+      const cl=myClassList();
+      const klass=myKlass()||(cl&&cl.klass)||'';
       await firestore.collection('diary').add({
-        ownerId:currentUser.id,ownerName:currentUser.name,klass:(myClassList()||{}).klass||currentUser.klass||'',
-        type:'discipline',date:v.date,studentId:sid||null,studentName:student?student.name:(sid?'':'Общее'),
+        ownerId:currentUser.id,ownerName:currentUser.name,klass,klassKey:normKlass(klass),
+        classListId:cl?cl.id:null, type:'discipline',date:v.date,studentId:sid||null,
+        studentName:student?student.name:(sid?'':'Общее'),
         kind:v.kind||'Заметка',text:v.text||'',created:new Date().toISOString()
       });
-      closeModal(); toast('Запись сохранена'); return;
+      closeModal(); toast('Запись в общем журнале'); return;
     }
     if(modalType==='schedule'){
       const nums=f.getAll('les_num'), subjs=f.getAll('les_subj'), rooms=f.getAll('les_room');
