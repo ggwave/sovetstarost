@@ -9,255 +9,192 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <style>
 :root{--bg:#f4f6fb;--panel:#fff;--ink:#172033;--muted:#6c768b;--line:#e4e8f1;--blue:#425ee8;--blue2:#edf0ff;--green:#15835d;--amber:#a8640a;--red:#c43f52;--shadow:0 8px 28px #23345c0b}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 Inter,ui-sans-serif,system-ui,sans-serif}
 button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:10px;padding:10px 14px;background:var(--blue);color:#fff;font-weight:650}
-button.secondary{background:#eef1f8;color:#29334a}button.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}button.danger{background:#fff0f1;color:var(--red)}button.small{padding:6px 9px;font-size:12px;border-radius:8px}
-button:disabled{opacity:.55;cursor:not-allowed}
-/* LOGIN */
-.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(160deg,#151d33 0%,#273354 50%,#3a4a7a 100%)}
+button.secondary{background:#eef1f8;color:#29334a}button.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}button.danger{background:#fff0f1;color:var(--red)}button.small{padding:6px 9px;font-size:12px;border-radius:8px}button:disabled{opacity:.5;cursor:not-allowed}
+.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(160deg,#151d33,#273354 50%,#3a4a7a)}
 .login-card{background:#fff;border-radius:20px;padding:32px 28px;width:min(400px,100%);box-shadow:0 24px 80px #0005}
 .login-card .logo{width:52px;height:52px;border-radius:16px;background:linear-gradient(145deg,#7185ff,#4058d9);display:grid;place-items:center;color:#fff;font-size:24px;margin:0 auto 16px}
-.login-card h1{margin:0 0 6px;text-align:center;font-size:22px}.login-card .sub{text-align:center;color:var(--muted);font-size:13px;margin:0 0 22px}
-.role-btn{display:block;width:100%;text-align:left;padding:14px 16px;margin:8px 0;border:1px solid var(--line);border-radius:14px;background:#fff;color:var(--ink);font-weight:600}
-.role-btn:hover{border-color:#aab5ff;background:#f8f9ff}
-.role-btn span{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-top:3px}
+.login-card h1{margin:0 0 6px;text-align:center;font-size:22px}.login-card .sub{text-align:center;color:var(--muted);font-size:13px;margin:0 0 20px}
 .login-field{margin:12px 0}label{display:block;font-size:13px;font-weight:600;margin-bottom:5px}
 input,select,textarea{border:1px solid #dfe4ef;background:#fff;border-radius:10px;padding:10px 12px;color:var(--ink);width:100%;outline:none}
 input:focus,select:focus,textarea:focus{border-color:#8a9aff;box-shadow:0 0 0 3px #7185ff20}
 .login-err{color:var(--red);font-size:13px;margin:8px 0;display:none}
-/* APP */
-.app{display:none;grid-template-columns:248px 1fr;min-height:100vh}.app.show{display:grid}
-.sidebar{background:#151d33;color:#fff;padding:24px 15px;display:flex;flex-direction:column;gap:20px}
-.brand{display:flex;align-items:center;gap:11px;padding:0 8px}
-.brand .logo{width:40px;height:40px;border-radius:13px;background:linear-gradient(145deg,#7185ff,#4058d9);display:grid;place-items:center;font-size:20px;margin:0}
-.brand strong{display:block;font-size:15px}.brand small{display:block;color:#aab4d0;font-size:12px;margin-top:2px}
-.navlabel{color:#7885a8;text-transform:uppercase;letter-spacing:.12em;font-size:10px;padding:0 12px;margin-bottom:5px}
-.nav{display:grid;gap:4px}.nav button{display:flex;gap:10px;align-items:center;text-align:left;background:transparent;color:#b9c3dd;padding:11px 12px;font-weight:550}
+.app{display:none;grid-template-columns:240px 1fr;min-height:100vh}.app.show{display:grid}
+.sidebar{background:#151d33;color:#fff;padding:20px 12px;display:flex;flex-direction:column;gap:12px;overflow:auto}
+.brand{display:flex;align-items:center;gap:10px;padding:0 8px}.brand .logo{width:36px;height:36px;border-radius:11px;background:linear-gradient(145deg,#7185ff,#4058d9);display:grid;place-items:center;font-size:18px}
+.brand strong{display:block;font-size:14px}.brand small{display:block;color:#aab4d0;font-size:11px}
+.navlabel{color:#7885a8;text-transform:uppercase;letter-spacing:.1em;font-size:9px;padding:8px 10px 4px}
+.nav{display:grid;gap:2px}.nav button{display:block;text-align:left;background:transparent;color:#b9c3dd;padding:9px 10px;font-weight:550;font-size:13px;border-radius:8px}
 .nav button.active,.nav button:hover{background:#273354;color:#fff}
-.sidebar-foot{margin-top:auto;padding:12px;font-size:12px;color:#aab4d0}
-.sidebar-foot button{width:100%;margin-top:8px}
-.main{min-width:0}.topbar{height:68px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#ffffffd9;border-bottom:1px solid var(--line);gap:12px}
-.topbar h1{font-size:17px;margin:0}.crumb{color:var(--muted);font-size:12px}
-.badge-role{font-size:11px;font-weight:700;padding:4px 10px;border-radius:100px;background:var(--blue2);color:#3349bc}
-.fb-status{font-size:11px;font-weight:700;padding:4px 10px;border-radius:100px}
-.fb-status.on{background:#e4f7ef;color:var(--green)}.fb-status.off{background:#fff2d9;color:var(--amber)}.fb-status.err{background:#ffeaed;color:var(--red)}
-.content{max-width:1200px;margin:auto;padding:24px 28px 48px}
+.sidebar-foot{margin-top:auto;padding:8px}.sidebar-foot button{width:100%;margin-top:6px}
+.main{min-width:0;display:flex;flex-direction:column}
+.topbar{height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:#ffffffee;border-bottom:1px solid var(--line);gap:10px;flex-shrink:0}
+.topbar h1{font-size:16px;margin:0}.crumb{color:var(--muted);font-size:11px}
+.badge-role,.fb-status{font-size:11px;font-weight:700;padding:4px 9px;border-radius:100px}
+.badge-role{background:var(--blue2);color:#3349bc}.fb-status.on{background:#e4f7ef;color:var(--green)}.fb-status.off{background:#fff2d9;color:var(--amber)}.fb-status.err{background:#ffeaed;color:var(--red)}
+.content{flex:1;overflow:auto;padding:20px 22px 40px;max-width:1100px;width:100%;margin:0 auto}
 .page{display:none}.page.active{display:block}
-.welcome{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:20px;flex-wrap:wrap}
-.welcome h2{font-size:24px;margin:0 0 4px;letter-spacing:-.03em}.welcome p{margin:0;color:var(--muted)}
+.welcome{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.welcome h2{font-size:22px;margin:0 0 4px}.welcome p{margin:0;color:var(--muted);font-size:13px}
 .welcome-actions{display:flex;gap:8px;flex-wrap:wrap}
-.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}
-.stat,.panel,.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
-.stat{padding:16px}.stat-top{display:flex;justify-content:space-between;color:var(--muted);font-size:12px}
-.stat-num{font-size:26px;font-weight:780;margin:10px 0 2px}.stat-foot{font-size:12px;color:var(--muted)}
-.panel{padding:18px;margin-bottom:16px}.panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
-.panel-head h3{margin:0;font-size:15px}
-.pill{display:inline-flex;align-items:center;border-radius:100px;padding:4px 9px;font-size:11px;font-weight:700;background:#eef1f8;color:#5d6780}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.stat,.panel,.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.stat{padding:14px}.stat-top{color:var(--muted);font-size:11px}.stat-num{font-size:24px;font-weight:780;margin:6px 0 0}
+.panel{padding:16px;margin-bottom:14px}.panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.panel-head h3{margin:0;font-size:15px}
+.pill{display:inline-flex;border-radius:100px;padding:3px 8px;font-size:11px;font-weight:700;background:#eef1f8;color:#5d6780}
 .pill.green{background:#e4f7ef;color:var(--green)}.pill.amber{background:#fff2d9;color:var(--amber)}.pill.red{background:#ffeaed;color:var(--red)}
-.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.toolbar input,.toolbar select{max-width:240px}
-.table-wrap{overflow:auto}.table{width:100%;border-collapse:collapse;min-width:560px}
-.table th{text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em;font-weight:700;background:#fafbfe}
-.table td,.table th{padding:12px;border-bottom:1px solid var(--line);vertical-align:top;font-size:13px}
-.table .maincell{font-weight:700}.empty{padding:32px 12px;text-align:center;color:var(--muted)}.empty b{display:block;color:var(--ink);margin-bottom:4px}
-.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
-.card{padding:16px}.card h4{margin:8px 0 4px;font-size:15px}.card p{color:var(--muted);font-size:13px;margin:0 0 8px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.toolbar input,.toolbar select{max-width:220px}
+.table-wrap{overflow:auto}.table{width:100%;border-collapse:collapse;min-width:480px}
+.table th{text-align:left;color:var(--muted);font-size:10px;text-transform:uppercase;font-weight:700;background:#fafbfe}
+.table td,.table th{padding:10px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:top}
+.table .maincell{font-weight:700}.empty{padding:28px;text-align:center;color:var(--muted)}.empty b{display:block;color:var(--ink);margin-bottom:4px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.card{padding:14px}.card h4{margin:6px 0 4px;font-size:15px}.card p{color:var(--muted);font-size:13px;margin:0}
 .card-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
-.poll{border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px;background:#fff}
-.poll h4{margin:0 0 6px;font-size:15px}.poll .meta{font-size:12px;color:var(--muted);margin-bottom:10px}
-.option{display:flex;align-items:flex-start;gap:10px;border:1px solid var(--line);padding:11px 12px;border-radius:10px;margin:7px 0;cursor:pointer}
+.poll{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;background:#fff}
+.poll h4{margin:0 0 4px}.poll .meta{font-size:12px;color:var(--muted);margin-bottom:8px}
+.option{display:flex;gap:10px;border:1px solid var(--line);padding:10px 12px;border-radius:10px;margin:6px 0;cursor:pointer;align-items:flex-start}
 .option:hover{background:#f8f9ff;border-color:#aab5ff}.option input{width:auto;margin-top:3px;accent-color:var(--blue)}
-.option .opt-body{flex:1}.option .opt-text{font-weight:600;display:block}.option .opt-desc{display:block;margin-top:3px;font-size:12px;color:var(--muted)}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.form-grid .full{grid-column:1/-1}
-.form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
-.notice{background:#f0f3ff;border:1px solid #dfe5ff;color:#394b9c;padding:12px 14px;border-radius:12px;font-size:12px;margin-bottom:14px}
-.notice strong{display:block;margin-bottom:3px}.muted{color:var(--muted)}
-.badge-campus{display:inline-flex;background:#e8f5e9;color:#2e7d32;font-size:11px;font-weight:700;padding:3px 8px;border-radius:100px}
-.bar-chart{display:flex;flex-direction:column;gap:9px;margin:12px 0}
-.bar-row{display:grid;gap:3px}.bar-label{font-size:13px;font-weight:600}.bar-desc{font-size:11px;color:var(--muted)}
-.bar-track{height:18px;background:#edf0f6;border-radius:8px;overflow:hidden}
+.option .opt-text{font-weight:600;display:block}.option .opt-desc{font-size:12px;color:var(--muted);display:block;margin-top:2px}
+.option .opt-link{font-size:12px;color:var(--blue)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.form-grid .full{grid-column:1/-1}
+.form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+.notice{background:#f0f3ff;border:1px solid #dfe5ff;color:#394b9c;padding:11px 13px;border-radius:11px;font-size:12px;margin-bottom:12px}
+.notice strong{display:block;margin-bottom:2px}.muted{color:var(--muted)}
+.badge-campus{display:inline-flex;background:#e8f5e9;color:#2e7d32;font-size:11px;font-weight:700;padding:2px 7px;border-radius:100px}
+.bar-chart{display:flex;flex-direction:column;gap:8px;margin:10px 0}
+.bar-label{font-size:13px;font-weight:600}.bar-desc{font-size:11px;color:var(--muted)}
+.bar-track{height:16px;background:#edf0f6;border-radius:8px;overflow:hidden}
 .bar-fill{height:100%;border-radius:8px;min-width:2px;transition:width .35s}.bar-pct{font-size:12px;color:var(--muted)}
-.pie-wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:8px}
-.pie-svg{width:110px;height:110px;flex-shrink:0}.pie-legend{font-size:12px;display:flex;flex-direction:column;gap:4px}
-.pie-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:middle}
-.meeting-row{display:flex;gap:12px}.datebox{width:48px;height:50px;border-radius:12px;background:#f1f3ff;text-align:center;flex-shrink:0;padding-top:5px;color:#465be0}
-.datebox b{font-size:18px;display:block;line-height:1.1}.datebox span{font-size:10px;text-transform:uppercase;font-weight:700}
-.block-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:10px 0 4px}
+.meeting-row{display:flex;gap:12px}.datebox{width:46px;height:48px;border-radius:11px;background:#f1f3ff;text-align:center;flex-shrink:0;padding-top:4px;color:#465be0}
+.datebox b{font-size:17px;display:block;line-height:1.1}.datebox span{font-size:9px;text-transform:uppercase;font-weight:700}
+.block-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:12px 0 4px}
 .block-body{font-size:13px;white-space:pre-wrap}
-.opt-row{border:1px solid var(--line);border-radius:12px;padding:12px;margin:8px 0;background:#fafbfe}
-.opt-row .opt-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:12px;font-weight:700;color:var(--muted)}
-.modal-backdrop{position:fixed;inset:0;background:#10182b80;display:none;align-items:center;justify-content:center;padding:16px;z-index:20}
-.modal-backdrop.open{display:flex}.modal{background:#fff;width:min(560px,100%);max-height:90vh;overflow:auto;border-radius:18px;padding:22px;box-shadow:0 24px 80px #111a3a33}
-.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}.modal-head h3{margin:0}
-.toast{position:fixed;right:20px;bottom:20px;background:#17213a;color:#fff;padding:12px 16px;border-radius:12px;opacity:0;transform:translateY(8px);pointer-events:none;transition:.2s;z-index:30}
+.opt-row,.lesson-row{border:1px solid var(--line);border-radius:10px;padding:10px;margin:6px 0;background:#fafbfe}
+.lesson-row{display:grid;grid-template-columns:70px 1fr 90px auto;gap:8px;align-items:end}
+.detail-back{margin-bottom:12px}.detail-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:var(--shadow)}
+.detail-card h2{margin:0 0 6px;font-size:20px}.detail-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.quorum{height:8px;background:#edf0f6;border-radius:6px;overflow:hidden;margin:8px 0}.quorum span{display:block;height:100%;background:var(--green);border-radius:6px}
+.ann-item{border-bottom:1px solid var(--line);padding:12px 0}.ann-item:last-child{border-bottom:0}
+.ann-item h4{margin:0 0 4px}.slide-view{background:#1a2240;color:#fff;border-radius:14px;padding:28px;min-height:200px;margin:12px 0}
+.slide-view h3{margin:0 0 12px;font-size:22px}.slide-view p{margin:0;line-height:1.6;white-space:pre-wrap}
+.live-banner{background:linear-gradient(90deg,#c43f52,#e85d4c);color:#fff;padding:10px 14px;border-radius:10px;font-weight:700;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+.modal-backdrop{position:fixed;inset:0;background:#10182b80;display:none;align-items:center;justify-content:center;padding:14px;z-index:30}
+.modal-backdrop.open{display:flex}.modal{background:#fff;width:min(560px,100%);max-height:92vh;overflow:auto;border-radius:16px;padding:20px}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.modal-head h3{margin:0}
+.toast{position:fixed;right:16px;bottom:16px;background:#17213a;color:#fff;padding:11px 14px;border-radius:11px;opacity:0;transform:translateY(8px);pointer-events:none;transition:.2s;z-index:40;max-width:90%}
 .toast.show{opacity:1;transform:translateY(0)}
-.two-col{display:grid;grid-template-columns:1.2fr .9fr;gap:16px}
-.list-row{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}.list-row:last-child{border-bottom:0}
-.dot{width:8px;height:8px;border-radius:50%;background:#6b7ff4;margin-top:6px;flex-shrink:0}
-.event{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}.event:last-child{border-bottom:0}
-.starost-wrap{max-width:560px;margin:0 auto}
-@media(max-width:900px){.app.show{grid-template-columns:1fr}.sidebar{padding:10px;gap:8px}.navlabel,.sidebar-foot .hint{display:none}.nav{display:flex;overflow:auto;gap:4px}.nav button{white-space:nowrap;padding:9px 11px;font-size:12px}.grid{grid-template-columns:1fr 1fr}.two-col{grid-template-columns:1fr}.content{padding:16px}.form-grid{grid-template-columns:1fr}.topbar{padding:0 14px;height:56px}}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;font-size:12px}
+.cal-head{text-align:center;font-weight:700;color:var(--muted);padding:6px}
+.cal-day{min-height:64px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:4px;font-size:11px}
+.cal-day b{display:block;margin-bottom:2px}.cal-day .ev{background:var(--blue2);color:#3349bc;border-radius:4px;padding:1px 4px;margin:2px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.starost-wrap{max-width:640px;margin:0 auto}
+.idea-score{font-size:18px;font-weight:800;color:var(--blue)}
+@media(max-width:900px){.app.show{grid-template-columns:1fr}.sidebar{max-height:none;padding:8px}.nav{display:flex;overflow:auto}.nav button{white-space:nowrap;font-size:12px;padding:8px}.navlabel{display:none}.form-grid{grid-template-columns:1fr}.lesson-row{grid-template-columns:1fr 1fr}.content{padding:14px}}
+
+.meet-stage{border-radius:20px;overflow:hidden;margin-bottom:16px;position:relative}
+.meet-stage.theme-night{background:linear-gradient(160deg,#0b1224 0%,#1a2750 50%,#243866 100%);color:#fff}
+.meet-stage.theme-aurora{background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);color:#fff}
+.meet-stage.theme-sunset{background:linear-gradient(135deg,#1a0a0a,#4a1520,#2d1b4e);color:#fff}
+.meet-stage.theme-forest{background:linear-gradient(135deg,#0b1f14,#163526,#1a3a2a);color:#fff}
+.meet-stage.theme-classic{background:linear-gradient(160deg,#f4f6fb,#e8ecf8);color:var(--ink);border:1px solid var(--line)}
+.meet-hero{padding:28px 24px 20px;animation:meetIn .6s ease both}
+@keyframes meetIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.meet-hero h2{margin:8px 0 6px;font-size:clamp(22px,4vw,32px);letter-spacing:-.02em}
+.meet-hero .muted-hero{opacity:.75;font-size:14px}
+.countdown{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 8px}
+.cd-block{background:rgba(255,255,255,.1);backdrop-filter:blur(8px);border-radius:14px;min-width:70px;padding:12px 10px;text-align:center;animation:cdPop .5s ease both}
+.theme-classic .cd-block{background:#fff;box-shadow:var(--shadow);border:1px solid var(--line)}
+.cd-block:nth-child(1){animation-delay:.05s}.cd-block:nth-child(2){animation-delay:.1s}
+.cd-block:nth-child(3){animation-delay:.15s}.cd-block:nth-child(4){animation-delay:.2s}
+@keyframes cdPop{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+.cd-num{font-size:clamp(22px,5vw,36px);font-weight:900;line-height:1;font-variant-numeric:tabular-nums}
+.cd-lab{font-size:10px;text-transform:uppercase;letter-spacing:.08em;opacity:.65;margin-top:4px;font-weight:700}
+.cd-live{display:inline-flex;align-items:center;gap:8px;background:#c43f52;color:#fff;font-weight:800;padding:10px 16px;border-radius:100px;animation:pulseLive 1.5s infinite}
+@keyframes pulseLive{0%,100%{box-shadow:0 0 0 0 #c43f5288}50%{box-shadow:0 0 0 12px #c43f5200}}
+.cd-done{opacity:.85;font-weight:700}
+.meet-tabs{display:flex;gap:6px;flex-wrap:wrap;padding:0 16px 14px}
+.meet-tabs button{background:rgba(255,255,255,.12);color:inherit;border:0;border-radius:100px;padding:8px 14px;font-size:12px;font-weight:650}
+.theme-classic .meet-tabs button{background:#eef1f8;color:var(--ink)}
+.meet-tabs button.active{background:#425ee8;color:#fff}
+.meet-panel{padding:8px 20px 24px;animation:meetIn .45s ease both}
+.theme-picker{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.theme-dot{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0}
+.theme-dot.active{border-color:#fff;box-shadow:0 0 0 2px #425ee8}
+.theme-classic .theme-dot.active{border-color:#425ee8}
 </style>
 </head>
 <body>
-
-<!-- LOGIN -->
 <div class="login-screen" id="loginScreen">
   <div class="login-card">
     <div class="logo">✦</div>
     <h1>Совет старост</h1>
     <p class="sub">Вход по аккаунту</p>
-    <div class="login-field">
-      <label>Логин</label>
-      <input type="text" id="loginUser" placeholder="Логин" autocomplete="username">
-    </div>
-    <div class="login-field">
-      <label>Пароль</label>
-      <input type="password" id="loginPass" placeholder="Пароль" autocomplete="current-password">
-    </div>
-    <div class="login-err" id="loginErr">Неверный логин или пароль</div>
-    <button type="button" style="width:100%;margin-top:10px" onclick="doLogin()">Войти</button>
-    <p class="muted" style="font-size:11px;margin-top:14px;text-align:center;line-height:1.5">
-      Аккаунты старост создаёт председатель
-    </p>
+    <div class="login-field"><label>Логин</label><input type="text" id="loginUser" autocomplete="username"></div>
+    <div class="login-field"><label>Пароль</label><input type="password" id="loginPass" autocomplete="current-password"></div>
+    <div class="login-err" id="loginErr"></div>
+    <button type="button" id="loginBtn" style="width:100%;margin-top:8px" onclick="doLogin()">Войти</button>
+
   </div>
 </div>
 
-<!-- APP -->
 <div class="app" id="appShell">
 <aside class="sidebar">
   <div class="brand"><div class="logo">✦</div><div><strong>Совет старост</strong><small id="roleLabel">—</small></div></div>
-  <div>
-    <div class="navlabel">Меню</div>
-    <nav class="nav" id="navChair" style="display:none">
+  <div id="navChair" style="display:none">
+    <div class="navlabel">Основное</div>
+    <nav class="nav">
       <button class="active" data-page="dashboard">▦ Обзор</button>
-      <button data-page="schedule">▤ Расписания</button>
       <button data-page="meetings">◷ Собрания</button>
       <button data-page="polls">◉ Голосования</button>
-      <button data-page="decisions">✓ Задачи</button>
-      <button data-page="documents">▧ Документы</button>
+      <button data-page="announcements">📢 Объявления</button>
+      <button data-page="events">📅 Календарь</button>
+      <button data-page="duties">🧹 Дежурства</button>
+    </nav>
+    <div class="navlabel">Люди и учёба</div>
+    <nav class="nav">
+      <button data-page="contacts">👥 Старосты</button>
+      <button data-page="problems">🔧 Проблемы</button>
+      <button data-page="ideas">💡 Идеи</button>
+      <button data-page="links">🔗 Ссылки</button>
+      <button data-page="schedule">▤ Расписания</button>
+      <button data-page="journals">📔 Журналы</button>
+    </nav>
+    <div class="navlabel">Система</div>
+    <nav class="nav">
       <button data-page="users">👤 Аккаунты</button>
+      <button data-page="settings">⚙ Настройки</button>
       <button data-page="reports">▥ Отчёты</button>
     </nav>
-    <nav class="nav" id="navStarost" style="display:none">
+  </div>
+  <div id="navStarost" style="display:none">
+    <div class="navlabel">Меню</div>
+    <nav class="nav">
       <button class="active" data-page="s-polls">◉ Голосования</button>
       <button data-page="s-meetings">◷ Собрания</button>
-      <button data-page="s-results">▥ Итоги опросов</button>
+      <button data-page="s-ann">📢 Объявления</button>
+      <button data-page="s-events">📅 События</button>
+      <button data-page="s-duties">🧹 Дежурства</button>
+      <button data-page="s-problems">🔧 Проблемы</button>
+      <button data-page="s-ideas">💡 Идеи</button>
+      <button data-page="s-links">🔗 Ссылки</button>
+      <button data-page="s-contacts">👥 Контакты</button>
+      <button data-page="s-diary">📔 Дневник класса</button>
+      <button data-page="s-account">🔑 Мой аккаунт</button>
     </nav>
   </div>
-  <div class="sidebar-foot">
-    <div class="hint">Данные синхронизируются через Firebase</div>
-    <button class="secondary small" onclick="logout()">Выйти</button>
-  </div>
+  <div class="sidebar-foot"><button class="secondary small" onclick="logout()">Выйти</button></div>
 </aside>
 <main class="main">
 <header class="topbar">
-  <div><div class="crumb">Организация · Совет старост</div><h1 id="pageTitle">Обзор</h1></div>
-  <div style="display:flex;align-items:center;gap:8px">
+  <div><div class="crumb">Совет старост</div><h1 id="pageTitle">Обзор</h1></div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
     <span id="fbBadge" class="fb-status off">Firebase…</span>
     <span class="badge-role" id="roleBadge">—</span>
   </div>
 </header>
-<div class="content">
-
-<!-- CHAIR: dashboard -->
-<section class="page" id="page-dashboard">
-  <div class="welcome"><div><h2>Рабочий центр</h2><p>Управление советом старост</p></div>
-    <div class="welcome-actions"><button class="secondary" onclick="openModal('poll')">＋ Опрос</button><button onclick="openModal('meeting')">＋ Собрание</button></div></div>
-  <div class="grid">
-    <div class="stat"><div class="stat-top"><span>Классов</span></div><div class="stat-num" id="statClasses">0</div><div class="stat-foot">В расписании</div></div>
-    <div class="stat"><div class="stat-top"><span>Опросы</span></div><div class="stat-num" id="statPolls">0</div><div class="stat-foot">Открытые</div></div>
-    <div class="stat"><div class="stat-top"><span>Задачи</span></div><div class="stat-num" id="statTasks">0</div><div class="stat-foot">В работе</div></div>
-    <div class="stat"><div class="stat-top"><span>Собрания</span></div><div class="stat-num" id="statMeetings">0</div><div class="stat-foot">Всего</div></div>
-  </div>
-  <div class="two-col">
-    <div class="panel"><div class="panel-head"><h3>Ближайшие собрания</h3><button class="ghost small" onclick="showPage('meetings')">Все →</button></div><div id="dashMeetings"></div></div>
-    <div class="panel"><div class="panel-head"><h3>Активные опросы</h3><button class="ghost small" onclick="showPage('polls')">Все →</button></div><div id="dashPolls"></div></div>
-  </div>
-</section>
-
-<!-- CHAIR: schedule -->
-<section class="page" id="page-schedule">
-  <div class="welcome"><div><h2>Расписания классов</h2><p>Таблица · галочка «Новый корпус»</p></div><button onclick="openModal('schedule')">＋ Добавить</button></div>
-  <div class="toolbar">
-    <input id="scheduleSearch" placeholder="Поиск…" oninput="renderSchedules()">
-    <select id="scheduleDay" onchange="renderSchedules()"><option value="">Все дни</option><option>Понедельник</option><option>Вторник</option><option>Среда</option><option>Четверг</option><option>Пятница</option><option>Суббота</option></select>
-    <select id="scheduleCampus" onchange="renderSchedules()"><option value="">Все корпуса</option><option value="new">Новый корпус</option><option value="old">Без нового</option></select>
-  </div>
-  <div class="panel"><div id="scheduleList"></div></div>
-</section>
-
-<!-- CHAIR: meetings -->
-<section class="page" id="page-meetings">
-  <div class="welcome"><div><h2>Собрания и итоги</h2><p>Синхронизируются со старостами через Firebase</p></div><button onclick="openModal('meeting')">＋ Новое</button></div>
-  <div class="toolbar"><input id="meetingSearch" placeholder="Найти…" oninput="renderMeetings()"><select id="meetingFilter" onchange="renderMeetings()"><option value="">Все</option><option>Запланировано</option><option>Проведено</option><option>Отменено</option></select></div>
-  <div id="meetingList" class="cards"></div>
-</section>
-
-<!-- CHAIR: polls -->
-<section class="page" id="page-polls">
-  <div class="welcome"><div><h2>Голосования</h2><p>Один или несколько вариантов · описания к вариантам</p></div><button onclick="openModal('poll')">＋ Создать</button></div>
-  <div class="notice" id="pollNotice"><strong>Firebase</strong>Опросы и голоса синхронизируются онлайн.</div>
-  <div class="toolbar"><select id="pollFilter" onchange="renderPolls()"><option value="">Все</option><option>Открыто</option><option>Закрыто</option></select></div>
-  <div id="pollList"></div>
-</section>
-
-<!-- CHAIR: decisions -->
-<section class="page" id="page-decisions">
-  <div class="welcome"><div><h2>Решения и задачи</h2></div><button onclick="openModal('decision')">＋ Добавить</button></div>
-  <div class="toolbar"><input id="decisionSearch" placeholder="Поиск…" oninput="renderDecisions()"><select id="decisionFilter" onchange="renderDecisions()"><option value="">Все</option><option>В работе</option><option>Выполнено</option><option>Отложено</option></select></div>
-  <div class="panel"><div id="decisionList"></div></div>
-</section>
-
-<!-- CHAIR: documents -->
-<section class="page" id="page-documents">
-  <div class="welcome"><div><h2>Документы</h2></div><button onclick="openModal('document')">＋ Добавить</button></div>
-  <div class="toolbar"><input id="docSearch" placeholder="Поиск…" oninput="renderDocuments()"><select id="docType" onchange="renderDocuments()"><option value="">Все</option><option>Протокол</option><option>Повестка</option><option>Отчёт</option><option>Положение</option><option>Ссылка</option><option>Другое</option></select></div>
-  <div id="documentList" class="cards"></div>
-</section>
-
-<!-- CHAIR: users -->
-<section class="page" id="page-users">
-  <div class="welcome"><div><h2>Аккаунты</h2><p>Создавай логины для старост и председателей</p></div>
-    <button onclick="openModal('user')">＋ Новый аккаунт</button></div>
-  <div class="notice"><strong>Как это работает</strong>Каждый староста входит под своим логином. Повторный голос с аккаунта блокируется. Первый аккаунт <b>admin</b> создаётся автоматически.</div>
-  <div class="panel"><div id="userList"></div></div>
-</section>
-
-<!-- CHAIR: reports -->
-<section class="page" id="page-reports">
-  <div class="welcome"><div><h2>Отчёты</h2></div><div class="welcome-actions"><button onclick="exportData()">↓ JSON</button><button class="secondary" onclick="makeReport()">Сводка</button></div></div>
-  <div class="grid">
-    <div class="stat"><div class="stat-top"><span>Проведено</span></div><div class="stat-num" id="reportMeetings">0</div></div>
-    <div class="stat"><div class="stat-top"><span>Выполнено</span></div><div class="stat-num" id="reportDone">0</div></div>
-    <div class="stat"><div class="stat-top"><span>Документы</span></div><div class="stat-num" id="reportDocs">0</div></div>
-    <div class="stat"><div class="stat-top"><span>Опросы</span></div><div class="stat-num" id="reportPolls">0</div></div>
-  </div>
-  <div class="panel"><textarea id="reportText" rows="10" placeholder="Нажми «Сводка»"></textarea>
-    <div class="form-actions"><button class="secondary" onclick="copyReport()">Копировать</button><button onclick="downloadReport()">TXT</button></div></div>
-</section>
-
-<!-- STAROST pages -->
-<section class="page" id="page-s-polls">
-  <div class="starost-wrap">
-    <div class="welcome"><div><h2>Голосования</h2><p>Открытые опросы совета</p></div></div>
-    <div class="notice"><strong>Как голосовать</strong>Выбери вариант(ы) и нажми «Проголосовать». Один голос с этого устройства. У вариантов может быть описание.</div>
-    <div id="sPollList"></div>
-  </div>
-</section>
-<section class="page" id="page-s-meetings">
-  <div class="starost-wrap">
-    <div class="welcome"><div><h2>Собрания</h2><p>Повестка и итоги</p></div></div>
-    <div id="sMeetingList"></div>
-  </div>
-</section>
-<section class="page" id="page-s-results">
-  <div class="starost-wrap">
-    <div class="welcome"><div><h2>Итоги опросов</h2><p>Закрытые голосования</p></div></div>
-    <div id="sResultList"></div>
-  </div>
-</section>
-
-</div>
+<div class="content" id="content"></div>
 </main>
 </div>
 
@@ -269,7 +206,6 @@ input:focus,select:focus,textarea:focus{border-color:#8a9aff;box-shadow:0 0 0 3p
 <div class="toast" id="toast"></div>
 
 <script>
-/* ========== НАСТРОЙКИ ========== */
 const firebaseConfig = {
   apiKey: "AIzaSyAKRxizCyVr634sdmB7mxRZudJpxD_EBsw",
   authDomain: "sovet-701c5.firebaseapp.com",
@@ -279,671 +215,1812 @@ const firebaseConfig = {
   appId: "1:770061016694:web:280d5caa6db66bea2d0957",
   measurementId: "G-D4QTK30MWV"
 };
-/* Первый admin: логин admin, пароль starosta — создаётся сам при первом запуске */
-/* ============================== */
+const STORE='councilFull_v2', SESSION_KEY='councilSession_v2';
+const days=['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+const COLORS=['#425ee8','#15835d','#a8640a','#c43f52','#7c4dff','#00897b','#f57c00','#5c6bc0'];
+const COLS=['polls','meetings','users','events','duties','announcements','problems','ideas','links','classlists','diary'];
 
-const STORE = 'councilUnified_v1';
-const SESSION_KEY = 'councilSession_v2';
-const days = ['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
-const COLORS = ['#425ee8','#15835d','#a8640a','#c43f52','#7c4dff','#00897b','#f57c00','#5c6bc0'];
-
-let currentUser = null; // {id, login, name, role, klass}
-let db = {schedules:[], meetings:[], polls:[], decisions:[], documents:[], users:[]};
-let modalType = '';
-let fbEnabled = false;
-let firestore = null;
-let pollsUnsub = null;
-let meetingsUnsub = null;
-let usersUnsub = null;
-let optCount = 0;
+let currentUser=null, fbEnabled=false, firestore=null;
+let unsubs={};
+let db={schedules:[],meetings:[],polls:[],decisions:[],documents:[],users:[],events:[],duties:[],announcements:[],problems:[],ideas:[],links:[],classlists:[],diary:[]};
+let modalType='', optCount=0, lessonCount=0, slideCount=0, speechCount=0;
+let livePollId=null, slideIdx=0, detailMeetingId=null;
+let settings={telegramWebhook:'', notifyEmail:''};
 
 function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
-function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}
 function dateLabel(d){if(!d)return '—';const x=new Date(d+'T12:00:00');return isNaN(x)?d:x.toLocaleDateString('ru-RU',{day:'2-digit',month:'short',year:'numeric'})}
 function dayNum(d){if(!d)return '—';const x=new Date(d+'T12:00:00');return isNaN(x)?'—':x.getDate()}
 function monthShort(d){if(!d)return '';const x=new Date(d+'T12:00:00');return isNaN(x)?'':x.toLocaleDateString('ru-RU',{month:'short'})}
-function statusPill(s){const c=s==='Проведено'||s==='Выполнено'||s==='Закрыто'?'green':s==='Запланировано'||s==='Открыто'||s==='В работе'?'amber':s==='Отменено'?'red':'';return `<span class="pill ${c}">${esc(s||'—')}</span>`}
+function statusPill(s){const c=['Проведено','Выполнено','Закрыто','Решено'].includes(s)?'green':['Запланировано','Открыто','В работе','Новое'].includes(s)?'amber':s==='Отменено'?'red':'';return `<span class="pill ${c}">${esc(s||'—')}</span>`}
+function isChair(){return currentUser&&currentUser.role==='chair'}
 function pollTotal(p){return (p.options||[]).reduce((n,o)=>n+(o.votes||0),0)}
-function pollModeLabel(p){return p.mode==='multi'?'Несколько вариантов':'Один вариант'}
-function userHasVoted(p){if(!currentUser)return false;return (p.voterIds||[]).includes(currentUser.id)}
-/* ----- LOGIN / ACCOUNTS ----- */
-function roleOf(){return currentUser && currentUser.role}
-function isChair(){return roleOf()==='chair'}
+function userHasVoted(p){return currentUser&&(p.voterIds||[]).includes(currentUser.id)}
+function loadSettings(){try{const s=JSON.parse(localStorage.getItem('councilSettings_v1'));if(s)settings={...settings,...s}}catch(e){}}
+function saveSettingsLocal(){localStorage.setItem('councilSettings_v1',JSON.stringify(settings))}
 
-async function ensureAdminUser(){
-  if(!fbEnabled||!firestore) return;
-  try{
-    const q=await firestore.collection('users').where('login','==','admin').limit(1).get();
-    if(q.empty){
-      await firestore.collection('users').add({
-        login:'admin', password:'starosta', name:'Председатель', role:'chair', klass:'', active:true, created:new Date().toISOString()
-      });
-      console.log('Created default admin user');
-    }
-  }catch(e){console.error('ensureAdmin',e)}
-}
-
-async function doLogin(){
-  const login=(document.getElementById('loginUser')?.value||'').trim().toLowerCase();
-  const pass=document.getElementById('loginPass')?.value||'';
-  const err=document.getElementById('loginErr');
-  const btn=document.querySelector('.login-card button[onclick*=doLogin], .login-card button');
-  err.style.display='none';
-  if(!login||!pass){err.textContent='Введи логин и пароль';err.style.display='block';return}
-
-  if(btn){btn.disabled=true;btn.textContent='Вход…'}
-  try{
-    if(!fbEnabled){
-      initFirebase(true);
-      await new Promise(r=>setTimeout(r,500));
-    }
-    if(!fbEnabled||!firestore){
-      err.textContent='Firebase не подключился. Проверь интернет и Rules (коллекция users).';
-      err.style.display='block';
-      return;
-    }
-    await ensureAdminUser();
-    const snap=await firestore.collection('users').where('login','==',login).limit(1).get();
-    if(snap.empty){err.textContent='Пользователь не найден. Первый вход: admin / starosta';err.style.display='block';return}
-    const doc=snap.docs[0];
-    const u={id:doc.id,...doc.data()};
-    if(u.active===false){err.textContent='Аккаунт отключён';err.style.display='block';return}
-    if(String(u.password)!==String(pass)){err.textContent='Неверный логин или пароль';err.style.display='block';return}
-    enterApp(u);
-  }catch(e){
-    console.error(e);
-    let msg=e.message||String(e);
-    if(msg.includes('permission')||msg.includes('Permission')) msg='Нет доступа к Firestore. Открой Rules и разреши users (read/write).';
-    if(msg.includes('offline')||msg.includes('network')) msg='Нет сети или Firebase недоступен.';
-    err.textContent='Ошибка входа: '+msg;
-    err.style.display='block';
-  }finally{
-    if(btn){btn.disabled=false;btn.textContent='Войти'}
-  }
-}
-
-function enterApp(u){
-  currentUser={id:u.id, login:u.login, name:u.name||u.login, role:u.role||'starost', klass:u.klass||''};
-  sessionStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
-  document.getElementById('loginScreen').style.display='none';
-  document.getElementById('appShell').classList.add('show');
-  document.getElementById('roleLabel').textContent=currentUser.name+(currentUser.klass?' · '+currentUser.klass:'');
-  document.getElementById('roleBadge').textContent=isChair()?'Председатель':'Староста';
-  document.getElementById('navChair').style.display=isChair()?'grid':'none';
-  document.getElementById('navStarost').style.display=isChair()?'none':'grid';
-  showPage(isChair()?'dashboard':'s-polls');
-  if(!fbEnabled) initFirebase();
-  else { listenPolls(); listenMeetings(); if(isChair()) listenUsers(); }
-  loadLocal();
-  renderAll();
-}
-
-function logout(){
-  sessionStorage.removeItem(SESSION_KEY);
-  currentUser=null;
-  if(pollsUnsub){pollsUnsub();pollsUnsub=null}
-  if(meetingsUnsub){meetingsUnsub();meetingsUnsub=null}
-  if(usersUnsub){usersUnsub();usersUnsub=null}
-  document.getElementById('appShell').classList.remove('show');
-  document.getElementById('loginScreen').style.display='flex';
-  const lu=document.getElementById('loginUser'); if(lu) lu.value='';
-  const lp=document.getElementById('loginPass'); if(lp) lp.value='';
-}
-
-function restoreSession(){
-  try{
-    const raw=sessionStorage.getItem(SESSION_KEY);
-    if(!raw) return;
-    const u=JSON.parse(raw);
-    if(u&&u.id&&u.login&&u.role){
-      // show app shell first, then verify against FB
-      initFirebase();
-      setTimeout(async()=>{
-        if(!fbEnabled){ sessionStorage.removeItem(SESSION_KEY); return; }
-        try{
-          const doc=await firestore.collection('users').doc(u.id).get();
-          if(!doc.exists||doc.data().active===false){ sessionStorage.removeItem(SESSION_KEY); return; }
-          const data=doc.data();
-          enterApp({id:doc.id,...data});
-        }catch(e){console.error(e); sessionStorage.removeItem(SESSION_KEY)}
-      },300);
-    }
-  }catch(e){sessionStorage.removeItem(SESSION_KEY)}
-}
-
-/* ----- FIREBASE ----- */
-function isFbConfigured(){
-  return firebaseConfig.apiKey && firebaseConfig.apiKey!=='YOUR_API_KEY' && firebaseConfig.projectId;
-}
-function initFirebase(silent){
+/* Firebase */
+function initFirebase(){
   const badge=document.getElementById('fbBadge');
-  const notice=document.getElementById('pollNotice');
-  if(!isFbConfigured()){
-    fbEnabled=false;
-    if(badge){badge.textContent='Firebase: выкл';badge.className='fb-status off'}
-    if(notice) notice.innerHTML='<strong>Локальный режим</strong>Firebase не настроен — аккаунты недоступны.';
-    return;
-  }
   try{
     if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     firestore=firebase.firestore();
     fbEnabled=true;
     if(badge){badge.textContent='Firebase: онлайн';badge.className='fb-status on'}
-    if(notice) notice.innerHTML='<strong>Онлайн</strong>Опросы, собрания и аккаунты синхронизируются.';
-    if(currentUser){
-      listenPolls();
-      listenMeetings();
-      if(isChair()) listenUsers();
-    }
   }catch(e){
-    console.error(e);
     fbEnabled=false;
     if(badge){badge.textContent='Firebase: ошибка';badge.className='fb-status err'}
-    if(!silent) toast('Ошибка Firebase: '+e.message);
+    console.error(e);
   }
 }
-function listenUsers(){
+function listenCol(name, orderField){
   if(!fbEnabled||!firestore) return;
-  if(usersUnsub) usersUnsub();
-  usersUnsub=firestore.collection('users').onSnapshot(snap=>{
-    db.users=snap.docs.map(d=>({id:d.id,...d.data()}));
-    renderUsers();
-  },err=>console.error('users',err));
+  if(unsubs[name]) unsubs[name]();
+  let ref=firestore.collection(name);
+  const unsub=ref.onSnapshot(snap=>{
+    db[name]=snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderCurrent();
+  },err=>console.error(name,err));
+  unsubs[name]=unsub;
 }
-function listenPolls(){
-  if(!fbEnabled||!firestore) return;
-  if(pollsUnsub) pollsUnsub();
-  pollsUnsub=firestore.collection('polls').orderBy('created','desc').onSnapshot(snap=>{
-    db.polls=snap.docs.map(d=>({id:d.id,...d.data()}));
-    renderAll();
-  },err=>{console.error(err);toast('Ошибка опросов: '+err.message)});
+function startListeners(){
+  COLS.forEach(c=>listenCol(c));
 }
-function listenMeetings(){
-  if(!fbEnabled||!firestore) return;
-  if(meetingsUnsub) meetingsUnsub();
-  meetingsUnsub=firestore.collection('meetings').onSnapshot(snap=>{
-    const remote=snap.docs.map(d=>({id:d.id,...d.data(),fb:true}));
-    const localOnly=db.meetings.filter(m=>!m.fb && !remote.some(r=>r.id===m.id));
-    db.meetings=[...remote,...localOnly];
-    renderAll();
-  },err=>{
-    console.error(err);
-    // fallback without orderBy if index missing
-    firestore.collection('meetings').get().then(snap=>{
-      db.meetings=snap.docs.map(d=>({id:d.id,...d.data(),fb:true}));
-      renderAll();
-    }).catch(e=>console.error(e));
-  });
+async function ensureAdmin(){
+  if(!fbEnabled) return;
+  try{
+    const q=await firestore.collection('users').where('login','==','admin').limit(1).get();
+    if(q.empty) await firestore.collection('users').add({login:'admin',password:'starosta',name:'Председатель',role:'chair',klass:'',phone:'',contact:'',active:true,created:new Date().toISOString()});
+  }catch(e){console.error(e)}
 }
 
-/* ----- LOCAL STORAGE (schedules, decisions, docs) ----- */
-function loadLocal(){
+/* Auth */
+async function doLogin(){
+  const login=(document.getElementById('loginUser').value||'').trim().toLowerCase();
+  const pass=document.getElementById('loginPass').value||'';
+  const err=document.getElementById('loginErr');
+  const btn=document.getElementById('loginBtn');
+  err.style.display='none';
+  if(!login||!pass){err.textContent='Введи логин и пароль';err.style.display='block';return}
+  btn.disabled=true;btn.textContent='Вход…';
   try{
-    const x=JSON.parse(localStorage.getItem(STORE));
-    if(x){
-      db.schedules=x.schedules||[];
-      db.decisions=x.decisions||[];
-      db.documents=x.documents||[];
-      if(!fbEnabled){
-        db.polls=x.polls||[];
-        db.meetings=x.meetings||[];
-      }
-    }
+    if(!fbEnabled) initFirebase();
+    if(!fbEnabled){err.textContent='Firebase не подключился';err.style.display='block';return}
+    await ensureAdmin();
+    const snap=await firestore.collection('users').where('login','==',login).limit(1).get();
+    if(snap.empty){err.textContent='Пользователь не найден';err.style.display='block';return}
+    const doc=snap.docs[0]; const u={id:doc.id,...doc.data()};
+    if(u.active===false){err.textContent='Аккаунт отключён';err.style.display='block';return}
+    if(String(u.password)!==String(pass)){err.textContent='Неверный пароль';err.style.display='block';return}
+    enterApp(u);
+  }catch(e){
+    console.error(e);
+    let m=e.message||'';
+    if(/permission/i.test(m)) m='Нет доступа. Rules: users, polls, meetings, events, duties, announcements, problems, ideas, links';
+    err.textContent='Ошибка: '+m; err.style.display='block';
+  }finally{btn.disabled=false;btn.textContent='Войти'}
+}
+function enterApp(u){
+  currentUser={id:u.id,login:u.login,name:u.name||u.login,role:u.role||'starost',klass:u.klass||'',phone:u.phone||'',contact:u.contact||''};
+  sessionStorage.setItem(SESSION_KEY,JSON.stringify(currentUser));
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('appShell').classList.add('show');
+  document.getElementById('roleLabel').textContent=currentUser.name+(currentUser.klass?' · '+currentUser.klass:'');
+  document.getElementById('roleBadge').textContent=isChair()?'Председатель':'Староста';
+  document.getElementById('navChair').style.display=isChair()?'block':'none';
+  document.getElementById('navStarost').style.display=isChair()?'none':'block';
+  loadLocal(); loadSettings();
+  startListeners();
+  showPage(isChair()?'dashboard':'s-polls');
+  // live mode from URL
+  const params=new URLSearchParams(location.search);
+  if(params.get('live')){livePollId=params.get('live');showPage(isChair()?'live':'s-live')}
+}
+function logout(){
+  Object.values(unsubs).forEach(u=>{try{u()}catch(e){}}); unsubs={};
+  currentUser=null; sessionStorage.removeItem(SESSION_KEY);
+  document.getElementById('appShell').classList.remove('show');
+  document.getElementById('loginScreen').style.display='flex';
+}
+function restoreSession(){
+  try{
+    const u=JSON.parse(sessionStorage.getItem(SESSION_KEY)||'null');
+    if(!u||!u.id) return;
+    initFirebase();
+    setTimeout(async()=>{
+      if(!fbEnabled) return;
+      try{
+        const doc=await firestore.collection('users').doc(u.id).get();
+        if(doc.exists&&doc.data().active!==false) enterApp({id:doc.id,...doc.data()});
+        else sessionStorage.removeItem(SESSION_KEY);
+      }catch(e){console.error(e)}
+    },250);
   }catch(e){}
 }
-function saveLocal(){
-  localStorage.setItem(STORE, JSON.stringify({
-    schedules:db.schedules,
-    decisions:db.decisions,
-    documents:db.documents,
-    polls:fbEnabled?[]:db.polls,
-    meetings:fbEnabled?db.meetings.filter(m=>!m.fb):db.meetings
-  }));
-}
+function loadLocal(){try{const x=JSON.parse(localStorage.getItem(STORE)||'{}');db.schedules=x.schedules||[]}catch(e){}}
+function saveLocal(){localStorage.setItem(STORE,JSON.stringify({schedules:db.schedules}))}
 
-/* ----- NAV ----- */
+/* Nav */
+const PAGE_TITLES={
+  dashboard:'Обзор',meetings:'Собрания',polls:'Голосования',announcements:'Объявления',events:'Календарь',duties:'Дежурства',
+  contacts:'Старосты',problems:'Проблемы',ideas:'Идеи',links:'Ссылки',schedule:'Расписания',users:'Аккаунты',settings:'Настройки',reports:'Отчёты',
+  'meeting-detail':'Собрание',live:'LIVE голосование',
+  's-polls':'Голосования','s-meetings':'Собрания','s-ann':'Объявления','s-events':'События','s-duties':'Дежурства',
+  's-problems':'Проблемы','s-ideas':'Идеи','s-links':'Ссылки','s-contacts':'Контакты','s-diary':'Дневник класса','s-account':'Мой аккаунт',
+  's-meeting-detail':'Собрание','s-live':'LIVE'
+};
 function showPage(p){
-  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
-  const el=document.getElementById('page-'+p);
-  if(el) el.classList.add('active');
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===p));
-  const names={
-    dashboard:'Обзор',schedule:'Расписания',meetings:'Собрания',polls:'Голосования',
-    decisions:'Задачи',documents:'Документы',users:'Аккаунты',reports:'Отчёты',
-    's-polls':'Голосования','s-meetings':'Собрания','s-results':'Итоги опросов'
-  };
-  document.getElementById('pageTitle').textContent=names[p]||p;
+  document.getElementById('pageTitle').textContent=PAGE_TITLES[p]||p;
+  window._page=p;
+  renderCurrent();
   window.scrollTo({top:0,behavior:'smooth'});
-  renderAll();
 }
 document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
 
-/* ----- MODALS ----- */
+function renderCurrent(){
+  const c=document.getElementById('content');
+  if(!currentUser||!c) return;
+  const p=window._page||'dashboard';
+  const map={
+    dashboard:renderDashboard,meetings:renderMeetingsPage,polls:renderPollsPage,announcements:renderAnnPage,
+    events:renderEventsPage,duties:renderDutiesPage,contacts:renderContactsPage,problems:renderProblemsPage,
+    ideas:renderIdeasPage,links:renderLinksPage,schedule:renderSchedulePage,journals:renderJournalsPage,users:renderUsersPage,
+    settings:renderSettingsPage,reports:renderReportsPage,'meeting-detail':renderMeetingDetail,live:renderLivePage,
+    's-polls':renderSPolls,'s-meetings':renderSMeetings,'s-ann':renderSAnn,'s-events':renderSEvents,
+    's-duties':renderSDuties,'s-problems':renderSProblems,'s-ideas':renderSIdeas,'s-links':renderSLinks,
+    's-contacts':renderContactsPage,'s-account':renderAccountPage,'s-diary':renderDiaryPage,'s-meeting-detail':renderMeetingDetail,'s-live':renderLivePage
+  };
+  (map[p]||(()=>c.innerHTML='<div class="empty"><b>Раздел</b></div>'))();
+}
+
+/* Charts */
+function chartBars(p){
+  const tot=pollTotal(p)||1,maxV=Math.max(...(p.options||[]).map(o=>o.votes||0),1);
+  return `<div class="bar-chart">${(p.options||[]).map((o,i)=>{
+    const pct=Math.round((o.votes||0)/tot*100),w=Math.round((o.votes||0)/maxV*100);
+    return `<div><div class="bar-label">${esc(o.text)}</div>${o.desc?`<div class="bar-desc">${esc(o.desc)}</div>`:''}
+      <div class="bar-track"><div class="bar-fill" style="width:${w}%;background:${COLORS[i%COLORS.length]}"></div></div>
+      <div class="bar-pct">${pct}% · ${o.votes||0}</div></div>`;
+  }).join('')}</div>`;
+}
+function quorumBar(p){
+  if(!p.quorum) return '';
+  const t=pollTotal(p), need=Number(p.quorum)||0, pct=need?Math.min(100,Math.round(t/need*100)):0;
+  const ok=t>=need;
+  return `<div style="margin:8px 0"><div class="muted" style="font-size:12px">Кворум: ${t} / ${need} ${ok?'✓ набран':'ещё нужно '+(need-t)}</div>
+    <div class="quorum"><span style="width:${pct}%;background:${ok?'var(--green)':'var(--amber)'}"></span></div></div>`;
+}
+
+/* ===== PAGES ===== */
+function renderDashboard(){
+  document.getElementById('content').innerHTML=`
+  <div class="welcome"><div><h2>Рабочий центр</h2><p>Привет, ${esc(currentUser.name)}</p></div>
+    <div class="welcome-actions"><button class="secondary" onclick="openModal('poll')">＋ Опрос</button><button onclick="openModal('meeting')">＋ Собрание</button><button class="secondary" onclick="openModal('ann')">＋ Объявление</button></div></div>
+  <div class="grid">
+    <div class="stat"><div class="stat-top">Опросы</div><div class="stat-num">${db.polls.filter(p=>p.status==='Открыто').length}</div></div>
+    <div class="stat"><div class="stat-top">Собрания</div><div class="stat-num">${db.meetings.length}</div></div>
+    <div class="stat"><div class="stat-top">Старосты</div><div class="stat-num">${db.users.filter(u=>u.role==='starost'&&u.active!==false).length}</div></div>
+    <div class="stat"><div class="stat-top">Идеи</div><div class="stat-num">${db.ideas.length}</div></div>
+  </div>
+  <div class="panel"><div class="panel-head"><h3>Последние объявления</h3></div>
+    ${db.announcements.slice(0,3).map(a=>`<div class="ann-item"><h4>${esc(a.title)}</h4><p class="muted" style="font-size:12px">${dateLabel(a.date||a.created?.slice(0,10))}</p><p style="font-size:13px;margin-top:4px">${esc((a.text||'').slice(0,120))}</p></div>`).join('')||'<div class="empty"><b>Пока тихо</b></div>'}
+  </div>`;
+}
+
+function renderMeetingsPage(){
+  const list=[...db.meetings].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  document.getElementById('content').innerHTML=`
+  <div class="welcome"><div><h2>Собрания</h2><p>Повестка, итоги, тексты выступлений, презентация</p></div>
+    <button onclick="openModal('meeting')">＋ Новое</button></div>
+  <div class="cards">${list.map(m=>`<div class="card" style="cursor:pointer" onclick="openMeeting('${m.id}')">
+    <div class="meeting-row"><div class="datebox"><b>${dayNum(m.date)}</b><span>${monthShort(m.date)}</span></div>
+    <div style="flex:1"><div style="display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap"><h4 style="margin:0">${esc(m.title)}</h4><span>${statusPill(m.status)}${(m.pollIds||m.pollId)?' <span class="pill red">LIVE</span>':''}</span></div>
+    <p style="margin:4px 0;font-size:12px">${dateLabel(m.date)}${m.time?' · '+esc(m.time):''}${m.place?' · '+esc(m.place):''}</p></div></div>
+    <div class="card-actions" onclick="event.stopPropagation()"><button class="secondary small" onclick="openMeeting('${m.id}')">Открыть</button>
+    <button class="danger small" onclick="delDoc('meetings','${m.id}')">Удалить</button></div>
+  </div>`).join('')||'<div class="panel empty"><b>Нет собраний</b></div>'}</div>`;
+}
+function openMeeting(id){detailMeetingId=id;showPage(isChair()?'meeting-detail':'s-meeting-detail')}
+function meetingTheme(){return localStorage.getItem('meetTheme')||'night'}
+function setMeetingTheme(t){localStorage.setItem('meetTheme',t);renderMeetingDetail()}
+function meetingStartMs(m){
+  if(!m.date) return null;
+  const time=(m.time||'00:00').slice(0,5);
+  const d=new Date(m.date+'T'+time+':00');
+  return isNaN(d.getTime())?null:d.getTime();
+}
+function formatCountdown(ms){
+  if(ms<=0) return null;
+  const s=Math.floor(ms/1000);
+  const d=Math.floor(s/86400), h=Math.floor((s%86400)/3600), m=Math.floor((s%3600)/60), sec=s%60;
+  return {d,h,m,sec};
+}
+function renderMeetingDetail(){
+  const m=db.meetings.find(x=>x.id===detailMeetingId);
+  const c=document.getElementById('content');
+  if(!m){c.innerHTML='<div class="empty"><b>Не найдено</b></div>';return}
+  const speeches=m.speeches||[];
+  const slides=m.slides||[];
+  const linkedIds=m.pollIds||(m.pollId?[m.pollId]:[]);
+  const linkedPolls=linkedIds.map(id=>db.polls.find(p=>p.id===id)).filter(Boolean);
+  const theme=meetingTheme();
+  const tab=window._meetTab||'overview';
+  const startMs=meetingStartMs(m);
+  const now=Date.now();
+  let cdHtml='';
+  if(startMs){
+    const left=startMs-now;
+    if(left>0){
+      const cd=formatCountdown(left);
+      cdHtml=`<div class="countdown" id="meetCountdown">
+        ${cd.d>0?`<div class="cd-block"><div class="cd-num" data-u="d">${cd.d}</div><div class="cd-lab">дней</div></div>`:''}
+        <div class="cd-block"><div class="cd-num" data-u="h">${String(cd.h).padStart(2,'0')}</div><div class="cd-lab">часов</div></div>
+        <div class="cd-block"><div class="cd-num" data-u="m">${String(cd.m).padStart(2,'0')}</div><div class="cd-lab">минут</div></div>
+        <div class="cd-block"><div class="cd-num" data-u="s">${String(cd.sec).padStart(2,'0')}</div><div class="cd-lab">секунд</div></div>
+      </div>
+      <p class="muted-hero" id="cdHint">до начала собрания</p>`;
+    } else if(m.status==='Запланировано'||m.status==='Проведено'){
+      const ended=m.status==='Проведено';
+      cdHtml=ended?`<div class="cd-done">✓ Собрание проведено</div>`:`<div class="cd-live"><span style="width:8px;height:8px;border-radius:50%;background:#fff;display:inline-block"></span> ИДЁТ СЕЙЧАС</div>`;
+    }
+  }
+
+  const themes=[['night','#0b1224'],['aurora','#2c5364'],['sunset','#4a1520'],['forest','#163526'],['classic','#e8ecf8']];
+
+  c.innerHTML=`<div class="detail-back"><button class="ghost small" onclick="showPage('${isChair()?'meetings':'s-meetings'}')">← Назад</button></div>
+  <div class="meet-stage theme-${theme}" id="meetStage">
+    <div class="meet-hero">
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center">
+        <div>${statusPill(m.status)}</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button type="button" onclick="openMeetingLive('${m.id}')" style="background:#c43f52;color:#fff;font-size:12px;padding:8px 12px">🔴 LIVE-табло</button>
+          ${isChair()?`<button type="button" class="secondary small" onclick="openLiveControl('${m.id}')">🎛 Пульт</button>`:''}
+          <div class="theme-picker" title="Тема страницы">
+            ${themes.map(([id,col])=>`<button type="button" class="theme-dot ${theme===id?'active':''}" style="background:${col}" onclick="setMeetingTheme('${id}')"></button>`).join('')}
+          </div>
+        </div>
+      </div>
+      <h2>${esc(m.title)}</h2>
+      <div class="muted-hero">${dateLabel(m.date)}${m.time?' · '+esc(m.time):''}${m.place?' · 📍 '+esc(m.place):''}</div>
+      ${cdHtml}
+    </div>
+    <div class="meet-tabs">
+      <button class="${tab==='overview'?'active':''}" onclick="window._meetTab='overview';renderMeetingDetail()">Обзор</button>
+      <button class="${tab==='live'?'active':''}" onclick="window._meetTab='live';renderMeetingDetail()">LIVE ${linkedPolls.length?'· '+linkedPolls.length:''}</button>
+      <button class="${tab==='speeches'?'active':''}" onclick="window._meetTab='speeches';renderMeetingDetail()">Выступления</button>
+      <button class="${tab==='slides'?'active':''}" onclick="window._meetTab='slides';renderMeetingDetail()">Презентация</button>
+    </div>
+    <div class="meet-panel">
+      ${tab==='overview'?`
+        <div class="block-title" style="opacity:.7">Повестка</div>
+        <div class="block-body" style="margin-bottom:14px">${m.agenda?esc(m.agenda):'—'}</div>
+        <div class="block-title" style="opacity:.7">Итоги</div>
+        <div class="block-body">${m.minutes?esc(m.minutes):'Ещё не заполнены'}</div>
+        ${isChair()?`<div class="card-actions" style="margin-top:16px">
+          <button class="secondary" onclick="editMeetingMinutes('${m.id}')">Итоги</button>
+          <button class="secondary" onclick="openModal('meetingEdit')">Материалы</button>
+        </div>`:''}
+      `:''}
+      ${tab==='live'?`
+        ${linkedPolls.length?linkedPolls.map(p=>`<div class="poll" style="margin:10px 0;background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12)">
+          <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center">
+            <div><h4 style="margin:0">${esc(p.title)}</h4>
+              <div class="meta" style="opacity:.75">${statusPill(p.status)} · ${pollTotal(p)} голос(ов)</div></div>
+            <div class="card-actions">
+              <button onclick="openLive('${p.id}')">🔴 LIVE-табло</button>
+              ${isChair()&&p.status==='Открыто'?`<button class="secondary small" onclick="togglePoll('${p.id}')">Закрыть</button>`:''}
+              ${isChair()?`<button class="ghost small" onclick="unlinkPollFromMeeting('${m.id}','${p.id}')">Отвязать</button>`:''}
+            </div>
+          </div>
+          ${chartBars(p)}
+        </div>`).join(''):'<p style="opacity:.7">Нет привязанных голосований.</p>'}
+        ${isChair()?`<div style="margin-top:12px;padding:12px;border-radius:12px;background:rgba(255,255,255,.08)">
+          <b style="font-size:13px">Привязать опрос</b>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+            <select id="linkPollSelect" style="flex:1;min-width:160px">${db.polls.map(p=>`<option value="${p.id}">${esc(p.title)}</option>`).join('')}</select>
+            <button class="secondary small" onclick="linkPollToMeeting('${m.id}')">Привязать</button>
+            <button class="small" onclick="openModal('poll');window._linkPollToMeeting='${m.id}'">＋ Новый</button>
+          </div>
+        </div>`:''}
+      `:''}
+      ${tab==='speeches'?`
+        ${speeches.length?speeches.map((s,i)=>`<div class="card" style="margin:8px 0;background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1);animation:meetIn .4s ease ${i*0.05}s both">
+          <h4>${esc(s.title||'Выступление '+(i+1))}</h4><div class="block-body">${esc(s.text||'')}</div></div>`).join(''):'<p style="opacity:.7">Нет текстов выступлений</p>'}
+        ${isChair()?`<button class="secondary small" onclick="openModal('meetingEdit')">Редактировать</button>`:''}
+      `:''}
+      ${tab==='slides'?`
+        ${slides.length?`<div id="slideBox">${renderSlide(slides,0)}</div>
+          <div class="card-actions"><button class="secondary small" onclick="chgSlide(-1,${slides.length})">←</button>
+          <button class="secondary small" onclick="chgSlide(1,${slides.length})">→</button>
+          <button class="ghost small" onclick="startSlideShow()">На весь экран</button></div>`:'<p style="opacity:.7">Нет слайдов</p>'}
+        ${isChair()?`<button class="secondary small" style="margin-top:8px" onclick="openModal('meetingEdit')">Редактировать</button>`:''}
+      `:''}
+    </div>
+  </div>`;
+  window._slides=slides; slideIdx=0;
+  startMeetingCountdown(m);
+}
+function startMeetingCountdown(m){
+  if(window._cdTimer){clearInterval(window._cdTimer);window._cdTimer=null}
+  const startMs=meetingStartMs(m);
+  if(!startMs) return;
+  window._cdTimer=setInterval(()=>{
+    const box=document.getElementById('meetCountdown');
+    if(!box){clearInterval(window._cdTimer);return}
+    const left=startMs-Date.now();
+    if(left<=0){
+      clearInterval(window._cdTimer);
+      renderMeetingDetail();
+      return;
+    }
+    const cd=formatCountdown(left);
+    const map={d:cd.d,h:String(cd.h).padStart(2,'0'),m:String(cd.m).padStart(2,'0'),s:String(cd.sec).padStart(2,'0')};
+    box.querySelectorAll('.cd-num').forEach(el=>{
+      const u=el.getAttribute('data-u');
+      if(map[u]!==undefined && el.textContent!==String(map[u])){
+        el.style.transform='scale(1.15)';
+        el.textContent=map[u];
+        setTimeout(()=>{el.style.transition='transform .2s';el.style.transform='scale(1)'},50);
+      }
+    });
+  },250);
+}
+
+
+/* ===== MEETING LIVE BOARD + CONTROL PANEL ===== */
+async function setLiveState(meetingId, patch){
+  if(!fbEnabled){toast('Нужен Firebase');return}
+  const ref=firestore.collection('liveSessions').doc(meetingId);
+  await ref.set({...patch, meetingId, updated:new Date().toISOString()}, {merge:true});
+}
+async function openLiveControl(meetingId){
+  window._liveCtrlMeeting=meetingId;
+  const m=db.meetings.find(x=>x.id===meetingId);
+  if(!m){toast('Собрание не найдено');return}
+  // ensure session exists
+  try{
+    await setLiveState(meetingId, {
+      mode:'agenda', theme:'night', speechIndex:0, slideIndex:0, pollId:null,
+      title:m.title, showClock:true
+    });
+  }catch(e){toast(e.message);return}
+  showLiveControlPanel(meetingId);
+}
+function showLiveControlPanel(meetingId){
+  const m=db.meetings.find(x=>x.id===meetingId);
+  if(!m) return;
+  const linkedIds=m.pollIds||(m.pollId?[m.pollId]:[]);
+  const polls=linkedIds.map(id=>db.polls.find(p=>p.id===id)).filter(Boolean);
+  const speeches=m.speeches||[];
+  const slides=m.slides||[];
+  // modal-like panel in content overlay
+  let panel=document.getElementById('liveControlPanel');
+  if(!panel){
+    panel=document.createElement('div');
+    panel.id='liveControlPanel';
+    panel.style.cssText='position:fixed;right:16px;bottom:16px;width:min(360px,94vw);max-height:80vh;overflow:auto;z-index:60;background:#151d33;color:#fff;border-radius:16px;padding:16px;box-shadow:0 20px 60px #0008;border:1px solid #273354';
+    document.body.appendChild(panel);
+  }
+  panel.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <b>🎛 Пульт LIVE</b>
+      <button class="ghost small" style="color:#fff;border-color:#445" onclick="document.getElementById('liveControlPanel').remove()">✕</button>
+    </div>
+    <p style="font-size:12px;color:#aab4d0;margin:0 0 10px">${esc(m.title)}</p>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+      <button class="small" onclick="openMeetingLive('${meetingId}')">Открыть табло</button>
+      <button class="secondary small" onclick="setLiveState('${meetingId}',{mode:'agenda'}).then(()=>toast('Главный слайд'))">📋 Главный</button>
+      <button class="secondary small" onclick="setLiveState('${meetingId}',{mode:'minutes'}).then(()=>toast('Итоги'))">✓ Итоги</button>
+    </div>
+    <div style="font-size:11px;color:#8b9bb8;margin:8px 0 4px;text-transform:uppercase;letter-spacing:.06em">Выступления</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+      ${speeches.length?speeches.map((s,i)=>`<button class="secondary small" onclick="setLiveState('${meetingId}',{mode:'speech',speechIndex:${i}}).then(()=>toast('Выступление ${i+1}'))">${i+1}. ${esc((s.title||'Текст').slice(0,18))}</button>`).join(''):'<span style="color:#8b9bb8;font-size:12px">Нет</span>'}
+    </div>
+    <div style="font-size:11px;color:#8b9bb8;margin:8px 0 4px;text-transform:uppercase;letter-spacing:.06em">Слайды</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+      ${slides.length?`
+        <button class="secondary small" onclick="liveSlideNav('${meetingId}',-1)">←</button>
+        <button class="secondary small" onclick="setLiveState('${meetingId}',{mode:'slides'}).then(()=>toast('Слайды'))">Показать</button>
+        <button class="secondary small" onclick="liveSlideNav('${meetingId}',1)">→</button>
+        ${slides.map((s,i)=>`<button class="ghost small" style="color:#fff;border-color:#445" onclick="setLiveState('${meetingId}',{mode:'slides',slideIndex:${i}})">${i+1}</button>`).join('')}
+      `:'<span style="color:#8b9bb8;font-size:12px">Нет</span>'}
+    </div>
+    <div style="font-size:11px;color:#8b9bb8;margin:8px 0 4px;text-transform:uppercase;letter-spacing:.06em">Голосования</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+      ${polls.length?polls.map(p=>`<button class="small" style="background:#c43f52" onclick="setLiveState('${meetingId}',{mode:'poll',pollId:'${p.id}'}).then(()=>toast('Опрос на табло'))">◉ ${esc(p.title.slice(0,20))}</button>`).join(''):'<span style="color:#8b9bb8;font-size:12px">Привяжи опрос к собранию</span>'}
+    </div>
+    <div style="font-size:11px;color:#8b9bb8;margin:8px 0 4px;text-transform:uppercase;letter-spacing:.06em">Тема табло</div>
+    <div style="display:flex;gap:6px">
+      ${[['night','#1a2750'],['aurora','#2c5364'],['sunset','#4a1520'],['forest','#1a3a2a'],['gold','#c9a227']].map(([t,c])=>
+        `<button type="button" style="width:22px;height:22px;border-radius:50%;background:${c};border:0;cursor:pointer" onclick="setLiveState('${meetingId}',{theme:'${t}'})"></button>`).join('')}
+    </div>
+    <p style="font-size:11px;color:#6a7a98;margin:12px 0 0">Табло слушает Firebase · переключай режимы здесь, экран на проекторе обновится сам</p>
+  `;
+}
+async function liveSlideNav(meetingId, delta){
+  try{
+    const snap=await firestore.collection('liveSessions').doc(meetingId).get();
+    const cur=snap.exists?(snap.data().slideIndex||0):0;
+    const m=db.meetings.find(x=>x.id===meetingId);
+    const n=(m&&m.slides||[]).length||1;
+    const next=(cur+delta+n)%n;
+    await setLiveState(meetingId,{mode:'slides',slideIndex:next});
+  }catch(e){toast(e.message)}
+}
+
+function openMeetingLive(meetingId){
+  const m=db.meetings.find(x=>x.id===meetingId);
+  if(!m){toast('Собрание не найдено');return}
+  const w=window.open('', 'meetlive_'+meetingId, 'width=1280,height=800');
+  if(!w){toast('Разреши всплывающие окна');return}
+  // bootstrap session
+  setLiveState(meetingId,{
+    mode:'agenda', theme:'night', speechIndex:0, slideIndex:0,
+    title:m.title, showClock:true
+  }).catch(()=>{});
+  const cfg=JSON.stringify(firebaseConfig);
+  const mid=JSON.stringify(meetingId);
+  const meetJson=JSON.stringify({
+    title:m.title, date:m.date||'', time:m.time||'', place:m.place||'',
+    agenda:m.agenda||'', minutes:m.minutes||'',
+    speeches:m.speeches||[], slides:m.slides||[],
+    pollIds:m.pollIds||(m.pollId?[m.pollId]:[])
+  });
+  w.document.write(`<!doctype html>
+<html lang="ru"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LIVE · ${(m.title||'Собрание').replace(/[<>]/g,'')}</title>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"><\/script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"><\/script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:Inter,system-ui,sans-serif;color:#fff;display:flex;flex-direction:column;
+  background:linear-gradient(160deg,var(--bg1),var(--bg2));transition:background .6s}
+body.theme-night{--bg1:#0b1224;--bg2:#1a2750;--card:#141e38;--muted:#8b9bb8;--accent:#425ee8}
+body.theme-aurora{--bg1:#0f2027;--bg2:#2c5364;--card:#1a333d;--muted:#9bb;--accent:#4ecdc4}
+body.theme-sunset{--bg1:#1a0a0a;--bg2:#4a1520;--card:#2a1520;--muted:#c9a;--accent:#ff6b6b}
+body.theme-forest{--bg1:#0b1f14;--bg2:#1a3a2a;--card:#143024;--muted:#8b9;--accent:#81c784}
+body.theme-gold{--bg1:#1a1508;--bg2:#3d3010;--card:#2a2410;--muted:#ba8;--accent:#ffd54f}
+.top{padding:20px 32px 8px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;animation:in .5s ease}
+@keyframes in{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+.tag{display:inline-flex;align-items:center;gap:8px;background:#c43f52;font-weight:800;font-size:12px;padding:6px 12px;border-radius:100px}
+.tag i{width:8px;height:8px;border-radius:50%;background:#fff;animation:b 1s infinite}@keyframes b{50%{opacity:.3}}
+h1{margin:10px 0 4px;font-size:clamp(24px,4.5vw,40px);font-weight:800;letter-spacing:-.03em}
+.sub{color:var(--muted);font-size:14px}
+.stage{flex:1;padding:12px 32px 28px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.view{width:min(960px,100%);animation:up .45s ease}
+@keyframes up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.cd-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.cd{background:var(--card);border-radius:16px;min-width:80px;padding:16px;text-align:center;box-shadow:0 8px 32px #0004}
+.cd .n{font-size:clamp(28px,6vw,48px);font-weight:900;font-variant-numeric:tabular-nums}
+.cd .l{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-top:4px;font-weight:700}
+.lab{text-align:center;color:var(--muted);margin-bottom:12px;font-size:14px}
+.card{background:var(--card);border-radius:18px;padding:28px;box-shadow:0 12px 40px #0004}
+.card h2{margin:0 0 12px;font-size:clamp(20px,3vw,28px)}
+.card .body{font-size:clamp(16px,2.2vw,20px);line-height:1.55;white-space:pre-wrap}
+.slide{background:var(--card);border-radius:18px;padding:40px 32px;min-height:280px;box-shadow:0 12px 40px #0004}
+.slide .num{color:var(--muted);font-size:13px;margin-bottom:12px}
+.slide h2{margin:0 0 16px;font-size:clamp(24px,4vw,36px)}
+.slide .body{font-size:clamp(16px,2.4vw,22px);line-height:1.6;white-space:pre-wrap;opacity:.95}
+.board{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:16px}
+.cell{background:rgba(0,0,0,.25);border-radius:14px;padding:16px;text-align:center;border:2px solid transparent}
+.cell .n{font-size:36px;font-weight:900}
+.cell .l{font-size:13px;color:var(--muted);margin-top:6px}
+.bar-track{height:36px;background:rgba(0,0,0,.3);border-radius:10px;overflow:hidden;margin:6px 0}
+.bar-fill{height:100%;border-radius:10px;transition:width .6s ease;display:flex;align-items:center;padding-left:10px;font-weight:800;font-size:13px}
+.footer{padding:12px 24px;text-align:center;color:var(--muted);font-size:12px}
+.mode-pill{display:inline-block;background:rgba(255,255,255,.1);padding:4px 10px;border-radius:100px;font-size:11px;font-weight:700;margin-left:8px}
+</style></head><body class="theme-night">
+<div class="top">
+  <div>
+    <div class="tag"><i></i> LIVE СОБРАНИЕ <span class="mode-pill" id="modePill">—</span></div>
+    <h1 id="title"></h1>
+    <div class="sub" id="sub"></div>
+  </div>
+  <div class="sub" id="clock" style="font-variant-numeric:tabular-nums;font-size:18px;font-weight:700"></div>
+</div>
+<div class="stage"><div class="view" id="view"></div></div>
+<div class="footer">Совет старост · пульт управления в основном окне · F11 — полный экран</div>
+<script>
+const firebaseConfig=${cfg};
+const meetingId=${mid};
+const meet0=${meetJson};
+const COLORS=['#425ee8','#15835d','#a8640a','#c43f52','#7c4dff','#00897b','#f57c00','#5c6bc0'];
+let meet=meet0, state={mode:'agenda',theme:'night',speechIndex:0,slideIndex:0,pollId:null}, pollData=null;
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function pad(n){return String(n).padStart(2,'0')}
+function tickClock(){
+  document.getElementById('clock').textContent=new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+setInterval(tickClock,500); tickClock();
+function startMs(){
+  if(!meet.date) return null;
+  const t=(meet.time||'00:00').slice(0,5);
+  const d=new Date(meet.date+'T'+t+':00');
+  return isNaN(d.getTime())?null:d.getTime();
+}
+function render(){
+  document.body.className='theme-'+(state.theme||'night');
+  document.getElementById('title').textContent=meet.title||'Собрание';
+  document.getElementById('sub').textContent=[meet.date, meet.time, meet.place].filter(Boolean).join(' · ');
+  const modes={agenda:'Главный',speech:'Выступление',slides:'Презентация',poll:'Голосование',minutes:'Итоги'};
+  document.getElementById('modePill').textContent=modes[state.mode]||state.mode;
+  const v=document.getElementById('view');
+  v.innerHTML='';
+  const el=document.createElement('div');
+  el.className='view';
+  if(state.mode==='agenda'||state.mode==='countdown'){
+    el.innerHTML='<div class="card" style="text-align:center"><div class="lab" style="margin-bottom:8px">Собрание</div>'+
+      '<h2 style="font-size:clamp(28px,5vw,48px);margin:0 0 20px">'+esc(meet.title||'')+'</h2>'+
+      (meet.date||meet.time||meet.place?'<div class="lab" style="margin-bottom:24px">'+esc([meet.date,meet.time,meet.place].filter(Boolean).join(' · '))+'</div>':'')+
+      '<div style="text-align:left;border-top:1px solid rgba(255,255,255,.12);padding-top:20px">'+
+      '<div class="lab" style="text-align:left;margin-bottom:10px">Повестка</div>'+
+      '<div class="body">'+esc(meet.agenda||'Повестка не указана')+'</div></div></div>';
+  } else if(state.mode==='minutes'){
+    el.innerHTML='<div class="card"><h2>Итоги</h2><div class="body">'+esc(meet.minutes||'Ещё не заполнены')+'</div></div>';
+  } else if(state.mode==='speech'){
+    const sp=(meet.speeches||[])[state.speechIndex||0]||{title:'',text:''};
+    el.innerHTML='<div class="card"><div class="lab" style="text-align:left">Выступление '+(+(state.speechIndex||0)+1)+' / '+(meet.speeches||[]).length+'</div><h2>'+esc(sp.title||'')+'</h2><div class="body">'+esc(sp.text||'')+'</div></div>';
+  } else if(state.mode==='slides'){
+    const sl=(meet.slides||[])[state.slideIndex||0]||{title:'',body:''};
+    const n=(meet.slides||[]).length||1;
+    el.innerHTML='<div class="slide"><div class="num">Слайд '+(+(state.slideIndex||0)+1)+' / '+n+'</div><h2>'+esc(sl.title||'')+'</h2><div class="body">'+esc(sl.body||'')+'</div></div>';
+  } else if(state.mode==='poll'){
+    const p=pollData;
+    if(!p){el.innerHTML='<div class="card"><h2>Голосование</h2><div class="body">Загрузка…</div></div>';}
+    else {
+      const opts=p.options||[];
+      const tot=opts.reduce((n,o)=>n+(o.votes||0),0)||0;
+      const maxV=Math.max.apply(null,opts.map(o=>o.votes||0).concat([1]));
+      let html='<div class="card"><h2>'+esc(p.title)+'</h2><div class="lab" style="text-align:left">'+tot+' голосов · '+(p.status||'')+'</div>';
+      html+='<div class="board">'+opts.map((o,i)=>{
+        const c=COLORS[i%COLORS.length];
+        return '<div class="cell" style="border-color:'+c+'66"><div class="n" style="color:'+c+'">'+(o.votes||0)+'</div><div class="l">'+esc(o.text)+'</div></div>';
+      }).join('')+'</div>';
+      html+=opts.map((o,i)=>{
+        const c=COLORS[i%COLORS.length]; const w=Math.round((o.votes||0)/maxV*100);
+        const pct=tot?Math.round((o.votes||0)/tot*100):0;
+        return '<div style="margin-top:10px"><div style="font-weight:700">'+esc(o.text)+' · '+pct+'%</div><div class="bar-track"><div class="bar-fill" style="width:'+w+'%;background:'+c+'">'+(o.votes||0)+'</div></div></div>';
+      }).join('');
+      html+='</div>';
+      el.innerHTML=html;
+    }
+  }
+  v.appendChild(el);
+}
+try{
+  if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const db=firebase.firestore();
+  db.collection('liveSessions').doc(meetingId).onSnapshot(function(snap){
+    if(snap.exists){ state=Object.assign({mode:'countdown',theme:'night'}, snap.data()); }
+    // refresh meeting data lightly
+    db.collection('meetings').doc(meetingId).get().then(function(ms){
+      if(ms.exists){
+        const d=ms.data();
+        meet={title:d.title,date:d.date||'',time:d.time||'',place:d.place||'',agenda:d.agenda||'',minutes:d.minutes||'',speeches:d.speeches||[],slides:d.slides||[],pollIds:d.pollIds||[]};
+      }
+      if(state.mode==='poll'&&state.pollId){
+        db.collection('polls').doc(state.pollId).onSnapshot(function(ps){
+          if(ps.exists) pollData=Object.assign({id:ps.id}, ps.data());
+          render();
+        });
+      } else { render(); }
+    });
+  });
+}catch(e){document.getElementById('view').innerHTML='<div class="card">Ошибка Firebase</div>';console.error(e)}
+<\/script>
+</body></html>`);
+  w.document.close();
+}
+
+async function linkPollToMeeting(meetingId){
+  const sel=document.getElementById('linkPollSelect');
+  const pollId=sel&&sel.value;
+  if(!pollId){toast('Выбери опрос');return}
+  const m=db.meetings.find(x=>x.id===meetingId); if(!m)return;
+  const ids=[...(m.pollIds||(m.pollId?[m.pollId]:[]))];
+  if(ids.includes(pollId)){toast('Уже привязан');return}
+  ids.push(pollId);
+  try{
+    await firestore.collection('meetings').doc(meetingId).set({pollIds:ids,updated:new Date().toISOString()},{merge:true});
+    toast('Опрос привязан к собранию');
+  }catch(e){toast(e.message)}
+}
+async function unlinkPollFromMeeting(meetingId, pollId){
+  const m=db.meetings.find(x=>x.id===meetingId); if(!m)return;
+  const ids=(m.pollIds||(m.pollId?[m.pollId]:[])).filter(id=>id!==pollId);
+  try{
+    await firestore.collection('meetings').doc(meetingId).set({pollIds:ids,pollId:null,updated:new Date().toISOString()},{merge:true});
+    toast('Отвязано');
+  }catch(e){toast(e.message)}
+}
+
+function renderSlide(slides,i){
+  if(!slides.length) return '';
+  const s=slides[i]||slides[0];
+  return `<div class="slide-view"><div class="muted" style="color:#9ab;font-size:12px;margin-bottom:8px">Слайд ${i+1} / ${slides.length}</div><h3>${esc(s.title||'')}</h3><p>${esc(s.body||'')}</p></div>`;
+}
+function chgSlide(d,n){slideIdx=(slideIdx+d+n)%n;const box=document.getElementById('slideBox');if(box)box.innerHTML=renderSlide(window._slides,slideIdx)}
+function startSlideShow(){
+  const slides=window._slides||[]; if(!slides.length)return;
+  const w=window.open('','_blank');
+  if(!w){toast('Разреши всплывающие окна');return}
+  let i=0;
+  const draw=()=>{const s=slides[i];w.document.body.innerHTML=`<div style="font:20px/1.5 system-ui;padding:40px;background:#1a2240;color:#fff;min-height:100vh"><div style="opacity:.6;font-size:14px">${i+1}/${slides.length}</div><h1>${esc(s.title||'')}</h1><pre style="white-space:pre-wrap;font:18px/1.6 system-ui">${esc(s.body||'')}</pre><p style="opacity:.5;margin-top:40px">← → или клик</p></div>`};
+  w.document.write('<title>Презентация</title><body></body>');
+  draw();
+  w.document.body.onclick=()=>{i=(i+1)%slides.length;draw()};
+  w.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key===' '){i=(i+1)%slides.length;draw()} if(e.key==='ArrowLeft'){i=(i-1+slides.length)%slides.length;draw()}});
+}
+async function editMeetingMinutes(id){
+  const m=db.meetings.find(x=>x.id===id);if(!m)return;
+  const t=prompt('Итоги:',m.minutes||''); if(t===null)return;
+  m.minutes=t; if(m.status==='Запланировано') m.status='Проведено';
+  m.updated=new Date().toISOString();
+  try{await firestore.collection('meetings').doc(id).set({minutes:m.minutes,status:m.status,updated:m.updated},{merge:true});toast('Сохранено')}catch(e){toast(e.message)}
+}
+
+function renderPollsPage(){
+  document.getElementById('content').innerHTML=`
+  <div class="welcome"><div><h2>Голосования</h2><p>Кворум · анонимные/именные · LIVE · PDF</p></div>
+    <button onclick="openModal('poll')">＋ Создать</button></div>
+  ${db.polls.map(p=>pollCard(p,true)).join('')||'<div class="panel empty"><b>Нет опросов</b></div>'}`;
+}
+function pollCard(p, admin){
+  const tot=pollTotal(p), voted=userHasVoted(p), isMulti=p.mode==='multi';
+  let body='';
+  if(p.status==='Открыто'&&!voted){
+    body=`<form onsubmit="vote(event,'${p.id}')">${(p.options||[]).map((o,i)=>`<label class="option"><input type="${isMulti?'checkbox':'radio'}" name="choice" value="${i}" ${isMulti?'':'required'}>
+      <span><span class="opt-text">${esc(o.text)}</span>${o.desc?`<span class="opt-desc">${esc(o.desc)}</span>`:''}${o.link?`<a class="opt-link" href="${esc(o.link)}" target="_blank" onclick="event.stopPropagation()">Вложение ↗</a>`:''}</span></label>`).join('')}
+      <button type="submit">Проголосовать</button></form>`;
+  } else body=chartBars(p)+quorumBar(p)+(voted?'<p class="muted" style="font-size:12px">Вы уже голосовали</p>':'')+(p.anonymous===false&&(p.voterNames||[]).length?`<p class="muted" style="font-size:12px">Голосовали: ${esc((p.voterNames||[]).join(', '))}</p>`:'');
+  return `<div class="poll"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><h4>${esc(p.title)}</h4>${statusPill(p.status)}</div>
+    <div class="meta">${esc(p.description||'')} · ${p.mode==='multi'?'несколько':'один'} · ${p.anonymous!==false?'анонимно':'именно'} · ${tot} голос(ов)${p.quorum?' · кворум '+p.quorum:''}</div>
+    ${quorumBar(p)}${body}
+    <div class="card-actions">
+      <button class="secondary small" onclick="openLive('${p.id}')">LIVE</button>
+      <button class="secondary small" onclick="exportPollPdf('${p.id}')">PDF / печать</button>
+      ${admin?`<button class="secondary small" onclick="togglePoll('${p.id}')">${p.status==='Открыто'?'Закрыть':'Открыть'}</button>
+      <button class="danger small" onclick="delDoc('polls','${p.id}')">Удалить</button>`:''}
+    </div></div>`;
+}
+function openLive(id){
+  livePollId=id;
+  const p=db.polls.find(x=>x.id===id);
+  if(!p){toast('Опрос не найден');return}
+  // try link meeting for countdown
+  const meet=(db.meetings||[]).find(m=>(m.pollIds||[]).includes(id)||m.pollId===id);
+  const w=window.open('', 'live_'+id, 'width=1280,height=800');
+  if(!w){toast('Разреши всплывающие окна');return}
+  const cfg=JSON.stringify(firebaseConfig);
+  const pollId=JSON.stringify(id);
+  const colors=JSON.stringify(COLORS);
+  const meetStart=meet&&meet.date?JSON.stringify(meet.date+'T'+((meet.time||'00:00').slice(0,5))+':00'):'null';
+  const meetTitle=JSON.stringify(meet?meet.title:'');
+  const deadline=JSON.stringify(p.deadline||'');
+  w.document.write(`<!doctype html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LIVE · ${(p.title||'Голосование').replace(/[<>]/g,'')}</title>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"><\/script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"><\/script>
+<style>
+*{box-sizing:border-box}
+:root{--bg1:#0b1224;--bg2:#1a2750;--card:#141e38;--track:#1e2a4a;--text:#fff;--muted:#8b9bb8;--accent:#425ee8}
+body{margin:0;min-height:100vh;background:linear-gradient(160deg,var(--bg1),var(--bg2));color:var(--text);
+  font-family:Inter,system-ui,sans-serif;display:flex;flex-direction:column;transition:background 0.6s}
+body.theme-night{--bg1:#0b1224;--bg2:#1a2750;--card:#141e38;--track:#1e2a4a;--accent:#425ee8}
+body.theme-aurora{--bg1:#0f2027;--bg2:#2c5364;--card:#1a333d;--track:#244450;--accent:#4ecdc4}
+body.theme-sunset{--bg1:#1a0a0a;--bg2:#4a1520;--card:#2a1520;--track:#3d1a28;--accent:#ff6b6b}
+body.theme-forest{--bg1:#0b1f14;--bg2:#1a3a2a;--card:#143024;--track:#1e3d30;--accent:#81c784}
+body.theme-gold{--bg1:#1a1508;--bg2:#3d3010;--card:#2a2410;--track:#3d3420;--accent:#ffd54f}
+body{background:linear-gradient(160deg,var(--bg1),var(--bg2))}
+.top{padding:18px 28px 6px;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;
+  animation:fadeDown .5s ease}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
+.live-tag{display:inline-flex;align-items:center;gap:8px;background:#c43f52;color:#fff;font-weight:800;font-size:13px;
+  padding:6px 12px;border-radius:100px;letter-spacing:.04em}
+.live-tag i{width:8px;height:8px;border-radius:50%;background:#fff;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.25}}
+h1{margin:10px 0 4px;font-size:clamp(22px,4vw,38px);letter-spacing:-.03em;font-weight:800;transition:opacity .3s}
+.sub{color:var(--muted);font-size:14px}
+.theme-bar{display:flex;gap:6px;align-items:center}
+.theme-bar button{width:18px;height:18px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0}
+.theme-bar button.on{border-color:#fff;box-shadow:0 0 0 2px var(--accent)}
+.stage{flex:1;padding:8px 28px 20px;display:flex;flex-direction:column;gap:16px}
+.countdown-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:4px 0 8px;min-height:70px}
+.cd{background:var(--card);border-radius:14px;min-width:72px;padding:12px 10px;text-align:center;
+  animation:pop .45s cubic-bezier(.2,1.2,.3,1) both;box-shadow:0 8px 24px #0004}
+.cd:nth-child(1){animation-delay:.05s}.cd:nth-child(2){animation-delay:.1s}
+.cd:nth-child(3){animation-delay:.15s}.cd:nth-child(4){animation-delay:.2s}
+@keyframes pop{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+.cd .n{font-size:clamp(24px,5vw,40px);font-weight:900;font-variant-numeric:tabular-nums;line-height:1;transition:transform .15s}
+.cd .l{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-top:4px;font-weight:700}
+.cd-label{text-align:center;color:var(--muted);font-size:13px;margin-bottom:4px}
+.total{font-size:clamp(36px,6vw,56px);font-weight:900;text-align:center;letter-spacing:-.03em;animation:fadeDown .5s ease .1s both}
+.total small{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-top:2px}
+.quorum-wrap{background:var(--card);border-radius:14px;padding:12px 16px;animation:fadeUp .5s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.quorum-wrap .lab{font-size:12px;color:var(--muted);margin-bottom:6px}
+.qbar{height:12px;background:var(--track);border-radius:8px;overflow:hidden}
+.qbar span{display:block;height:100%;border-radius:8px;transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.board{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;max-width:960px;margin:0 auto;width:100%}
+.cell{background:var(--card);border-radius:16px;padding:18px 14px;text-align:center;border:2px solid transparent;
+  transition:transform .35s,border-color .35s,box-shadow .35s;animation:fadeUp .5s ease both}
+.cell:hover{transform:translateY(-2px)}
+.cell .n{font-size:clamp(32px,6vw,48px);font-weight:900;line-height:1;transition:transform .3s}
+.cell .l{font-size:13px;color:var(--muted);margin-top:8px;font-weight:600}
+.bars{display:flex;flex-direction:column;gap:12px;max-width:960px;margin:0 auto;width:100%}
+.row{display:grid;grid-template-columns:minmax(90px,200px) 1fr 70px;gap:12px;align-items:center;animation:fadeUp .45s ease both}
+.row .name{font-weight:700;font-size:clamp(14px,2vw,18px)}
+.row .desc{font-size:12px;color:var(--muted)}
+.track{height:clamp(28px,5vw,44px);background:var(--track);border-radius:10px;overflow:hidden}
+.fill{height:100%;border-radius:10px;transition:width .7s cubic-bezier(.2,.8,.2,1);display:flex;align-items:center;padding-left:12px;font-weight:800;font-size:14px;min-width:0}
+.pct{font-size:clamp(16px,2.5vw,22px);font-weight:900;text-align:right}
+.footer{padding:10px 28px 16px;color:var(--muted);font-size:12px;text-align:center}
+.closed-overlay{position:fixed;inset:0;background:rgba(8,12,28,.9);display:flex;align-items:center;justify-content:center;z-index:50;
+  opacity:0;pointer-events:none;transition:opacity .5s}
+.closed-overlay.show{opacity:1;pointer-events:auto}
+.closed-card{text-align:center;transform:scale(.7);opacity:0;transition:transform .65s cubic-bezier(.2,1.2,.3,1),opacity .5s}
+.closed-overlay.show .closed-card{transform:scale(1);opacity:1}
+.stamp{display:inline-block;font-size:clamp(26px,5vw,48px);font-weight:900;letter-spacing:.05em;color:#fff;
+  border:4px solid #c43f52;padding:12px 28px;border-radius:12px;transform:rotate(-8deg);
+  animation:stampIn .7s cubic-bezier(.2,1.4,.3,1) .15s both;box-shadow:0 0 40px #c43f5288}
+@keyframes stampIn{0%{transform:rotate(-25deg) scale(1.8);opacity:0}100%{transform:rotate(-8deg) scale(1);opacity:1}}
+.winner-box{background:var(--card);border-radius:16px;padding:16px 24px;display:inline-block;margin-top:20px;animation:fadeUp .6s ease .35s both}
+.winner-box .w-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.winner-box .w-name{font-size:clamp(18px,3vw,28px);font-weight:800;margin-top:4px}
+.confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:40}
+.confetti i{position:absolute;top:-12px;border-radius:2px;animation:fall linear forwards;opacity:.9}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
+body.is-closed .live-tag{background:#5a6a88}
+body.is-closed .live-tag i{animation:none;opacity:.4}
+</style></head><body class="theme-night">
+<div class="top">
+  <div>
+    <div class="live-tag"><i></i> LIVE</div>
+    <h1 id="title">—</h1>
+    <div class="sub" id="sub"></div>
+  </div>
+  <div style="text-align:right">
+    <div class="theme-bar" id="themeBar">
+      <button data-t="night" style="background:#1a2750" class="on" title="Ночь"></button>
+      <button data-t="aurora" style="background:#2c5364" title="Aurora"></button>
+      <button data-t="sunset" style="background:#4a1520" title="Закат"></button>
+      <button data-t="forest" style="background:#1a3a2a" title="Лес"></button>
+      <button data-t="gold" style="background:#c9a227" title="Золото"></button>
+    </div>
+    <div class="total" style="margin-top:10px"><span id="total">0</span><small>голосов</small></div>
+  </div>
+</div>
+<div class="stage">
+  <div class="cd-label" id="cdLabel"></div>
+  <div class="countdown-row" id="countdown"></div>
+  <div class="quorum-wrap" id="quorumBox" style="display:none">
+    <div class="lab" id="quorumLab"></div>
+    <div class="qbar"><span id="quorumFill"></span></div>
+  </div>
+  <div class="board" id="board"></div>
+  <div class="bars" id="bars"></div>
+</div>
+<div class="confetti" id="confetti"></div>
+<div class="closed-overlay" id="closedOverlay">
+  <div class="closed-card">
+    <div class="stamp">ГОЛОСОВАНИЕ ЗАВЕРШЕНО</div>
+    <h2 id="closedTitle" style="margin:24px 0 6px">Итоги</h2>
+    <p id="closedSub" style="color:var(--muted)">Результаты зафиксированы</p>
+    <div class="winner-box" id="winnerBox"></div>
+  </div>
+</div>
+<div class="footer">Совет старост · табло для проектора · F11 — на весь экран</div>
+<script>
+const firebaseConfig=${cfg};
+const pollId=${pollId};
+const COLORS=${colors};
+const meetStartStr=${meetStart};
+const meetTitle=${meetTitle};
+const deadlineStr=${deadline};
+let lastStatus='', lastVotes='';
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+document.getElementById('themeBar').onclick=function(e){
+  const b=e.target.closest('button[data-t]'); if(!b)return;
+  document.body.className='theme-'+b.getAttribute('data-t');
+  document.querySelectorAll('#themeBar button').forEach(x=>x.classList.toggle('on',x===b));
+};
+function pad(n){return String(n).padStart(2,'0')}
+function renderCd(targetMs, label){
+  const box=document.getElementById('countdown');
+  const lab=document.getElementById('cdLabel');
+  if(!targetMs){box.innerHTML='';lab.textContent='';return}
+  const left=targetMs-Date.now();
+  lab.textContent=label||'';
+  if(left<=0){
+    box.innerHTML='<div class="cd" style="min-width:160px;background:#c43f52"><div class="n" style="font-size:18px">СЕЙЧАС</div><div class="l">идёт голосование</div></div>';
+    return;
+  }
+  const s=Math.floor(left/1000);
+  const d=Math.floor(s/86400), h=Math.floor((s%86400)/3600), m=Math.floor((s%3600)/60), sec=s%60;
+  box.innerHTML=(d>0?'<div class="cd"><div class="n">'+d+'</div><div class="l">дней</div></div>':'')+
+    '<div class="cd"><div class="n">'+pad(h)+'</div><div class="l">часов</div></div>'+
+    '<div class="cd"><div class="n">'+pad(m)+'</div><div class="l">минут</div></div>'+
+    '<div class="cd"><div class="n">'+pad(sec)+'</div><div class="l">секунд</div></div>';
+}
+function tickCd(){
+  if(deadlineStr){
+    const t=new Date(deadlineStr.length===10?deadlineStr+'T23:59:59':deadlineStr).getTime();
+    if(!isNaN(t) && t>Date.now()){renderCd(t,'до окончания голосования');return}
+  }
+  if(meetStartStr){
+    const t=new Date(meetStartStr).getTime();
+    if(!isNaN(t)){renderCd(t, meetTitle?('до собрания «'+meetTitle+'»'):'до начала собрания');return}
+  }
+  document.getElementById('countdown').innerHTML='';
+  document.getElementById('cdLabel').textContent='';
+}
+setInterval(tickCd, 250); tickCd();
+try{
+  if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const db=firebase.firestore();
+  db.collection('polls').doc(pollId).onSnapshot(snap=>{
+    if(!snap.exists){document.getElementById('title').textContent='Опрос удалён';return}
+    const p=snap.data();
+    const opts=p.options||[];
+    const tot=opts.reduce((n,o)=>n+(o.votes||0),0)||0;
+    const maxV=Math.max.apply(null,opts.map(o=>o.votes||0).concat([1]));
+    const votesKey=opts.map(o=>o.votes||0).join(',');
+    document.getElementById('title').textContent=p.title||'Голосование';
+    document.getElementById('sub').textContent=(p.description||'')+' · '+(p.status||'')+(p.anonymous===false?' · именное':' · анонимно');
+    document.getElementById('total').textContent=tot;
+    const q=Number(p.quorum)||0;
+    const qb=document.getElementById('quorumBox');
+    if(q>0){
+      qb.style.display='block';
+      const pct=Math.min(100,Math.round(tot/q*100));
+      const ok=tot>=q;
+      document.getElementById('quorumLab').textContent='Кворум: '+tot+' / '+q+(ok?' ✓ набран':' — ещё '+(q-tot));
+      const fill=document.getElementById('quorumFill');
+      fill.style.width=pct+'%';
+      fill.style.background=ok?'#15835d':'#a8640a';
+    } else qb.style.display='none';
+    document.getElementById('board').innerHTML=opts.map((o,i)=>{
+      const c=COLORS[i%COLORS.length];
+      const grow=votesKey!==lastVotes?'transform:scale(1.08)':'';
+      return '<div class="cell" style="border-color:'+c+'55;animation-delay:'+(i*0.05)+'s"><div class="n" style="color:'+c+';'+grow+'">'+(o.votes||0)+'</div><div class="l">'+esc(o.text)+'</div></div>';
+    }).join('');
+    document.getElementById('bars').innerHTML=opts.map((o,i)=>{
+      const c=COLORS[i%COLORS.length];
+      const votes=o.votes||0;
+      const pct=tot?Math.round(votes/tot*100):0;
+      const wdt=Math.round(votes/maxV*100);
+      return '<div class="row" style="animation-delay:'+(i*0.06)+'s"><div><div class="name">'+esc(o.text)+'</div>'+
+        (o.desc?'<div class="desc">'+esc(o.desc)+'</div>':'')+'</div>'+
+        '<div class="track"><div class="fill" style="width:'+wdt+'%;background:'+c+'">'+(wdt>15?votes:'')+'</div></div>'+
+        '<div class="pct">'+pct+'%</div></div>';
+    }).join('');
+    lastVotes=votesKey;
+    if(p.status==='Закрыто'){
+      if(!window._closedShown){
+        window._closedShown=true;
+        document.body.classList.add('is-closed');
+        var liveTag=document.querySelector('.live-tag');
+        if(liveTag) liveTag.innerHTML='<i></i> ЗАВЕРШЕНО';
+        var sorted=opts.slice().sort(function(a,b){return (b.votes||0)-(a.votes||0)});
+        var win=sorted[0];
+        var wb=document.getElementById('winnerBox');
+        if(win&&(win.votes||0)>0){
+          wb.innerHTML='<div class="w-label">Победитель</div><div class="w-name">'+esc(win.text)+'</div><div style="color:var(--muted);margin-top:4px">'+(win.votes||0)+' · '+(tot?Math.round((win.votes||0)/tot*100):0)+'%</div>';
+        } else wb.innerHTML='<div class="w-name">Нет голосов</div>';
+        document.getElementById('closedTitle').textContent=p.title||'Итоги';
+        document.getElementById('closedSub').textContent='Всего: '+tot+(q>0?' · кворум '+(tot>=q?'набран':'не набран'):'');
+        var conf=document.getElementById('confetti'); conf.innerHTML='';
+        var cols=COLORS.concat(['#fff','#ffd54f','#81c784']);
+        for(var ci=0;ci<70;ci++){
+          var el=document.createElement('i');
+          el.style.left=(Math.random()*100)+'%';
+          el.style.background=cols[ci%cols.length];
+          el.style.animationDuration=(2+Math.random()*2.5)+'s';
+          el.style.animationDelay=(Math.random()*0.9)+'s';
+          el.style.width=(6+Math.random()*8)+'px';
+          el.style.height=(8+Math.random()*10)+'px';
+          conf.appendChild(el);
+        }
+        setTimeout(function(){document.getElementById('closedOverlay').classList.add('show')},180);
+      }
+    } else {
+      window._closedShown=false;
+      document.body.classList.remove('is-closed');
+      document.getElementById('closedOverlay').classList.remove('show');
+      document.getElementById('confetti').innerHTML='';
+    }
+  },err=>{document.getElementById('title').textContent='Ошибка: '+err.message});
+}catch(e){document.getElementById('title').textContent='Ошибка Firebase';console.error(e)}
+<\/script>
+</body></html>`);
+  w.document.close();
+}
+
+function renderLivePage(){
+  // fallback inside app if opened as page
+  const p=db.polls.find(x=>x.id===livePollId);
+  document.getElementById('content').innerHTML=`
+  <div class="live-banner"><span>🔴 LIVE</span>
+    <button class="secondary small" onclick="if(livePollId)openLive(livePollId)">Открыть табло в окне</button>
+    <button class="ghost small" onclick="showPage('${isChair()?'polls':'s-polls'}')">Назад</button></div>
+  ${p?`<div class="detail-card"><h2>${esc(p.title)}</h2>${chartBars(p)}${quorumBar(p)}
+    <button onclick="openLive('${p.id}')">Открыть табло как в Госдуме</button></div>`:'<div class="empty"><b>Опрос не найден</b></div>'}`;
+}
+
+function exportPollPdf(id){
+  const p=db.polls.find(x=>x.id===id); if(!p)return;
+  const tot=pollTotal(p);
+  const w=window.open('','_blank');
+  if(!w){toast('Разреши окна');return}
+  w.document.write(`<html><head><title>${esc(p.title)}</title><style>body{font:14px system-ui;padding:32px}h1{font-size:20px}.row{margin:8px 0;padding:8px;border-bottom:1px solid #ddd}</style></head><body>
+    <h1>${esc(p.title)}</h1><p>${esc(p.description||'')}</p><p>Всего голосов: ${tot} · ${p.anonymous!==false?'Анонимно':'Именно'} · ${new Date().toLocaleString('ru-RU')}</p>
+    ${(p.options||[]).map(o=>`<div class="row"><b>${esc(o.text)}</b>${o.desc?' — '+esc(o.desc):''}<br>${o.votes||0} (${tot?Math.round((o.votes||0)/tot*100):0}%)</div>`).join('')}
+    ${p.anonymous===false&&(p.voterNames||[]).length?`<p>Участники: ${esc((p.voterNames||[]).join(', '))}</p>`:''}
+    <script>window.print()<\/script></body></html>`);
+}
+async function vote(e,id){
+  e.preventDefault();
+  if(!currentUser) return;
+  const p=db.polls.find(x=>x.id===id); if(!p||p.status!=='Открыто')return;
+  if(userHasVoted(p)){toast('Уже голосовали');return}
+  const choices=[...new FormData(e.target).getAll('choice')].map(Number);
+  if(!choices.length){toast('Выбери вариант');return}
+  try{
+    await firestore.runTransaction(async tx=>{
+      const ref=firestore.collection('polls').doc(id);
+      const snap=await tx.get(ref); if(!snap.exists) throw new Error('Не найден');
+      const data=snap.data(); if(data.status!=='Открыто') throw new Error('Закрыто');
+      const vids=data.voterIds||[]; if(vids.includes(currentUser.id)) throw new Error('Уже голосовали');
+      const options=data.options.map((o,i)=>({...o,votes:(o.votes||0)+(choices.includes(i)?1:0)}));
+      const upd={options,voterIds:[...vids,currentUser.id]};
+      if(data.anonymous===false){upd.voterNames=[...(data.voterNames||[]), currentUser.name||currentUser.login]}
+      tx.update(ref,upd);
+    });
+    toast('Голос учтён');
+  }catch(err){toast(err.message)}
+}
+async function togglePoll(id){
+  const p=db.polls.find(x=>x.id===id);if(!p)return;
+  try{await firestore.collection('polls').doc(id).update({status:p.status==='Открыто'?'Закрыто':'Открыто'});toast('OK')}catch(e){toast(e.message)}
+}
+
+function renderAnnPage(){
+  document.getElementById('content').innerHTML=`<div class="welcome"><div><h2>Объявления</h2></div><button onclick="openModal('ann')">＋</button></div>
+  <div class="panel">${[...db.announcements].sort((a,b)=>(b.created||'').localeCompare(a.created||'')).map(a=>`<div class="ann-item">
+    <div style="display:flex;justify-content:space-between"><h4>${esc(a.title)}</h4>${isChair()?`<button class="danger small" onclick="delDoc('announcements','${a.id}')">×</button>`:''}</div>
+    <p class="muted" style="font-size:12px">${dateLabel((a.created||'').slice(0,10))}</p><p style="margin-top:6px;white-space:pre-wrap">${esc(a.text||'')}</p>
+  </div>`).join('')||'<div class="empty"><b>Нет объявлений</b></div>'}</div>`;
+}
+function renderSAnn(){renderAnnPage()}
+
+function renderEventsPage(){
+  const now=new Date(); const y=now.getFullYear(), m=now.getMonth();
+  const first=new Date(y,m,1).getDay(); const daysIn=new Date(y,m+1,0).getDate();
+  const start=(first+6)%7; // Mon-first
+  let cells='';
+  for(let i=0;i<start;i++) cells+=`<div class="cal-day" style="opacity:.3"></div>`;
+  for(let d=1;d<=daysIn;d++){
+    const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const evs=db.events.filter(e=>e.date===ds);
+    cells+=`<div class="cal-day"><b>${d}</b>${evs.map(e=>`<div class="ev" title="${esc(e.title)}">${esc(e.title)}</div>`).join('')}</div>`;
+  }
+  document.getElementById('content').innerHTML=`
+  <div class="welcome"><div><h2>Календарь · ${now.toLocaleDateString('ru-RU',{month:'long',year:'numeric'})}</h2></div>
+    ${isChair()?`<button onclick="openModal('event')">＋ Событие</button>`:''}</div>
+  <div class="cal-grid"><div class="cal-head">Пн</div><div class="cal-head">Вт</div><div class="cal-head">Ср</div><div class="cal-head">Чт</div><div class="cal-head">Пт</div><div class="cal-head">Сб</div><div class="cal-head">Вс</div>${cells}</div>
+  <div class="panel" style="margin-top:16px"><h3 style="margin-top:0">Список</h3>
+  ${[...db.events].sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(e=>`<div class="ann-item"><b>${esc(e.title)}</b> · ${dateLabel(e.date)} ${esc(e.time||'')} ${esc(e.place||'')}
+    ${isChair()?`<button class="danger small" style="float:right" onclick="delDoc('events','${e.id}')">×</button>`:''}
+    <div class="muted" style="font-size:12px;margin-top:4px">${esc(e.description||'')}</div></div>`).join('')||'<p class="muted">Пусто</p>'}</div>`;
+}
+function renderSEvents(){renderEventsPage()}
+
+function renderDutiesPage(){
+  const isSt=!isChair();
+  let list=[...db.duties].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  if(isSt){
+    list=list.filter(d=>{
+      const ids=d.userIds||[];
+      if(ids.includes(currentUser.id)) return true;
+      const names=(d.people||'').toLowerCase();
+      const my=(currentUser.name||'').toLowerCase();
+      return my && names.includes(my);
+    });
+  }
+  document.getElementById('content').innerHTML=`
+  <div class="welcome"><div><h2>${isSt?'Мои дежурства':'Дежурства'}</h2>
+    <p>${isSt?'Только те, где ты назначен из аккаунта':'Назначение из списка аккаунтов'}</p></div>
+    ${isChair()?`<button onclick="openModal('duty')">＋</button>`:''}</div>
+  <div class="panel"><div class="table-wrap"><table class="table"><thead><tr><th>Дата</th><th>Этаж / зона</th><th>Кто</th><th>Комментарий</th><th></th></tr></thead><tbody>
+  ${list.length?list.map(d=>{
+    const who=(d.assignees&&d.assignees.length)
+      ? d.assignees.map(a=>`<span class="pill" style="margin:2px">${esc(a.name)}${a.klass?' · '+esc(a.klass):''}</span>`).join(' ')
+      : esc(d.people||'—');
+    return `<tr>
+    <td>${dateLabel(d.date)}</td><td>${esc(d.floor||'')}</td><td>${who}</td><td>${esc(d.note||'')}</td>
+    <td>${isChair()?`<button class="danger small" onclick="delDoc('duties','${d.id}')">×</button>`:''}</td></tr>`;
+  }).join(''):`<tr><td colspan="5" class="empty">${isSt?'Тебя пока не назначили на дежурство':'Нет записей'}</td></tr>`}
+  </tbody></table></div></div>
+  ${isChair()?`<div class="notice"><strong>Как назначать</strong>В форме дежурства выбери людей из аккаунтов (Ctrl+клик для нескольких). У старост в «Дежурства» отобразятся только их смены.</div>`:''}`;
+}
+function renderSDuties(){renderDutiesPage()}
+
+function renderContactsPage(){
+  const list=db.users.filter(u=>u.active!==false).sort((a,b)=>{
+    if(a.role!==b.role) return a.role==='chair'?-1:1;
+    return (a.klass||'').localeCompare(b.klass||'')||(a.name||'').localeCompare(b.name||'');
+  });
+  document.getElementById('content').innerHTML=`
+  <div class="welcome"><div><h2>Старосты и контакты</h2>
+    <p>Список из аккаунтов · совпадает с теми, кого можно назначить на дежурство</p></div>
+    ${isChair()?`<button class="secondary" onclick="showPage('users')">Управление аккаунтами</button>`:''}</div>
+  <div class="panel"><div class="table-wrap"><table class="table"><thead><tr><th>Имя</th><th>Логин</th><th>Класс</th><th>Роль</th><th>Телефон</th><th>Контакт</th></tr></thead><tbody>
+  ${list.map(u=>`<tr>
+    <td class="maincell">${esc(u.name||u.login)}</td>
+    <td><code>${esc(u.login)}</code></td>
+    <td>${esc(u.klass||'—')}</td>
+    <td>${u.role==='chair'?'<span class="pill amber">Председатель</span>':'<span class="pill">Староста</span>'}</td>
+    <td>${esc(u.phone||'—')}</td>
+    <td>${esc(u.contact||'—')}</td>
+  </tr>`).join('')||'<tr><td colspan="6" class="empty">Нет аккаунтов</td></tr>'}
+  </tbody></table></div></div>
+  ${isChair()?`<div class="notice"><strong>Связь с дежурствами</strong>Создай аккаунт старосте (Аккаунты → имя, класс, телефон). Потом в Дежурствах выбери его из списка — смена привяжется к аккаунту.</div>`:''}`;
+}
+
+function renderProblemsPage(){
+  document.getElementById('content').innerHTML=`
+  <div class="welcome"><div><h2>Проблемы классов</h2><p>Ремонт, расписание, быт</p></div>
+    <button onclick="openModal('problem')">＋ Сообщить</button></div>
+  ${db.problems.map(p=>`<div class="card" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between"><h4>${esc(p.title)}</h4>${statusPill(p.status||'Новое')}</div>
+    <p class="muted" style="font-size:12px">${esc(p.klass||'')} · ${esc(p.author||'')} · ${dateLabel((p.created||'').slice(0,10))}</p>
+    <p style="margin-top:6px">${esc(p.text||'')}</p>
+    ${isChair()?`<div class="card-actions"><select onchange="setProblemStatus('${p.id}',this.value)">${['Новое','В работе','Решено','Отклонено'].map(s=>`<option ${s===(p.status||'Новое')?'selected':''}>${s}</option>`).join('')}</select>
+    <button class="danger small" onclick="delDoc('problems','${p.id}')">Удалить</button></div>`:''}
+  </div>`).join('')||'<div class="panel empty"><b>Проблем нет</b></div>'}`;
+}
+function renderSProblems(){renderProblemsPage()}
+async function setProblemStatus(id,s){try{await firestore.collection('problems').doc(id).update({status:s})}catch(e){toast(e.message)}}
+
+function renderIdeasPage(){
+  const sorted=[...db.ideas].sort((a,b)=>(b.score||0)-(a.score||0));
+  document.getElementById('content').innerHTML=`
+  <div class="welcome"><div><h2>Рейтинг идей</h2></div><button onclick="openModal('idea')">＋ Идея</button></div>
+  ${sorted.map(idea=>`<div class="card" style="margin-bottom:10px;display:flex;gap:14px;align-items:flex-start">
+    <div style="text-align:center"><div class="idea-score">${idea.score||0}</div>
+      <button class="secondary small" onclick="voteIdea('${idea.id}',1)">▲</button>
+      <button class="ghost small" onclick="voteIdea('${idea.id}',-1)">▼</button></div>
+    <div style="flex:1"><h4 style="margin:0">${esc(idea.title)}</h4>
+      <p class="muted" style="font-size:12px">${esc(idea.author||'')} · ${esc(idea.klass||'')}</p>
+      <p style="margin-top:6px">${esc(idea.text||'')}</p>
+      ${isChair()?`<button class="danger small" onclick="delDoc('ideas','${idea.id}')">Удалить</button>`:''}
+    </div></div>`).join('')||'<div class="panel empty"><b>Идей пока нет</b></div>'}`;
+}
+function renderSIdeas(){renderIdeasPage()}
+async function voteIdea(id,delta){
+  if(!currentUser)return;
+  try{
+    await firestore.runTransaction(async tx=>{
+      const ref=firestore.collection('ideas').doc(id);
+      const snap=await tx.get(ref); if(!snap.exists) return;
+      const data=snap.data(); const voters=data.voters||{};
+      if(voters[currentUser.id]===delta) return;
+      let score=data.score||0;
+      if(voters[currentUser.id]) score-=voters[currentUser.id];
+      score+=delta; voters[currentUser.id]=delta;
+      tx.update(ref,{score,voters});
+    });
+  }catch(e){toast(e.message)}
+}
+
+function renderLinksPage(){
+  document.getElementById('content').innerHTML=`
+  <div class="welcome"><div><h2>Полезные ссылки</h2></div>${isChair()?`<button onclick="openModal('link')">＋</button>`:''}</div>
+  <div class="cards">${db.links.map(l=>`<div class="card"><span class="pill">${esc(l.category||'Другое')}</span><h4>${esc(l.title)}</h4>
+    <p>${esc(l.description||'')}</p><a href="${esc(l.url)}" target="_blank" rel="noopener" style="color:var(--blue);font-size:13px">Открыть ↗</a>
+    ${isChair()?`<div class="card-actions"><button class="danger small" onclick="delDoc('links','${l.id}')">Удалить</button></div>`:''}
+  </div>`).join('')||'<div class="panel empty"><b>Ссылок нет</b></div>'}</div>`;
+}
+function renderSLinks(){renderLinksPage()}
+
+
+function renderJournalsPage(){
+  const lists=db.classlists||[];
+  const diary=db.diary||[];
+  const filterOwner=window._journalOwner||'';
+  const filterType=window._journalType||'';
+  const filterDate=window._journalDate||'';
+
+  let rows=diary.filter(d=>{
+    if(filterOwner && d.ownerId!==filterOwner) return false;
+    if(filterType==='attendance' && d.type!=='attendance') return false;
+    if(filterType==='discipline' && d.type!=='discipline') return false;
+    if(filterDate && d.date!==filterDate) return false;
+    return true;
+  }).sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.created||'').localeCompare(a.created||''));
+
+  const ownerOpts=lists.map(l=>{
+    const u=db.users.find(x=>x.id===l.ownerId);
+    const name=u?u.name:l.ownerName||l.ownerId;
+    return `<option value="${l.ownerId}" ${filterOwner===l.ownerId?'selected':''}>${esc(name)}${l.klass?' · '+esc(l.klass):''}</option>`;
+  }).join('');
+
+  const disc=diary.filter(d=>d.type==='discipline');
+  const att=diary.filter(d=>d.type==='attendance');
+  const late=att.filter(d=>d.status==='late').length;
+  const absent=att.filter(d=>d.status==='absent').length;
+
+  document.getElementById('content').innerHTML=`
+  <div class="welcome"><div><h2>Журналы поведения</h2>
+    <p>Просмотр и редактирование записей старост</p></div>
+    <div class="welcome-actions">
+      <button class="secondary" onclick="openModal('disciplineChair')">＋ Запись</button>
+      <button class="secondary" onclick="exportJournalsPdf()">PDF</button>
+    </div></div>
+  <div class="grid">
+    <div class="stat"><div class="stat-top">Дисциплина</div><div class="stat-num">${disc.length}</div></div>
+    <div class="stat"><div class="stat-top">Опозданий</div><div class="stat-num">${late}</div></div>
+    <div class="stat"><div class="stat-top">Пропусков</div><div class="stat-num">${absent}</div></div>
+    <div class="stat"><div class="stat-top">Списков классов</div><div class="stat-num">${lists.length}</div></div>
+  </div>
+  <div class="toolbar">
+    <select id="jOwner" onchange="window._journalOwner=this.value;renderJournalsPage()">
+      <option value="">Все старосты</option>${ownerOpts}</select>
+    <select id="jType" onchange="window._journalType=this.value;renderJournalsPage()">
+      <option value="" ${!filterType?'selected':''}>Все типы</option>
+      <option value="discipline" ${filterType==='discipline'?'selected':''}>Дисциплина</option>
+      <option value="attendance" ${filterType==='attendance'?'selected':''}>Посещаемость</option>
+    </select>
+    <input type="date" id="jDate" value="${esc(filterDate)}" onchange="window._journalDate=this.value;renderJournalsPage()">
+    <button class="ghost small" onclick="window._journalOwner='';window._journalType='';window._journalDate='';renderJournalsPage()">Сбросить</button>
+  </div>
+  <div class="panel">
+    <div class="table-wrap"><table class="table"><thead><tr>
+      <th>Дата</th><th>Староста</th><th>Класс</th><th>Ученик</th><th>Тип</th><th>Детали</th><th></th>
+    </tr></thead><tbody>
+    ${rows.length?rows.map(d=>{
+      const u=db.users.find(x=>x.id===d.ownerId);
+      const owner=u?u.name:(d.ownerName||'—');
+      let detail='';
+      if(d.type==='attendance'){
+        const st={present:'Присутствует',late:'Опоздал',absent:'Отсутствует'}[d.status]||d.status;
+        detail=`<span class="pill ${d.status==='present'?'green':d.status==='late'?'amber':'red'}">${esc(st)}</span>`;
+      } else {
+        detail=`<span class="pill">${esc(d.kind||'Заметка')}</span> ${esc(d.text||'')}`;
+      }
+      return `<tr>
+        <td>${dateLabel(d.date)}</td>
+        <td>${esc(owner)}</td>
+        <td>${esc(d.klass||'—')}</td>
+        <td class="maincell">${esc(d.studentName||'—')}</td>
+        <td>${d.type==='attendance'?'Посещаемость':'Дисциплина'}</td>
+        <td>${detail}</td>
+        <td style="white-space:nowrap">
+          <button class="secondary small" onclick="editDiaryEntry('${d.id}')">Изменить</button>
+          <button class="danger small" onclick="delDoc('diary','${d.id}')">×</button>
+        </td>
+      </tr>`;
+    }).join(''):'<tr><td colspan="7" class="empty">Нет записей</td></tr>'}
+    </tbody></table></div>
+  </div>
+  <div class="panel"><h3 style="margin-top:0">Списки классов</h3>
+    ${lists.length?lists.map(l=>{
+      const u=db.users.find(x=>x.id===l.ownerId);
+      return `<div class="ann-item"><b>${esc(u?u.name:l.ownerName||'—')}</b> · класс ${esc(l.klass||'—')} · ${(l.students||[]).length} уч.
+        <div class="muted" style="font-size:12px;margin-top:4px">${(l.students||[]).map(s=>esc(s.name)).join(', ')||'пусто'}</div></div>`;
+    }).join(''):'<p class="muted">Старосты ещё не создали списки</p>'}
+  </div>`;
+}
+async function editDiaryEntry(id){
+  const d=(db.diary||[]).find(x=>x.id===id);
+  if(!d){toast('Не найдено');return}
+  if(d.type==='attendance'){
+    const st=prompt('Статус: present / late / absent', d.status||'present');
+    if(st===null)return;
+    const v=st.trim().toLowerCase();
+    if(!['present','late','absent'].includes(v)){toast('Нужно: present, late или absent');return}
+    try{await firestore.collection('diary').doc(id).update({status:v,updated:new Date().toISOString()});toast('Обновлено')}
+    catch(e){toast(e.message)}
+    return;
+  }
+  const kind=prompt('Тип записи (Замечание, Опоздание, …)', d.kind||'');
+  if(kind===null)return;
+  const text=prompt('Текст', d.text||'');
+  if(text===null)return;
+  const date=prompt('Дата (ГГГГ-ММ-ДД)', d.date||'');
+  if(date===null)return;
+  const studentName=prompt('Ученик', d.studentName||'');
+  if(studentName===null)return;
+  try{
+    await firestore.collection('diary').doc(id).update({
+      kind:kind.trim(), text:text.trim(), date:date.trim(), studentName:studentName.trim(),
+      updated:new Date().toISOString()
+    });
+    toast('Запись изменена');
+  }catch(e){toast(e.message)}
+}
+
+function exportJournalsPdf(){
+  const diary=db.diary||[];
+  const lists=db.classlists||[];
+  const w=window.open('','_blank');
+  if(!w){toast('Разреши всплывающие окна');return}
+  const rows=diary.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Журналы поведения</title>
+    <style>body{font:13px system-ui;padding:24px;color:#111}h1{font-size:18px}table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{border:1px solid #ccc;padding:6px 8px;text-align:left;font-size:12px}th{background:#f5f5f5}
+    @media print{button{display:none}}</style></head><body>
+    <h1>Журналы поведения — Совет старост</h1>
+    <p>${new Date().toLocaleString('ru-RU')} · записей: ${rows.length}</p>
+    <table><thead><tr><th>Дата</th><th>Староста</th><th>Класс</th><th>Ученик</th><th>Тип</th><th>Детали</th></tr></thead><tbody>
+    ${rows.map(d=>{
+      const u=db.users.find(x=>x.id===d.ownerId);
+      const owner=u?u.name:(d.ownerName||'—');
+      let detail=d.type==='attendance'?(d.status||''):( (d.kind||'')+' '+(d.text||'') );
+      return `<tr><td>${d.date||''}</td><td>${esc(owner)}</td><td>${esc(d.klass||'')}</td><td>${esc(d.studentName||'')}</td>
+        <td>${d.type==='attendance'?'Посещаемость':'Дисциплина'}</td><td>${esc(detail)}</td></tr>`;
+    }).join('')}
+    </tbody></table>
+    <h2 style="margin-top:24px;font-size:16px">Списки классов</h2>
+    ${lists.map(l=>{
+      const u=db.users.find(x=>x.id===l.ownerId);
+      return `<p><b>${esc(u?u.name:l.ownerName||'')} · ${esc(l.klass||'')}</b><br>${(l.students||[]).map(s=>esc(s.name)).join(', ')}</p>`;
+    }).join('')}
+    <script>window.print()<\/script></body></html>`);
+}
+
+function renderSchedulePage(){
+  document.getElementById('content').innerHTML=`
+  <div class="welcome"><div><h2>Расписания</h2><p>Урок · предмет · кабинет</p></div><button onclick="openModal('schedule')">＋</button></div>
+  ${db.schedules.map(x=>`<div class="card" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between"><b>${esc(x.klass)} · ${esc(x.day)}</b>
+    ${x.newCampus?'<span class="badge-campus">Новый корпус</span>':''}<button class="danger small" onclick="delLocalSchedule('${x.id}')">Удалить</button></div>
+    ${x.items?`<table class="table" style="min-width:0;margin-top:8px"><thead><tr><th>№</th><th>Предмет</th><th>Кабинет</th></tr></thead><tbody>
+    ${x.items.map(i=>`<tr><td>${esc(i.num)}</td><td>${esc(i.subject)}</td><td>${esc(i.room||'—')}</td></tr>`).join('')}</tbody></table>`:`<p style="margin-top:8px">${esc(x.lessons||'')}</p>`}
+  </div>`).join('')||'<div class="panel empty"><b>Пусто</b></div>'}`;
+}
+function delLocalSchedule(id){db.schedules=db.schedules.filter(x=>x.id!==id);saveLocal();renderCurrent();toast('Удалено')}
+
+function renderUsersPage(){
+  document.getElementById('content').innerHTML=`
+  <div class="welcome"><div><h2>Аккаунты</h2></div><button onclick="openModal('user')">＋</button></div>
+  <div class="panel"><table class="table"><thead><tr><th>Имя</th><th>Логин</th><th>Роль</th><th>Класс</th><th>Телефон</th><th></th></tr></thead><tbody>
+  ${db.users.map(u=>`<tr><td class="maincell">${esc(u.name)}</td><td><code>${esc(u.login)}</code></td>
+    <td>${u.role==='chair'?'Председатель':'Староста'}</td><td>${esc(u.klass||'—')}</td><td>${esc(u.phone||'—')}</td>
+    <td>${u.login==='admin'?'':`<button class="danger small" onclick="delDoc('users','${u.id}')">×</button>`}
+    <button class="secondary small" onclick="toggleUser('${u.id}',${u.active===false})">${u.active===false?'Вкл':'Выкл'}</button></td></tr>`).join('')}
+  </tbody></table></div>`;
+}
+async function toggleUser(id,on){try{await firestore.collection('users').doc(id).update({active:!!on})}catch(e){toast(e.message)}}
+
+function renderSettingsPage(){
+  document.getElementById('content').innerHTML=`
+  <div class="welcome"><div><h2>Настройки</h2></div></div>
+  <div class="panel"><h3 style="margin-top:0">Уведомления о новых опросах</h3>
+    <p class="muted" style="font-size:13px">Webhook Telegram (через Bot API или Zapier/Make). При создании опроса уйдёт POST с текстом.</p>
+    <label>Webhook URL<input id="setHook" value="${esc(settings.telegramWebhook)}" placeholder="https://..."></label>
+    <label style="margin-top:10px">Email для копии (справочно)<input id="setEmail" value="${esc(settings.notifyEmail)}" placeholder="mail@school.ru"></label>
+    <div class="form-actions"><button onclick="saveSettings()">Сохранить</button></div>
+  </div>
+  <div class="panel"><h3 style="margin-top:0">Смена пароля</h3>
+    <label>Новый пароль<input type="password" id="newPass"></label>
+    <div class="form-actions"><button onclick="changeMyPassword()">Сменить пароль</button></div>
+  </div>
+  <div class="notice"><strong>Firestore Rules</strong>Нужны read/write для: users, polls, meetings, events, duties, announcements, problems, ideas, links</div>`;
+}
+function saveSettings(){
+  settings.telegramWebhook=document.getElementById('setHook').value.trim();
+  settings.notifyEmail=document.getElementById('setEmail').value.trim();
+  saveSettingsLocal(); toast('Сохранено');
+}
+async function changeMyPassword(){
+  const p=document.getElementById('newPass').value;
+  if(!p||p.length<4){toast('Минимум 4 символа');return}
+  try{await firestore.collection('users').doc(currentUser.id).update({password:p});toast('Пароль изменён')}catch(e){toast(e.message)}
+}
+function renderAccountPage(){
+  document.getElementById('content').innerHTML=`
+  <div class="starost-wrap"><div class="welcome"><div><h2>Мой аккаунт</h2></div></div>
+  <div class="panel"><p><b>${esc(currentUser.name)}</b><br>Логин: ${esc(currentUser.login)}<br>Класс: ${esc(currentUser.klass||'—')}</p>
+    <label>Новый пароль<input type="password" id="newPass"></label>
+    <div class="form-actions"><button onclick="changeMyPassword()">Сменить пароль</button></div>
+  </div></div>`;
+}
+
+function renderReportsPage(){
+  const att=(db.diary||[]).filter(d=>d.type==='attendance');
+  const disc=(db.diary||[]).filter(d=>d.type==='discipline');
+  document.getElementById('content').innerHTML=`
+  <div class="welcome"><div><h2>Отчёты</h2><p>Сводка по совету старост</p></div>
+    <div class="welcome-actions">
+      <button onclick="exportReportPdf()">Экспорт PDF</button>
+      <button class="secondary" onclick="downloadBackup()">↓ JSON</button>
+    </div></div>
+  <div class="grid">
+    <div class="stat"><div class="stat-top">Опросы</div><div class="stat-num">${db.polls.length}</div></div>
+    <div class="stat"><div class="stat-top">Собрания</div><div class="stat-num">${db.meetings.length}</div></div>
+    <div class="stat"><div class="stat-top">Идеи</div><div class="stat-num">${db.ideas.length}</div></div>
+    <div class="stat"><div class="stat-top">Проблемы</div><div class="stat-num">${db.problems.length}</div></div>
+    <div class="stat"><div class="stat-top">Объявления</div><div class="stat-num">${db.announcements.length}</div></div>
+    <div class="stat"><div class="stat-top">Дежурства</div><div class="stat-num">${db.duties.length}</div></div>
+    <div class="stat"><div class="stat-top">Записей дисциплины</div><div class="stat-num">${disc.length}</div></div>
+    <div class="stat"><div class="stat-top">Отметок посещаемости</div><div class="stat-num">${att.length}</div></div>
+  </div>
+  <div class="panel">
+    <h3 style="margin-top:0">Краткая сводка</h3>
+    <p class="muted" style="font-size:13px">Нажми «Экспорт PDF» — откроется окно печати: можно сохранить как PDF.</p>
+    <ul style="font-size:13px;line-height:1.7">
+      <li>Старост (аккаунты): ${db.users.filter(u=>u.role==='starost'&&u.active!==false).length}</li>
+      <li>Открытых опросов: ${db.polls.filter(p=>p.status==='Открыто').length}</li>
+      <li>Опозданий в журналах: ${att.filter(d=>d.status==='late').length}</li>
+      <li>Пропусков: ${att.filter(d=>d.status==='absent').length}</li>
+      <li>Списков классов: ${(db.classlists||[]).length}</li>
+    </ul>
+  </div>`;
+}
+function exportReportPdf(){
+  const att=(db.diary||[]).filter(d=>d.type==='attendance');
+  const disc=(db.diary||[]).filter(d=>d.type==='discipline');
+  const w=window.open('','_blank');
+  if(!w){toast('Разреши всплывающие окна');return}
+  const lines=[
+    ['Опросы', db.polls.length],
+    ['Открытые опросы', db.polls.filter(p=>p.status==='Открыто').length],
+    ['Собрания', db.meetings.length],
+    ['Объявления', db.announcements.length],
+    ['События', db.events.length],
+    ['Дежурства', db.duties.length],
+    ['Идеи', db.ideas.length],
+    ['Проблемы', db.problems.length],
+    ['Аккаунты старост', db.users.filter(u=>u.role==='starost'&&u.active!==false).length],
+    ['Записей дисциплины', disc.length],
+    ['Отметок посещаемости', att.length],
+    ['Опозданий', att.filter(d=>d.status==='late').length],
+    ['Пропусков', att.filter(d=>d.status==='absent').length],
+  ];
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Отчёт совета старост</title>
+    <style>body{font:14px system-ui;padding:32px;color:#111;max-width:700px;margin:auto}
+    h1{font-size:20px;margin-bottom:4px}table{width:100%;border-collapse:collapse;margin-top:16px}
+    td,th{border-bottom:1px solid #ddd;padding:8px;text-align:left}th{color:#666;font-size:12px}
+    .foot{margin-top:24px;color:#666;font-size:12px}@media print{button{display:none}}</style></head><body>
+    <h1>Отчёт — Совет старост</h1>
+    <p style="color:#666">${new Date().toLocaleString('ru-RU')}</p>
+    <table><thead><tr><th>Показатель</th><th>Значение</th></tr></thead><tbody>
+    ${lines.map(([k,v])=>`<tr><td>${k}</td><td><b>${v}</b></td></tr>`).join('')}
+    </tbody></table>
+    <h2 style="font-size:16px;margin-top:28px">Последние записи дисциплины</h2>
+    <table><thead><tr><th>Дата</th><th>Класс</th><th>Ученик</th><th>Тип</th><th>Текст</th></tr></thead><tbody>
+    ${disc.slice(0,40).map(d=>`<tr><td>${d.date||''}</td><td>${esc(d.klass||'')}</td><td>${esc(d.studentName||'')}</td>
+      <td>${esc(d.kind||'')}</td><td>${esc(d.text||'')}</td></tr>`).join('')||'<tr><td colspan="5">Нет данных</td></tr>'}
+    </tbody></table>
+    <p class="foot">Сформировано в системе «Совет старост»</p>
+    <script>window.print()<\/script></body></html>`);
+}
+
+function downloadBackup(){
+  const b=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='sovet-backup.json';a.click();
+}
+
+function renderSPolls(){document.getElementById('content').innerHTML=`<div class="starost-wrap"><div class="welcome"><div><h2>Голосования</h2></div></div>${db.polls.filter(p=>p.status==='Открыто').map(p=>pollCard(p,false)).join('')||'<div class="panel empty"><b>Нет открытых</b></div>'}</div>`}
+function renderSMeetings(){
+  document.getElementById('content').innerHTML=`<div class="starost-wrap"><div class="welcome"><div><h2>Собрания</h2></div></div>
+  ${[...db.meetings].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(m=>`<div class="card" style="cursor:pointer;margin-bottom:10px" onclick="openMeeting('${m.id}')">
+    <div class="meeting-row"><div class="datebox"><b>${dayNum(m.date)}</b><span>${monthShort(m.date)}</span></div>
+    <div><h4 style="margin:0">${esc(m.title)}</h4><p class="muted" style="font-size:12px;margin:4px 0">${dateLabel(m.date)}${m.place?' · '+esc(m.place):''}</p></div></div>
+  </div>`).join('')||'<div class="empty"><b>Нет</b></div>'}</div>`;
+}
+
+
+/* ===== Дневник класса (староста) ===== */
+function myClassList(){
+  return db.classlists.find(c=>c.ownerId===currentUser.id) || null;
+}
+function myStudents(){
+  const cl=myClassList();
+  return (cl && cl.students) ? cl.students : [];
+}
+function renderDiaryPage(){
+  const cl=myClassList();
+  const students=myStudents();
+  const today=new Date().toISOString().slice(0,10);
+  const dateEl='diaryDate';
+  // filter diary for this owner
+  const myDiary=db.diary.filter(d=>d.ownerId===currentUser.id);
+  document.getElementById('content').innerHTML=`
+  <div class="starost-wrap">
+    <div class="welcome"><div><h2>Дневник класса</h2><p>Список класса · посещаемость · опоздания · дисциплина</p></div></div>
+    
+    <div class="panel">
+      <div class="panel-head"><h3>Список класса ${cl&&cl.klass?'· '+esc(cl.klass):''}</h3>
+        <button class="secondary small" onclick="openModal('student')">＋ Ученик</button></div>
+      ${students.length?`<div class="table-wrap"><table class="table" style="min-width:0"><thead><tr><th>№</th><th>ФИО</th><th></th></tr></thead><tbody>
+        ${students.map((s,i)=>`<tr><td>${i+1}</td><td class="maincell">${esc(s.name)}</td>
+          <td><button class="danger small" onclick="removeStudent('${s.id}')">×</button></td></tr>`).join('')}
+      </tbody></table></div>`:'<div class="empty"><b>Список пуст</b>Добавь учеников своего класса.</div>'}
+      ${!cl?`<div style="margin-top:10px"><label>Класс (например 8А)<input id="newKlassName" placeholder="8А" value="${esc(currentUser.klass||'')}"></label>
+        <button class="secondary small" style="margin-top:8px" onclick="ensureClassList()">Создать список класса</button></div>`:
+        `<p class="muted" style="font-size:12px;margin-top:8px">Класс: <b>${esc(cl.klass||'—')}</b> · ${students.length} чел.</p>`}
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h3>Отметить день</h3></div>
+      <label>Дата<input type="date" id="diaryDate" value="${today}" onchange="renderDiaryMarks()"></label>
+      <div id="diaryMarks" style="margin-top:12px"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h3>Журнал дисциплины и заметок</h3>
+        <button class="secondary small" onclick="openModal('discipline')">＋ Запись</button></div>
+      <div id="diaryLog"></div>
+    </div>
+  </div>`;
+  renderDiaryMarks();
+  renderDiaryLog();
+}
+function renderDiaryMarks(){
+  const box=document.getElementById('diaryMarks');
+  if(!box) return;
+  const students=myStudents();
+  const date=(document.getElementById('diaryDate')?.value)||new Date().toISOString().slice(0,10);
+  if(!students.length){box.innerHTML='<p class="muted">Сначала добавь учеников в список класса.</p>';return}
+  const dayRecs=db.diary.filter(d=>d.ownerId===currentUser.id && d.date===date && d.type==='attendance');
+  const byStudent={};
+  dayRecs.forEach(r=>{byStudent[r.studentId]=r});
+  box.innerHTML=`<div class="table-wrap"><table class="table" style="min-width:0"><thead><tr><th>Ученик</th><th>Статус</th></tr></thead><tbody>
+    ${students.map(s=>{
+      const rec=byStudent[s.id];
+      const st=rec?rec.status:'present';
+      return `<tr><td class="maincell">${esc(s.name)}</td><td>
+        <select onchange="setAttendance('${s.id}','${esc(s.name)}','${date}',this.value)" style="padding:6px 8px">
+          <option value="present" ${st==='present'?'selected':''}>Присутствует</option>
+          <option value="late" ${st==='late'?'selected':''}>Опоздал</option>
+          <option value="absent" ${st==='absent'?'selected':''}>Отсутствует</option>
+        </select>
+      </td></tr>`;
+    }).join('')}
+  </tbody></table></div>
+  <p class="muted" style="font-size:12px;margin-top:8px">Изменения сохраняются сразу. Дата: ${dateLabel(date)}</p>`;
+}
+function renderDiaryLog(){
+  const box=document.getElementById('diaryLog');
+  if(!box) return;
+  const notes=db.diary.filter(d=>d.ownerId===currentUser.id && d.type==='discipline')
+    .sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.created||'').localeCompare(a.created||''));
+  if(!notes.length){box.innerHTML='<p class="muted">Записей пока нет — замечания, благодарности, поведение.</p>';return}
+  box.innerHTML=notes.map(n=>`<div class="ann-item">
+    <div style="display:flex;justify-content:space-between;gap:8px">
+      <div><b>${esc(n.studentName||'Класс')}</b> · <span class="pill">${esc(n.kind||'Заметка')}</span>
+        <span class="muted" style="font-size:12px"> · ${dateLabel(n.date)}</span></div>
+      <button class="danger small" onclick="delDoc('diary','${n.id}')">×</button>
+    </div>
+    <p style="margin:6px 0 0;font-size:13px">${esc(n.text||'')}</p>
+  </div>`).join('');
+}
+async function ensureClassList(){
+  if(myClassList()){toast('Список уже есть');return}
+  const klass=(document.getElementById('newKlassName')?.value||currentUser.klass||'').trim()||'Класс';
+  try{
+    await firestore.collection('classlists').add({ownerId:currentUser.id,ownerName:currentUser.name,klass,students:[],updated:new Date().toISOString()});
+    toast('Список создан');
+  }catch(e){toast(e.message)}
+}
+async function removeStudent(sid){
+  const cl=myClassList(); if(!cl)return;
+  if(!confirm('Удалить ученика из списка?'))return;
+  const students=(cl.students||[]).filter(s=>s.id!==sid);
+  try{
+    await firestore.collection('classlists').doc(cl.id).update({students,updated:new Date().toISOString()});
+    toast('Удалён');
+  }catch(e){toast(e.message)}
+}
+async function setAttendance(studentId, studentName, date, status){
+  if(!fbEnabled){toast('Нужен Firebase');return}
+  try{
+    const existing=db.diary.find(d=>d.ownerId===currentUser.id && d.date===date && d.studentId===studentId && d.type==='attendance');
+    const payload={ownerId:currentUser.id,ownerName:currentUser.name,klass:(myClassList()||{}).klass||currentUser.klass||'',
+      type:'attendance',date,studentId,studentName,status,updated:new Date().toISOString()};
+    if(existing){
+      await firestore.collection('diary').doc(existing.id).update(payload);
+    } else {
+      payload.created=new Date().toISOString();
+      await firestore.collection('diary').add(payload);
+    }
+  }catch(e){toast(e.message)}
+}
+
+/* Modals */
 function openModal(type){
   modalType=type;
-  const titles={schedule:'Расписание класса',meeting:'Новое собрание',poll:'Создать голосование',decision:'Задача',document:'Документ',user:'Новый аккаунт'};
+  const titles={poll:'Опрос',meeting:'Собрание',meetingEdit:'Материалы собрания',ann:'Объявление',event:'Событие',duty:'Дежурство',
+    problem:'Проблема',idea:'Идея',link:'Ссылка',user:'Аккаунт',schedule:'Расписание',student:'Ученик в список',discipline:'Запись в дневник',disciplineChair:'Запись в журнал'};
   document.getElementById('modalTitle').textContent=titles[type]||'Добавить';
   document.getElementById('modalFields').innerHTML=formFor(type);
   document.getElementById('modalBackdrop').classList.add('open');
   if(type==='poll'){optCount=0;addOptRow();addOptRow()}
+  if(type==='schedule'){lessonCount=0;['','','',''].forEach((_,i)=>addLessonRow(i+1))}
+  if(type==='meeting'||type==='meetingEdit'){speechCount=0;slideCount=0;if(type==='meetingEdit') prefillMeetingEdit()}
 }
 function closeModal(){document.getElementById('modalBackdrop').classList.remove('open')}
-function field(label,name,ph='',type='text',extra=''){return `<label>${label}<input name="${name}" type="${type}" placeholder="${ph}" ${extra}></label>`}
+function field(l,n,ph='',t='text',ex=''){return `<label>${l}<input name="${n}" type="${t}" placeholder="${ph}" ${ex}></label>`}
 
 function addOptRow(){
   optCount++;
-  const box=document.getElementById('optBox');
-  if(!box) return;
-  const div=document.createElement('div');
-  div.className='opt-row';
-  div.dataset.idx=optCount;
-  div.innerHTML=`<div class="opt-head"><span>Вариант ${optCount}</span><button type="button" class="danger small" onclick="this.closest('.opt-row').remove()">Удалить</button></div>
-    <label>Название<input name="opt_text" required placeholder="Например, Пятница 16:00"></label>
-    <label style="margin-top:8px;display:block">Описание (необязательно)<input name="opt_desc" placeholder="Кратко, почему этот вариант"></label>`;
-  box.appendChild(div);
+  const box=document.getElementById('optBox'); if(!box)return;
+  const d=document.createElement('div'); d.className='opt-row';
+  d.innerHTML=`<div style="display:flex;justify-content:space-between;margin-bottom:6px"><b style="font-size:12px;color:var(--muted)">Вариант ${optCount}</b>
+    <button type="button" class="danger small" onclick="this.closest('.opt-row').remove()">×</button></div>
+    <label>Название<input name="opt_text" required></label>
+    <label style="margin-top:6px;display:block">Описание<input name="opt_desc"></label>
+    <label style="margin-top:6px;display:block">Ссылка / фото (URL)<input name="opt_link" type="url" placeholder="https://"></label>`;
+  box.appendChild(d);
+}
+function addLessonRow(n){
+  lessonCount++;
+  const box=document.getElementById('lessonBox'); if(!box)return;
+  const d=document.createElement('div'); d.className='lesson-row';
+  d.innerHTML=`<label>№<input name="les_num" type="number" min="1" value="${n||lessonCount}" required></label>
+    <label>Предмет<input name="les_subj" required></label>
+    <label>Кабинет<input name="les_room"></label>
+    <button type="button" class="danger small" onclick="this.closest('.lesson-row').remove()">×</button>`;
+  box.appendChild(d);
+}
+function addSpeechRow(title,text){
+  speechCount++;
+  const box=document.getElementById('speechBox'); if(!box)return;
+  const d=document.createElement('div'); d.className='opt-row';
+  d.innerHTML=`<div style="display:flex;justify-content:space-between"><b style="font-size:12px">Выступление ${speechCount}</b>
+    <button type="button" class="danger small" onclick="this.closest('.opt-row').remove()">×</button></div>
+    <label>Заголовок<input name="sp_title" value="${esc(title||'')}"></label>
+    <label style="margin-top:6px;display:block">Текст<textarea name="sp_text" rows="3">${esc(text||'')}</textarea></label>`;
+  box.appendChild(d);
+}
+function addSlideRow(title,body){
+  slideCount++;
+  const box=document.getElementById('slideBoxForm'); if(!box)return;
+  const d=document.createElement('div'); d.className='opt-row';
+  d.innerHTML=`<div style="display:flex;justify-content:space-between"><b style="font-size:12px">Слайд ${slideCount}</b>
+    <button type="button" class="danger small" onclick="this.closest('.opt-row').remove()">×</button></div>
+    <label>Заголовок<input name="sl_title" value="${esc(title||'')}"></label>
+    <label style="margin-top:6px;display:block">Текст<textarea name="sl_body" rows="3">${esc(body||'')}</textarea></label>`;
+  box.appendChild(d);
+}
+function prefillMeetingEdit(){
+  const m=db.meetings.find(x=>x.id===detailMeetingId); if(!m)return;
+  (m.speeches||[]).forEach(s=>addSpeechRow(s.title,s.text));
+  (m.slides||[]).forEach(s=>addSlideRow(s.title,s.body));
+  if(!(m.speeches||[]).length) addSpeechRow();
+  if(!(m.slides||[]).length) addSlideRow();
 }
 
 function formFor(t){
-  if(t==='schedule') return `<div class="form-grid">${field('Класс','klass','8А','text','required')}<label>День<select name="day">${days.map(d=>`<option>${d}</option>`).join('')}</select></label><label class="full">Уроки<textarea name="lessons" required placeholder="Математика — 205&#10;Русский — 12"></textarea></label><label class="full" style="display:flex;gap:8px;align-items:center;font-weight:500"><input type="checkbox" name="newCampus" value="1" style="width:auto"> Новый корпус</label></div>`;
-  if(t==='meeting') return `<div class="form-grid">${field('Название','title','Очередное собрание','text','required')}${field('Дата','date','','date','required')}${field('Время','time','16:00','time')}<label>Статус<select name="status"><option>Запланировано</option><option>Проведено</option><option>Отменено</option></select></label><label class="full">Повестка<textarea name="agenda" placeholder="1. …&#10;2. …"></textarea></label><label class="full">Итоги / протокол<textarea name="minutes" placeholder="Что решили…"></textarea></label><div class="full muted" style="font-size:12px">${fbEnabled?'Собрание сохранится в Firebase и будет видно старостам.':'Локально (Firebase выкл).'}</div></div>`;
-  if(t==='poll') return `<div class="form-grid"><label class="full">Вопрос голосования<input name="title" required placeholder="Когда провести мероприятие?"></label><label class="full">Описание / контекст<textarea name="description" placeholder="Кратко опиши ситуацию"></textarea></label>
-    <div class="full"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><b style="font-size:13px">Варианты ответа</b><button type="button" class="secondary small" onclick="addOptRow()">＋ Вариант</button></div>
-    <div id="optBox"></div>
-    <p class="muted" style="font-size:12px;margin:6px 0 0">Минимум 2 варианта. У каждого — название и необязательное описание.</p></div>
-    <label>Тип выбора<select name="mode"><option value="single">Один вариант</option><option value="multi">Несколько вариантов</option></select></label>${field('Дата закрытия','deadline','','date')}
-    <div class="full muted" style="font-size:12px">${fbEnabled?'Опрос уйдёт в Firebase.':'Локально.'}</div></div>`;
-  if(t==='user') return `<div class="form-grid">
-    <label class="full">Имя (как отображать)<input name="name" required placeholder="Иван Иванов"></label>
-    <label>Логин<input name="login" required placeholder="ivan8a" pattern="[a-zA-Z0-9_\\-]+" title="Латиница, цифры, _ -"></label>
-    <label>Пароль<input name="password" required placeholder="Пароль" type="text"></label>
-    <label>Роль<select name="role"><option value="starost">Староста</option><option value="chair">Председатель</option></select></label>
-    <label>Класс<input name="klass" placeholder="8А"></label>
-    <div class="full muted" style="font-size:12px">Логин только латиницей. Староста увидит голосования и собрания. Председатель — полный доступ.</div>
+  if(t==='poll') return `<div class="form-grid"><label class="full">Вопрос<input name="title" required></label>
+    <label class="full">Описание<textarea name="description"></textarea></label>
+    <div class="full"><div style="display:flex;justify-content:space-between"><b style="font-size:13px">Варианты</b><button type="button" class="secondary small" onclick="addOptRow()">＋</button></div><div id="optBox"></div></div>
+    <label>Тип<select name="mode"><option value="single">Один</option><option value="multi">Несколько</option></select></label>
+    <label>Режим<select name="anonymous"><option value="yes">Анонимно</option><option value="no">Именно (имена видны)</option></select></label>
+    <label>Кворум (N голосов)<input name="quorum" type="number" min="0" placeholder="0 = без кворума"></label>
+    ${field('Закрытие','deadline','','date')}</div>`;
+  if(t==='meeting') return `<div class="form-grid">${field('Название','title','','text','required')}${field('Дата','date','','date','required')}
+    ${field('Время','time','16:00','time')}${field('Место','place','Каб. / зал')}
+    <label>Статус<select name="status"><option>Запланировано</option><option>Проведено</option><option>Отменено</option></select></label>
+    <label class="full">Повестка<textarea name="agenda"></textarea></label>
+    <label class="full">Итоги<textarea name="minutes"></textarea></label>
+    <div class="full"><div style="display:flex;justify-content:space-between"><b style="font-size:13px">Тексты выступлений</b><button type="button" class="secondary small" onclick="addSpeechRow()">＋</button></div><div id="speechBox"></div></div>
+    <div class="full"><div style="display:flex;justify-content:space-between"><b style="font-size:13px">Слайды презентации</b><button type="button" class="secondary small" onclick="addSlideRow()">＋</button></div><div id="slideBoxForm"></div></div>
   </div>`;
-  if(t==='decision') return `<div class="form-grid"><label class="full">Задача<input name="title" required></label>${field('Ответственный','owner')}${field('Срок','deadline','','date')}<label>Статус<select name="status"><option>В работе</option><option>Выполнено</option><option>Отложено</option></select></label><label>Источник<select name="source"><option>Собрание</option><option>Голосование</option><option>Инициатива</option></select></label><label class="full">Комментарий<textarea name="note"></textarea></label></div>`;
-  return `<div class="form-grid"><label class="full">Название<input name="title" required></label><label>Тип<select name="type"><option>Протокол</option><option>Повестка</option><option>Отчёт</option><option>Положение</option><option>Ссылка</option><option>Другое</option></select></label>${field('Дата','date','','date')}${field('Ссылка','url','','url')}<label class="full">Описание<textarea name="description"></textarea></label></div>`;
+  if(t==='meetingEdit') return `<div class="form-grid">
+    <div class="full"><div style="display:flex;justify-content:space-between"><b>Выступления</b><button type="button" class="secondary small" onclick="addSpeechRow()">＋</button></div><div id="speechBox"></div></div>
+    <div class="full"><div style="display:flex;justify-content:space-between"><b>Слайды</b><button type="button" class="secondary small" onclick="addSlideRow()">＋</button></div><div id="slideBoxForm"></div></div>
+  </div>`;
+  if(t==='ann') return `<div class="form-grid"><label class="full">Заголовок<input name="title" required></label><label class="full">Текст<textarea name="text" required rows="5"></textarea></label></div>`;
+  if(t==='event') return `<div class="form-grid">${field('Название','title','','text','required')}${field('Дата','date','','date','required')}${field('Время','time','','time')}${field('Место','place')}
+    <label class="full">Описание<textarea name="description"></textarea></label></div>`;
+  if(t==='duty') {
+    const starosts=db.users.filter(u=>u.active!==false).sort((a,b)=>(a.klass||'').localeCompare(b.klass||'')||(a.name||'').localeCompare(b.name||''));
+    return `<div class="form-grid">${field('Дата','date','','date','required')}${field('Этаж / зона','floor','2 этаж','text','required')}
+    <label class="full">Кто дежурит (аккаунты)<select name="userIds" id="dutyUsers" multiple size="6" style="min-height:120px">
+      ${starosts.map(u=>`<option value="${u.id}">${esc(u.name||u.login)}${u.klass?' · '+esc(u.klass):''}${u.role==='chair'?' (предс.)':''}</option>`).join('')}
+    </select></label>
+    <p class="full muted" style="font-size:12px">Зажми Ctrl (Cmd), чтобы выбрать несколько. Список из аккаунтов.</p>
+    <label class="full">Или текстом (если нет в списке)<input name="people" placeholder="Дополнительно ФИО"></label>
+    <label class="full">Комментарий<textarea name="note"></textarea></label></div>`;
+  }
+  if(t==='problem') return `<div class="form-grid"><label class="full">Тема<input name="title" required></label>${field('Класс','klass',currentUser.klass||'')}
+    <label class="full">Описание<textarea name="text" required></textarea></label></div>`;
+  if(t==='idea') return `<div class="form-grid"><label class="full">Идея<input name="title" required></label>
+    <label class="full">Описание<textarea name="text"></textarea></label></div>`;
+  if(t==='link') return `<div class="form-grid">${field('Название','title','','text','required')}${field('URL','url','https://','url','required')}
+    <label>Категория<select name="category"><option>Учёба</option><option>Еда</option><option>Дневник</option><option>Библиотека</option><option>Другое</option></select></label>
+    <label class="full">Описание<textarea name="description"></textarea></label></div>`;
+  if(t==='user') return `<div class="form-grid">${field('Имя','name','','text','required')}${field('Логин','login','','text','required')}
+    ${field('Пароль','password','','text','required')}<label>Роль<select name="role"><option value="starost">Староста</option><option value="chair">Председатель</option></select></label>
+    ${field('Класс','klass')}${field('Телефон','phone')}${field('Контакт (TG/VK)','contact')}</div>`;
+  if(t==='disciplineChair') {
+    const starosts=db.users.filter(u=>u.role==='starost'&&u.active!==false);
+    return `<div class="form-grid">
+      <label>Староста / класс<select name="ownerId" required>
+        <option value="">— выбери —</option>
+        ${starosts.map(u=>`<option value="${u.id}">${esc(u.name)}${u.klass?' · '+esc(u.klass):''}</option>`).join('')}
+      </select></label>
+      <label>Дата<input name="date" type="date" value="${new Date().toISOString().slice(0,10)}" required></label>
+      <label>Ученик (ФИО)<input name="studentName" placeholder="Иванов Иван"></label>
+      <label>Тип<select name="kind"><option>Замечание</option><option>Опоздание</option><option>Пропуск</option><option>Благодарность</option><option>Дисциплина</option><option>Другое</option></select></label>
+      <label class="full">Текст<textarea name="text" required rows="4"></textarea></label>
+    </div>`;
+  }
+  if(t==='student') return `<div class="form-grid"><label class="full">ФИО ученика<input name="name" required placeholder="Иванов Иван"></label>
+    <p class="full muted" style="font-size:12px">Ученик попадёт в список твоего класса для отметок посещаемости.</p></div>`;
+  if(t==='discipline') return `<div class="form-grid">
+    <label>Ученик<select name="studentId" id="discStudent"><option value="">— Весь класс / общее —</option>${myStudents().map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select></label>
+    <label>Дата<input name="date" type="date" value="${new Date().toISOString().slice(0,10)}" required></label>
+    <label>Тип<select name="kind"><option>Замечание</option><option>Опоздание</option><option>Пропуск</option><option>Благодарность</option><option>Дисциплина</option><option>Другое</option></select></label>
+    <label class="full">Текст записи<textarea name="text" required rows="4" placeholder="Что произошло…"></textarea></label>
+  </div>`;
+  if(t==='schedule') return `<div class="form-grid">${field('Класс','klass','8А','text','required')}<label>День<select name="day">${days.map(d=>`<option>${d}</option>`).join('')}</select></label>
+    <label class="full" style="display:flex;gap:8px;align-items:center;font-weight:500"><input type="checkbox" name="newCampus" value="1" style="width:auto"> Новый корпус</label>
+    <div class="full"><div style="display:flex;justify-content:space-between"><b style="font-size:13px">Уроки</b><button type="button" class="secondary small" onclick="addLessonRow()">＋</button></div><div id="lessonBox"></div></div></div>`;
+  return '';
 }
 
 async function submitModal(e){
   e.preventDefault();
-  const f=new FormData(e.target);
-  const v=Object.fromEntries(f.entries());
-  const id=uid();
-
-  if(modalType==='schedule'){
-    const raw=(v.lessons||'').trim();
-    const lessons=raw.includes('\n')?raw.split(/\n+/).map(s=>s.trim()).filter(Boolean).join('; '):raw;
-    db.schedules.push({id,klass:(v.klass||'').trim(),day:v.day,lessons,newCampus:!!f.get('newCampus')});
-    closeModal();saveLocal();renderAll();toast('Сохранено');return;
-  }
-  if(modalType==='decision'){
-    db.decisions.push({id,title:v.title,owner:v.owner,deadline:v.deadline,status:v.status,source:v.source,note:v.note,created:new Date().toISOString()});
-    closeModal();saveLocal();renderAll();toast('Сохранено');return;
-  }
-  if(modalType==='document'){
-    db.documents.push({id,title:v.title,type:v.type,date:v.date,url:v.url,description:v.description});
-    closeModal();saveLocal();renderAll();toast('Сохранено');return;
-  }
-  if(modalType==='meeting'){
-    const m={title:v.title,date:v.date,time:v.time||'',status:v.status||'Запланировано',agenda:v.agenda||'',minutes:v.minutes||'',updated:new Date().toISOString()};
-    if(fbEnabled){
-      try{
-        const ref=await firestore.collection('meetings').add(m);
-        m.id=ref.id; m.fb=true;
-        toast('Собрание сохранено в Firebase');
-      }catch(err){
-        console.error(err);
-        m.id=id;
-        toast('Ошибка Firebase: '+err.message+' — сохранено локально');
+  const f=new FormData(e.target), v=Object.fromEntries(f.entries());
+  try{
+    if(modalType==='poll'){
+      const texts=f.getAll('opt_text').map(String), descs=f.getAll('opt_desc').map(String), links=f.getAll('opt_link').map(String);
+      const options=[]; for(let i=0;i<texts.length;i++) if(texts[i].trim()) options.push({text:texts[i].trim(),desc:(descs[i]||'').trim(),link:(links[i]||'').trim(),votes:0});
+      if(options.length<2){toast('Минимум 2 варианта');return}
+      const poll={title:v.title,description:v.description||'',options,mode:v.mode==='multi'?'multi':'single',
+        anonymous:v.anonymous!=='no',quorum:Number(v.quorum)||0,deadline:v.deadline||'',status:'Открыто',
+        voterIds:[],voterNames:[],created:new Date().toISOString()};
+      const pollRef=await firestore.collection('polls').add(poll);
+      const mid=window._linkPollToMeeting;
+      window._linkPollToMeeting=null;
+      if(mid){
+        try{
+          const mdoc=await firestore.collection('meetings').doc(mid).get();
+          const ids=(mdoc.exists&&mdoc.data().pollIds)||[];
+          ids.push(pollRef.id);
+          await firestore.collection('meetings').doc(mid).set({pollIds:ids,updated:new Date().toISOString()},{merge:true});
+          toast('Опрос создан и привязан к собранию');
+        }catch(e){toast('Опрос создан, привязка: '+e.message)}
+      } else {
+        toast('Опрос создан');
       }
-    }else{m.id=id}
-    // avoid duplicate if listener will add it
-    if(!db.meetings.some(x=>x.id===m.id)) db.meetings.push(m);
-    closeModal();saveLocal();renderAll();return;
-  }
-  if(modalType==='user'){
-    const login=(v.login||'').trim().toLowerCase();
-    const name=(v.name||'').trim();
-    const password=String(v.password||'');
-    const role=v.role==='chair'?'chair':'starost';
-    const klass=(v.klass||'').trim();
-    if(!login||!password||!name){toast('Заполни имя, логин и пароль');return}
-    if(!/^[a-z0-9_-]+$/i.test(login)){toast('Логин: только латиница, цифры, _ -');return}
-    if(!fbEnabled){toast('Нужен Firebase для аккаунтов');return}
-    try{
-      const exists=await firestore.collection('users').where('login','==',login).limit(1).get();
-      if(!exists.empty){toast('Такой логин уже занят');return}
-      await firestore.collection('users').add({login,password,name,role,klass,active:true,created:new Date().toISOString()});
-      closeModal();toast('Аккаунт создан');
-    }catch(err){console.error(err);toast('Ошибка: '+err.message)}
-    return;
-  }
-  if(modalType==='poll'){
-    const texts=f.getAll('opt_text').map(s=>String(s).trim());
-    const descs=f.getAll('opt_desc').map(s=>String(s).trim());
-    const opts=[];
-    for(let i=0;i<texts.length;i++){
-      if(texts[i]) opts.push({text:texts[i], desc:descs[i]||'', votes:0});
+      closeModal();
+      notifyNewPoll(poll.title);
+      return;
     }
-    if(opts.length<2){toast('Добавь минимум 2 варианта');return}
-    const poll={title:v.title,description:v.description||'',options:opts,deadline:v.deadline||'',status:'Открыто',mode:v.mode==='multi'?'multi':'single',created:new Date().toISOString()};
-    if(fbEnabled){
-      try{
-        await firestore.collection('polls').add(poll);
-        closeModal();toast('Опрос создан в Firebase');
-      }catch(err){console.error(err);toast('Ошибка: '+err.message)}
-    }else{
-      poll.id=id;
-      db.polls.push(poll);
-      closeModal();saveLocal();renderAll();toast('Сохранено локально');
+    if(modalType==='meeting'){
+      const speeches=[], slides=[];
+      const st=f.getAll('sp_title'), stx=f.getAll('sp_text');
+      for(let i=0;i<st.length;i++) if(String(st[i]||stx[i]||'').trim()) speeches.push({title:String(st[i]||'').trim(),text:String(stx[i]||'').trim()});
+      const slt=f.getAll('sl_title'), slb=f.getAll('sl_body');
+      for(let i=0;i<slt.length;i++) if(String(slt[i]||slb[i]||'').trim()) slides.push({title:String(slt[i]||'').trim(),body:String(slb[i]||'').trim()});
+      await firestore.collection('meetings').add({title:v.title,date:v.date,time:v.time||'',place:v.place||'',status:v.status||'Запланировано',
+        agenda:v.agenda||'',minutes:v.minutes||'',speeches,slides,updated:new Date().toISOString()});
+      closeModal(); toast('Собрание создано'); return;
     }
-  }
-}
-
-/* ----- CHARTS ----- */
-function chartBars(p){
-  const tot=pollTotal(p)||1, maxV=Math.max(...p.options.map(o=>o.votes||0),1);
-  return `<div class="bar-chart">${p.options.map((o,i)=>{
-    const pct=Math.round((o.votes||0)/tot*100), w=Math.round((o.votes||0)/maxV*100);
-    return `<div class="bar-row"><div class="bar-label">${esc(o.text)}</div>${o.desc?`<div class="bar-desc">${esc(o.desc)}</div>`:''}<div class="bar-track"><div class="bar-fill" style="width:${w}%;background:${COLORS[i%COLORS.length]}"></div></div><div class="bar-pct">${pct}% · ${o.votes||0}</div></div>`;
-  }).join('')}</div>`;
-}
-function chartPie(p){
-  const tot=pollTotal(p);
-  if(!tot) return '<p class="muted" style="font-size:12px">Голосов пока нет</p>';
-  let acc=0;
-  const segs=p.options.map((o,i)=>{
-    const start=acc/tot*360; acc+=o.votes||0; const end=acc/tot*360;
-    return `<circle r="16" cx="18" cy="18" fill="transparent" stroke="${COLORS[i%COLORS.length]}" stroke-width="8" stroke-dasharray="${(end-start)/360*100.53} 100.53" transform="rotate(${start-90} 18 18)"></circle>`;
-  }).join('');
-  const legend=p.options.map((o,i)=>`<div><i style="background:${COLORS[i%COLORS.length]}"></i>${esc(o.text)} — ${o.votes||0}</div>`).join('');
-  return `<div class="pie-wrap"><svg class="pie-svg" viewBox="0 0 36 36">${segs}</svg><div class="pie-legend">${legend}</div></div>`;
-}
-
-/* ----- RENDER: schedules ----- */
-function formatLessons(s){
-  if(!s) return '';
-  const p=String(s).split(/;\s*/).map(x=>x.trim()).filter(Boolean);
-  return p.length<=1?esc(s):p.map(x=>`<div>${esc(x)}</div>`).join('');
-}
-function renderSchedules(){
-  const q=(document.getElementById('scheduleSearch')?.value||'').toLowerCase();
-  const day=document.getElementById('scheduleDay')?.value||'';
-  const campus=document.getElementById('scheduleCampus')?.value||'';
-  const arr=db.schedules.filter(x=>{
-    const mq=(x.klass+' '+x.lessons).toLowerCase().includes(q);
-    const md=!day||x.day===day;
-    const mc=campus===''||(campus==='new'&&x.newCampus)||(campus==='old'&&!x.newCampus);
-    return mq&&md&&mc;
-  });
-  const el=document.getElementById('scheduleList');
-  if(!el) return;
-  el.innerHTML=arr.length?`<div class="table-wrap"><table class="table"><thead><tr><th>Класс</th><th>День</th><th>Корпус</th><th>Уроки</th><th></th></tr></thead><tbody>${arr.map(x=>`<tr>
-    <td class="maincell">${esc(x.klass)}</td><td>${esc(x.day)}</td>
-    <td>${x.newCampus?'<span class="badge-campus">✓ Новый корпус</span>':'<span class="muted">—</span>'}</td>
-    <td>${formatLessons(x.lessons)}</td>
-    <td><button class="danger small" onclick="delLocal('schedules','${x.id}')">Удалить</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty"><b>Расписаний нет</b>Добавь первый класс.</div>';
-}
-
-/* ----- RENDER: meetings (chair) ----- */
-function renderMeetings(){
-  const q=(document.getElementById('meetingSearch')?.value||'').toLowerCase();
-  const st=document.getElementById('meetingFilter')?.value||'';
-  const a=[...db.meetings].filter(x=>(x.title+' '+(x.agenda||'')+' '+(x.minutes||'')).toLowerCase().includes(q)&&(!st||x.status===st))
-    .sort((x,y)=>(x.date||'').localeCompare(y.date||''));
-  const el=document.getElementById('meetingList');
-  if(!el) return;
-  el.innerHTML=a.length?a.map(x=>`<div class="card"><div class="meeting-row">
-    <div class="datebox"><b>${dayNum(x.date)}</b><span>${monthShort(x.date)}</span></div>
-    <div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;gap:8px"><h4 style="margin:0">${esc(x.title)}</h4>${statusPill(x.status)}</div>
-    <p style="margin:4px 0;font-size:12px;color:var(--muted)">${dateLabel(x.date)}${x.time?' · '+esc(x.time):''}${x.fb?' · онлайн':''}</p>
-    ${x.agenda?`<div class="block-title">Повестка</div><div class="block-body">${esc(x.agenda)}</div>`:''}
-    ${x.minutes?`<div class="block-title">Итоги</div><div class="block-body">${esc(x.minutes)}</div>`:''}
-    </div></div>
-    <div class="card-actions">
-      <button class="secondary small" onclick="editMeeting('${x.id}')">Итоги</button>
-      <button class="danger small" onclick="delMeeting('${x.id}')">Удалить</button>
-    </div></div>`).join(''):'<div class="panel empty"><b>Собраний нет</b></div>';
-}
-async function editMeeting(id){
-  const x=db.meetings.find(a=>a.id===id);if(!x)return;
-  const t=prompt('Итоги / протокол:',x.minutes||'');if(t===null)return;
-  x.minutes=t;
-  if(x.status==='Запланировано') x.status='Проведено';
-  x.updated=new Date().toISOString();
-  if(fbEnabled){
-    try{
-      await firestore.collection('meetings').doc(id).set({
-        title:x.title,date:x.date,time:x.time||'',status:x.status,
-        agenda:x.agenda||'',minutes:x.minutes||'',updated:x.updated
-      },{merge:true});
-      toast('Итоги сохранены онлайн');
-    }catch(err){console.error(err);toast(err.message);saveLocal()}
-  }else{saveLocal();toast('Итоги сохранены')}
-  renderAll();
-}
-async function delMeeting(id){
-  if(!confirm('Удалить собрание?'))return;
-  if(fbEnabled){
-    try{await firestore.collection('meetings').doc(id).delete()}catch(e){console.error(e);toast(e.message)}
-  }
-  db.meetings=db.meetings.filter(x=>x.id!==id);
-  saveLocal();renderAll();toast('Удалено');
-}
-
-/* ----- RENDER: polls (chair) ----- */
-function renderPolls(){
-  const filter=document.getElementById('pollFilter')?.value||'';
-  const a=db.polls.filter(p=>!filter||p.status===filter);
-  const el=document.getElementById('pollList');
-  if(!el) return;
-  el.innerHTML=a.length?a.map(p=>{
-    const tot=pollTotal(p), voted=userHasVoted(p), isMulti=p.mode==='multi';
-    let body='';
-    if(p.status==='Открыто'&&!voted){
-      body=`<form onsubmit="vote(event,'${p.id}')">${p.options.map((o,i)=>`<label class="option"><input type="${isMulti?'checkbox':'radio'}" name="choice" value="${i}" ${isMulti?'':'required'}><span class="opt-body"><span class="opt-text">${esc(o.text)}</span>${o.desc?`<span class="opt-desc">${esc(o.desc)}</span>`:''}</span></label>`).join('')}<div class="card-actions"><button type="submit">Проголосовать</button></div></form>`;
-    }else{
-      body=chartBars(p)+chartPie(p)+(voted?'<p class="muted" style="font-size:12px">Уже голосовали с этого устройства</p>':'');
+    if(modalType==='meetingEdit'){
+      const speeches=[], slides=[];
+      const st=f.getAll('sp_title'), stx=f.getAll('sp_text');
+      for(let i=0;i<st.length;i++) if(String(st[i]||stx[i]||'').trim()) speeches.push({title:String(st[i]||'').trim(),text:String(stx[i]||'').trim()});
+      const slt=f.getAll('sl_title'), slb=f.getAll('sl_body');
+      for(let i=0;i<slt.length;i++) if(String(slt[i]||slb[i]||'').trim()) slides.push({title:String(slt[i]||'').trim(),body:String(slb[i]||'').trim()});
+      await firestore.collection('meetings').doc(detailMeetingId).set({speeches,slides,updated:new Date().toISOString()},{merge:true});
+      closeModal(); toast('Материалы сохранены'); return;
     }
-    return `<div class="poll"><div style="display:flex;justify-content:space-between;gap:8px"><h4>${esc(p.title)}</h4>${statusPill(p.status)}</div>
-      <div class="meta">${esc(p.description||'')} · ${pollModeLabel(p)} · ${tot} голос(ов)${fbEnabled?' · онлайн':''}</div>
-      ${body}
-      <div class="card-actions">
-        <button class="secondary small" onclick="togglePoll('${p.id}')">${p.status==='Открыто'?'Закрыть':'Открыть'}</button>
-        <button class="danger small" onclick="delPoll('${p.id}')">Удалить</button>
-      </div></div>`;
-  }).join(''):'<div class="panel empty"><b>Опросов нет</b>Создай голосование с отдельными полями для вариантов.</div>';
-}
-
-async function vote(e,id){
-  e.preventDefault();
-  if(!currentUser){toast('Войди в аккаунт');return}
-  const p=db.polls.find(x=>x.id===id);
-  if(!p||p.status!=='Открыто')return;
-  const voterIds=p.voterIds||[];
-  if(voterIds.includes(currentUser.id)){toast('Вы уже голосовали с этого аккаунта');return}
-  const choices=[...new FormData(e.target).getAll('choice')].map(Number);
-  if(!choices.length){toast('Выбери вариант');return}
-  if(p.mode!=='multi'&&choices.length>1){toast('Только один вариант');return}
-  const btn=e.target.querySelector('button[type=submit]');
-  if(btn) btn.disabled=true;
-  if(fbEnabled){
-    try{
-      const ref=firestore.collection('polls').doc(id);
-      await firestore.runTransaction(async tx=>{
-        const snap=await tx.get(ref);
-        if(!snap.exists) throw new Error('Опрос не найден');
-        const data=snap.data();
-        if(data.status!=='Открыто') throw new Error('Закрыто');
-        const vids=data.voterIds||[];
-        if(vids.includes(currentUser.id)) throw new Error('Уже голосовали');
-        const options=data.options.map((o,i)=>({...o,votes:(o.votes||0)+(choices.includes(i)?1:0)}));
-        tx.update(ref,{options, voterIds:[...vids, currentUser.id]});
+    if(modalType==='ann'){
+      await firestore.collection('announcements').add({title:v.title,text:v.text,created:new Date().toISOString()});
+      closeModal(); toast('Опубликовано'); return;
+    }
+    if(modalType==='event'){
+      await firestore.collection('events').add({title:v.title,date:v.date,time:v.time||'',place:v.place||'',description:v.description||''});
+      closeModal(); toast('Событие добавлено'); return;
+    }
+    if(modalType==='duty'){
+      const userIds=f.getAll('userIds').map(String).filter(Boolean);
+      const assignees=userIds.map(id=>{
+        const u=db.users.find(x=>x.id===id);
+        return u?{id:u.id,name:u.name||u.login,klass:u.klass||'',login:u.login}:null;
+      }).filter(Boolean);
+      const peopleText=assignees.map(a=>a.name+(a.klass?' ('+a.klass+')':'')).join(', ')
+        + (v.people?((assignees.length?', ':'')+v.people):'');
+      if(!assignees.length && !(v.people||'').trim()){toast('Выбери хотя бы одного из аккаунтов или укажи текстом');return}
+      await firestore.collection('duties').add({
+        date:v.date,floor:v.floor,people:peopleText,note:v.note||'',
+        userIds, assignees, created:new Date().toISOString()
       });
-      toast('Голос учтён');
-    }catch(err){console.error(err);toast(err.message);if(btn)btn.disabled=false}
-  }else{
-    toast('Нужен Firebase для голосования');
-    if(btn)btn.disabled=false;
-  }
-}
-async function togglePoll(id){
-  const p=db.polls.find(x=>x.id===id);if(!p)return;
-  const next=p.status==='Открыто'?'Закрыто':'Открыто';
-  if(fbEnabled){
-    try{await firestore.collection('polls').doc(id).update({status:next});toast('Статус обновлён')}
-    catch(e){toast(e.message)}
-  }else{p.status=next;saveLocal();renderAll()}
-}
-async function delPoll(id){
-  if(!confirm('Удалить опрос?'))return;
-  if(fbEnabled){try{await firestore.collection('polls').doc(id).delete()}catch(e){toast(e.message);return}}
-  db.polls=db.polls.filter(x=>x.id!==id);saveLocal();renderAll();toast('Удалено');
-}
-
-/* ----- decisions / documents ----- */
-function renderDecisions(){
-  const q=(document.getElementById('decisionSearch')?.value||'').toLowerCase();
-  const st=document.getElementById('decisionFilter')?.value||'';
-  const a=[...db.decisions].filter(x=>(x.title+' '+(x.owner||'')).toLowerCase().includes(q)&&(!st||x.status===st));
-  const el=document.getElementById('decisionList');
-  if(!el) return;
-  el.innerHTML=a.length?`<div class="table-wrap"><table class="table"><thead><tr><th>Задача</th><th>Кто</th><th>Срок</th><th>Статус</th><th></th></tr></thead><tbody>${a.map(x=>`<tr>
-    <td class="maincell">${esc(x.title)}</td><td>${esc(x.owner||'—')}</td><td>${dateLabel(x.deadline)}</td>
-    <td><select style="padding:6px" onchange="setDecisionStatus('${x.id}',this.value)">${['В работе','Выполнено','Отложено'].map(s=>`<option ${s===x.status?'selected':''}>${s}</option>`).join('')}</select></td>
-    <td><button class="danger small" onclick="delLocal('decisions','${x.id}')">×</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty"><b>Задач нет</b></div>';
-}
-function setDecisionStatus(id,s){const x=db.decisions.find(x=>x.id===id);if(x){x.status=s;saveLocal();renderAll()}}
-function renderDocuments(){
-  const q=(document.getElementById('docSearch')?.value||'').toLowerCase();
-  const type=document.getElementById('docType')?.value||'';
-  const a=db.documents.filter(x=>(x.title+' '+(x.description||'')).toLowerCase().includes(q)&&(!type||x.type===type));
-  const el=document.getElementById('documentList');
-  if(!el) return;
-  el.innerHTML=a.length?a.map(x=>`<div class="card"><span class="pill">${esc(x.type)}</span><h4>${esc(x.title)}</h4><p>${esc(x.description||'')}</p>${x.url?`<a href="${esc(x.url)}" target="_blank" rel="noopener" style="font-size:12px;color:var(--blue)">Ссылка ↗</a>`:''}<div class="card-actions"><button class="danger small" onclick="delLocal('documents','${x.id}')">Удалить</button></div></div>`).join(''):'<div class="panel empty"><b>Документов нет</b></div>';
-}
-function delLocal(key,id){if(!confirm('Удалить?'))return;db[key]=db[key].filter(x=>x.id!==id);saveLocal();renderAll();toast('Удалено')}
-
-
-function renderUsers(){
-  const el=document.getElementById('userList');
-  if(!el) return;
-  const a=[...db.users].sort((x,y)=>(x.role===y.role?0:x.role==='chair'?-1:1)||(x.login||'').localeCompare(y.login||''));
-  if(!a.length){el.innerHTML='<div class="empty"><b>Нет аккаунтов</b>Создай admin войдёт автоматически при первом входе.</div>';return}
-  el.innerHTML=`<div class="table-wrap"><table class="table"><thead><tr><th>Имя</th><th>Логин</th><th>Роль</th><th>Класс</th><th>Статус</th><th></th></tr></thead><tbody>${a.map(u=>`<tr>
-    <td class="maincell">${esc(u.name||'—')}</td>
-    <td><code>${esc(u.login)}</code></td>
-    <td>${u.role==='chair'?'<span class="pill amber">Председатель</span>':'<span class="pill">Староста</span>'}</td>
-    <td>${esc(u.klass||'—')}</td>
-    <td>${u.active===false?'<span class="pill red">Выкл</span>':'<span class="pill green">Активен</span>'}</td>
-    <td style="white-space:nowrap">
-      <button class="secondary small" onclick="toggleUserActive('${u.id}', ${u.active===false?'true':'false'})">${u.active===false?'Включить':'Выключить'}</button>
-      ${u.login==='admin'?'':`<button class="danger small" onclick="delUser('${u.id}')">Удалить</button>`}
-    </td></tr>`).join('')}</tbody></table></div>`;
-}
-async function toggleUserActive(id, makeActive){
-  if(!fbEnabled)return;
-  try{await firestore.collection('users').doc(id).update({active:!!makeActive});toast(makeActive?'Включён':'Отключён')}
-  catch(e){toast(e.message)}
-}
-async function delUser(id){
-  if(!confirm('Удалить аккаунт?'))return;
-  if(id===currentUser?.id){toast('Нельзя удалить себя');return}
-  try{await firestore.collection('users').doc(id).delete();toast('Удалён')}
-  catch(e){toast(e.message)}
-}
-
-/* ----- STAROST renders ----- */
-function renderStarostPolls(){
-  const open=db.polls.filter(p=>p.status==='Открыто');
-  const el=document.getElementById('sPollList');
-  if(!el) return;
-  if(!open.length){el.innerHTML='<div class="card empty"><b>Нет открытых голосований</b>Когда председатель создаст опрос — он появится здесь.</div>';return}
-  el.innerHTML=open.map(p=>{
-    const voted=userHasVoted(p), isMulti=p.mode==='multi', tot=pollTotal(p);
-    let body='';
-    if(!voted){
-      body=`<form onsubmit="vote(event,'${p.id}')">${p.options.map((o,i)=>`<label class="option"><input type="${isMulti?'checkbox':'radio'}" name="choice" value="${i}" ${isMulti?'':'required'}><span class="opt-body"><span class="opt-text">${esc(o.text)}</span>${o.desc?`<span class="opt-desc">${esc(o.desc)}</span>`:''}</span></label>`).join('')}<div class="card-actions"><button type="submit">Проголосовать</button></div></form>`;
-    }else{
-      body=chartBars(p)+chartPie(p)+'<p class="muted" style="font-size:12px">Вы уже проголосовали.</p>';
+      closeModal(); toast('Дежурство сохранено'); return;
     }
-    return `<div class="poll"><div style="display:flex;justify-content:space-between;gap:8px"><h4>${esc(p.title)}</h4>${statusPill(p.status)}</div>
-      <div class="meta">${esc(p.description||'')} · ${pollModeLabel(p)} · ${tot} голос(ов)</div>${body}</div>`;
-  }).join('');
-}
-function renderStarostMeetings(){
-  const el=document.getElementById('sMeetingList');
-  if(!el) return;
-  if(!db.meetings.length){el.innerHTML='<div class="card empty"><b>Собраний пока нет</b>Председатель ещё не добавил встречи.</div>';return}
-  const sorted=[...db.meetings].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  el.innerHTML=sorted.map(m=>`<div class="card"><div class="meeting-row">
-    <div class="datebox"><b>${dayNum(m.date)}</b><span>${monthShort(m.date)}</span></div>
-    <div style="flex:1"><div style="display:flex;justify-content:space-between;gap:8px"><h4 style="margin:0">${esc(m.title)}</h4>${statusPill(m.status)}</div>
-    <p style="margin:4px 0;font-size:12px;color:var(--muted)">${dateLabel(m.date)}${m.time?' · '+esc(m.time):''}</p>
-    ${m.agenda?`<div class="block-title">Повестка</div><div class="block-body">${esc(m.agenda)}</div>`:''}
-    ${m.minutes?`<div class="block-title">Итоги / протокол</div><div class="block-body">${esc(m.minutes)}</div>`:'<p class="muted" style="font-size:12px;margin-top:8px">Итоги ещё не заполнены</p>'}
-    </div></div></div>`).join('');
-}
-function renderStarostResults(){
-  const closed=db.polls.filter(p=>p.status!=='Открыто');
-  const el=document.getElementById('sResultList');
-  if(!el) return;
-  if(!closed.length){el.innerHTML='<div class="card empty"><b>Нет закрытых опросов</b></div>';return}
-  el.innerHTML=closed.map(p=>`<div class="poll"><div style="display:flex;justify-content:space-between;gap:8px"><h4>${esc(p.title)}</h4>${statusPill(p.status)}</div>
-    <div class="meta">${esc(p.description||'')} · ${pollTotal(p)} голос(ов)</div>${chartBars(p)}${chartPie(p)}</div>`).join('');
+    if(modalType==='problem'){
+      await firestore.collection('problems').add({title:v.title,text:v.text,klass:v.klass||currentUser.klass||'',author:currentUser.name,status:'Новое',created:new Date().toISOString()});
+      closeModal(); toast('Отправлено'); return;
+    }
+    if(modalType==='idea'){
+      await firestore.collection('ideas').add({title:v.title,text:v.text||'',author:currentUser.name,klass:currentUser.klass||'',score:0,voters:{},created:new Date().toISOString()});
+      closeModal(); toast('Идея добавлена'); return;
+    }
+    if(modalType==='link'){
+      await firestore.collection('links').add({title:v.title,url:v.url,category:v.category,description:v.description||''});
+      closeModal(); toast('Ссылка добавлена'); return;
+    }
+    if(modalType==='user'){
+      const login=v.login.trim().toLowerCase();
+      if(!/^[a-z0-9_-]+$/i.test(login)){toast('Логин: латиница');return}
+      const ex=await firestore.collection('users').where('login','==',login).limit(1).get();
+      if(!ex.empty){toast('Логин занят');return}
+      await firestore.collection('users').add({login,password:v.password,name:v.name,role:v.role==='chair'?'chair':'starost',
+        klass:v.klass||'',phone:v.phone||'',contact:v.contact||'',active:true,created:new Date().toISOString()});
+      closeModal(); toast('Аккаунт создан'); return;
+    }
+        if(modalType==='disciplineChair'){
+      const owner=db.users.find(u=>u.id===v.ownerId);
+      if(!owner){toast('Выбери старосту');return}
+      await firestore.collection('diary').add({
+        ownerId:owner.id, ownerName:owner.name, klass:owner.klass||'',
+        type:'discipline', date:v.date, studentId:null,
+        studentName:(v.studentName||'').trim()||'—',
+        kind:v.kind||'Заметка', text:v.text||'',
+        created:new Date().toISOString(), byChair:true
+      });
+      closeModal(); toast('Запись добавлена'); return;
+    }
+    if(modalType==='student'){
+      let cl=myClassList();
+      if(!cl){
+        const klass=currentUser.klass||'Класс';
+        const ref=await firestore.collection('classlists').add({ownerId:currentUser.id,ownerName:currentUser.name,klass,students:[],updated:new Date().toISOString()});
+        cl={id:ref.id,students:[]};
+      }
+      const name=(v.name||'').trim();
+      if(!name){toast('Укажи ФИО');return}
+      const students=[...(cl.students||[]),{id:uid(),name}];
+      await firestore.collection('classlists').doc(cl.id).update({students,updated:new Date().toISOString()});
+      closeModal(); toast('Ученик добавлен'); return;
+    }
+    if(modalType==='discipline'){
+      const sid=v.studentId||'';
+      const student=myStudents().find(s=>s.id===sid);
+      await firestore.collection('diary').add({
+        ownerId:currentUser.id,ownerName:currentUser.name,klass:(myClassList()||{}).klass||currentUser.klass||'',
+        type:'discipline',date:v.date,studentId:sid||null,studentName:student?student.name:(sid?'':'Общее'),
+        kind:v.kind||'Заметка',text:v.text||'',created:new Date().toISOString()
+      });
+      closeModal(); toast('Запись сохранена'); return;
+    }
+    if(modalType==='schedule'){
+      const nums=f.getAll('les_num'), subjs=f.getAll('les_subj'), rooms=f.getAll('les_room');
+      const items=[]; for(let i=0;i<subjs.length;i++) if(String(subjs[i]).trim()) items.push({num:String(nums[i]||i+1),subject:String(subjs[i]).trim(),room:String(rooms[i]||'').trim()});
+      if(!items.length){toast('Добавь уроки');return}
+      items.sort((a,b)=>Number(a.num)-Number(b.num));
+      db.schedules.push({id:uid(),klass:v.klass,day:v.day,items,lessons:items.map(x=>x.num+'. '+x.subject+(x.room?' — '+x.room:'')).join('; '),newCampus:!!f.get('newCampus')});
+      saveLocal(); closeModal(); renderCurrent(); toast('Сохранено'); return;
+    }
+  }catch(err){console.error(err);toast(err.message)}
 }
 
-/* ----- dashboard / reports ----- */
-function renderDashboard(){
-  const sc=document.getElementById('statClasses');
-  if(!sc) return;
-  sc.textContent=new Set(db.schedules.map(x=>x.klass)).size;
-  document.getElementById('statPolls').textContent=db.polls.filter(x=>x.status==='Открыто').length;
-  document.getElementById('statTasks').textContent=db.decisions.filter(x=>x.status!=='Выполнено').length;
-  document.getElementById('statMeetings').textContent=db.meetings.length;
-  const ms=db.meetings.filter(x=>x.status==='Запланировано').sort((a,b)=>(a.date||'').localeCompare(b.date||'')).slice(0,4);
-  document.getElementById('dashMeetings').innerHTML=ms.length?ms.map(x=>`<div class="event"><div class="datebox"><b>${dayNum(x.date)}</b><span>${monthShort(x.date)}</span></div><div><b style="font-size:13px">${esc(x.title)}</b><p style="margin:2px 0;font-size:12px;color:var(--muted)">${dateLabel(x.date)}</p></div></div>`).join(''):'<div class="empty"><b>Нет запланированных</b></div>';
-  const op=db.polls.filter(x=>x.status==='Открыто').slice(0,4);
-  document.getElementById('dashPolls').innerHTML=op.length?op.map(x=>`<div class="list-row"><span class="dot"></span><div><b style="font-size:13px">${esc(x.title)}</b><div class="muted" style="font-size:12px">${pollTotal(x)} голос.</div></div></div>`).join(''):'<div class="empty"><b>Нет активных</b></div>';
+async function delDoc(col,id){
+  if(!confirm('Удалить?'))return;
+  try{await firestore.collection(col).doc(id).delete();toast('Удалено')}catch(e){toast(e.message)}
 }
-function updateReportStats(){
-  const a=document.getElementById('reportMeetings');if(!a)return;
-  a.textContent=db.meetings.filter(x=>x.status==='Проведено').length;
-  document.getElementById('reportDone').textContent=db.decisions.filter(x=>x.status==='Выполнено').length;
-  document.getElementById('reportDocs').textContent=db.documents.length;
-  document.getElementById('reportPolls').textContent=db.polls.length;
-}
-function makeReport(){
-  const lines=['ОТЧЁТ СОВЕТА СТАРОСТ',new Date().toLocaleDateString('ru-RU'),'',
-    `Классов: ${new Set(db.schedules.map(x=>x.klass)).size}`,
-    `Собраний: ${db.meetings.length}`,
-    `Опросов: ${db.polls.length}`,
-    '','СОБРАНИЯ',...db.meetings.map(x=>`• ${x.title} — ${dateLabel(x.date)}, ${x.status}`),
-    '','ОПРОСЫ',...db.polls.map(p=>`• ${p.title} (${p.status}, ${pollTotal(p)} голос.)`)
-  ];
-  document.getElementById('reportText').value=lines.join('\n');
-  updateReportStats();toast('Сводка готова');
-}
-function copyReport(){if(!document.getElementById('reportText').value)makeReport();document.getElementById('reportText').select();document.execCommand('copy');toast('Скопировано')}
-function downloadReport(){if(!document.getElementById('reportText').value)makeReport();const b=new Blob([document.getElementById('reportText').value],{type:'text/plain;charset=utf-8'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='otchet.txt';a.click();URL.revokeObjectURL(u)}
-function exportData(){const b=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='sovet-backup.json';a.click();URL.revokeObjectURL(u);toast('JSON скачан')}
 
-function renderAll(){
-  if(!currentUser) return;
-  if(isChair()){
-    renderDashboard();renderSchedules();renderMeetings();renderPolls();renderDecisions();renderDocuments();renderUsers();updateReportStats();
-  } else {
-    renderStarostPolls();renderStarostMeetings();renderStarostResults();
-  }
+function notifyNewPoll(title){
+  const url=settings.telegramWebhook;
+  if(!url) return;
+  fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:`Новый опрос совета старост: ${title}`})}).catch(()=>{});
 }
 
 /* boot */
-initFirebase(true);
-setTimeout(()=>{ restoreSession(); }, 200);
-['loginUser','loginPass'].forEach(id=>{
-  document.getElementById(id)?.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
-});
+loadSettings();
+initFirebase();
+setTimeout(restoreSession,200);
+['loginUser','loginPass'].forEach(id=>document.getElementById(id)?.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()}));
 </script>
 </body>
 </html>
