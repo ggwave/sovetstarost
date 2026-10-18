@@ -161,6 +161,54 @@ input:focus,select:focus,textarea:focus{border-color:#8a9aff;box-shadow:0 0 0 3p
 .diary-avatar{width:40px;height:40px;border-radius:12px;background:var(--blue2);color:#3349bc;display:grid;place-items:center;font-weight:800;font-size:14px;flex-shrink:0}
 .diary-student-card select{flex:1;min-width:0;max-width:160px}
 .ann-pending{border-left:3px solid var(--amber);background:#fffbf0}
+
+.nav-fab,.nav-sheet-bg,.nav-sheet{display:none}
+.desk-only{}
+@media(max-width:900px){
+  .desk-only{display:none!important}
+  .sidebar{display:none!important}
+  .app.show{grid-template-columns:1fr}
+  .topbar{padding:0 14px;height:56px;background:#fff;border-bottom:1px solid var(--line)}
+  .content{padding:14px 14px 100px;max-width:100%}
+  .nav-fab{display:grid;place-items:center;position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));
+    transform:translateX(-50%);width:60px;height:60px;border-radius:50%;border:0;z-index:50;
+    background:linear-gradient(145deg,#5b6ff5,#425ee8);color:#fff;font-size:22px;font-weight:700;
+    box-shadow:0 8px 28px #425ee866,0 2px 8px #0002;cursor:pointer;transition:transform .2s,box-shadow .2s}
+  .nav-fab:active{transform:translateX(-50%) scale(.94)}
+  .nav-fab.open{background:linear-gradient(145deg,#3d4a6b,#151d33);box-shadow:0 8px 24px #0004}
+  .nav-sheet-bg{display:block;position:fixed;inset:0;background:#0b122499;z-index:55;opacity:0;pointer-events:none;transition:opacity .25s}
+  .nav-sheet-bg.show{opacity:1;pointer-events:auto}
+  .nav-sheet{display:block;position:fixed;left:0;right:0;bottom:0;z-index:60;background:#fff;
+    border-radius:22px 22px 0 0;padding:10px 16px calc(28px + env(safe-area-inset-bottom,0px));
+    transform:translateY(110%);transition:transform .3s cubic-bezier(.2,.8,.2,1);max-height:78vh;overflow:auto;
+    box-shadow:0 -8px 40px #0002}
+  .nav-sheet.show{transform:translateY(0)}
+  .nav-sheet-handle{width:40px;height:4px;border-radius:4px;background:#dfe3ee;margin:4px auto 12px}
+  .nav-sheet-title{font-size:13px;font-weight:700;color:var(--muted);text-align:center;margin-bottom:14px;text-transform:uppercase;letter-spacing:.06em}
+  .nav-sheet-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .nav-sheet-item{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 8px;border-radius:16px;
+    background:#f4f6fb;border:0;color:var(--ink);font-size:11px;font-weight:650;cursor:pointer;text-align:center;line-height:1.2}
+  .nav-sheet-item:active{background:#e8ecf8}
+  .nav-sheet-item.active{background:var(--blue2);color:#3349bc}
+  .nav-sheet-ico{width:40px;height:40px;border-radius:14px;display:grid;place-items:center;font-size:18px;background:#fff;box-shadow:0 2px 8px #0001}
+  .welcome{margin-bottom:12px}
+  .welcome h2{font-size:20px}
+  .panel,.card,.poll,.diary-section{border-radius:16px}
+  .starost-wrap{max-width:100%}
+  .badge-role,.fb-status{font-size:10px;padding:3px 8px}
+}
+@media(min-width:901px){
+  .nav-fab,.nav-sheet-bg,.nav-sheet{display:none!important}
+}
+</style>
+
+<style id="mobile-nav-fix">
+@media(max-width:900px){
+  .sidebar{display:none!important}
+  .app.show{display:block!important}
+  .main{min-height:100vh}
+  .nav-fab{display:grid!important}
+}
 </style>
 </head>
 <body>
@@ -222,7 +270,7 @@ input:focus,select:focus,textarea:focus{border-color:#8a9aff;box-shadow:0 0 0 3p
       <button data-page="s-account">🔑 Мой аккаунт</button>
     </nav>
   </div>
-  <div class="sidebar-foot"><button class="secondary small" onclick="logout()">Выйти</button></div>
+  <div class="sidebar-foot desk-only"><button class="secondary small" onclick="logout()">Выйти</button></div>
 </aside>
 <main class="main">
 <header class="topbar">
@@ -240,6 +288,15 @@ input:focus,select:focus,textarea:focus{border-color:#8a9aff;box-shadow:0 0 0 3p
   <div class="modal"><div class="modal-head"><h3 id="modalTitle">Добавить</h3><button class="ghost small" onclick="closeModal()">✕</button></div>
   <form id="modalForm" onsubmit="submitModal(event)"><div id="modalFields"></div>
   <div class="form-actions"><button type="button" class="secondary" onclick="closeModal()">Отмена</button><button type="submit">Сохранить</button></div></form></div>
+</div>
+
+<!-- Mobile nav FAB -->
+<button type="button" class="nav-fab" id="navFab" onclick="toggleNavSheet()" aria-label="Меню">☰</button>
+<div class="nav-sheet-bg" id="navSheetBg" onclick="closeNavSheet()"></div>
+<div class="nav-sheet" id="navSheet">
+  <div class="nav-sheet-handle"></div>
+  <div class="nav-sheet-title" id="navSheetTitle">Меню</div>
+  <div class="nav-sheet-grid" id="navSheetGrid"></div>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -1582,7 +1639,8 @@ function renderSettingsPage(){
     <label>Новый пароль<input type="password" id="newPass"></label>
     <div class="form-actions"><button onclick="changeMyPassword()">Сменить пароль</button></div>
   </div>
-  <div class="notice"><strong>Firestore Rules</strong>Нужны read/write для: users, polls, meetings, events, duties, announcements, problems, ideas, links</div>`;
+  <div class="notice"><strong>Firestore Rules</strong>Нужны read/write для: users, polls, meetings, events, duties, announcements, problems, ideas, links, classlists, diary, liveSessions</div>
+  <div class="panel"><button class="danger" style="width:100%" onclick="logout()">Выйти из аккаунта</button></div>`;
 }
 function saveSettings(){
   settings.telegramWebhook=document.getElementById('setHook').value.trim();
@@ -1596,11 +1654,30 @@ async function changeMyPassword(){
 }
 function renderAccountPage(){
   document.getElementById('content').innerHTML=`
-  <div class="starost-wrap"><div class="welcome"><div><h2>Мой аккаунт</h2></div></div>
-  <div class="panel"><p><b>${esc(currentUser.name)}</b><br>Логин: ${esc(currentUser.login)}<br>Класс: ${esc(currentUser.klass||'—')}</p>
-    <label>Новый пароль<input type="password" id="newPass"></label>
-    <div class="form-actions"><button onclick="changeMyPassword()">Сменить пароль</button></div>
-  </div></div>`;
+  <div class="starost-wrap">
+    <div class="diary-hero" style="background:linear-gradient(135deg,#151d33,#273354)">
+      <h2>${esc(currentUser.name)}</h2>
+      <p>${isChair()?'Председатель':'Староста'}${currentUser.klass?' · класс '+esc(currentUser.klass):''}</p>
+    </div>
+    <div class="diary-section">
+      <h3>Данные</h3>
+      <p style="font-size:14px;line-height:1.7;margin:0">
+        <span class="muted">Логин</span><br><b>${esc(currentUser.login)}</b><br><br>
+        <span class="muted">Класс</span><br><b>${esc(currentUser.klass||'—')}</b>
+      </p>
+    </div>
+    <div class="diary-section">
+      <h3>Сменить пароль</h3>
+      <label>Новый пароль<input type="password" id="newPass" placeholder="Минимум 4 символа"></label>
+      <div class="form-actions" style="justify-content:stretch;margin-top:12px">
+        <button style="width:100%" onclick="changeMyPassword()">Сохранить пароль</button>
+      </div>
+    </div>
+    <div class="diary-section">
+      <h3>Сессия</h3>
+      <button class="danger" style="width:100%" onclick="logout()">Выйти из аккаунта</button>
+    </div>
+  </div>`;
 }
 
 function renderReportsPage(){
@@ -2239,6 +2316,72 @@ function notifyNewPoll(title){
   const url=settings.telegramWebhook;
   if(!url) return;
   fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:`Новый опрос совета старост: ${title}`})}).catch(()=>{});
+}
+
+
+function starostMenuItems(){
+  return [
+    {page:'s-polls',ico:'◉',label:'Голосования'},
+    {page:'s-meetings',ico:'◷',label:'Собрания'},
+    {page:'s-ann',ico:'📢',label:'Объявления'},
+    {page:'s-events',ico:'📅',label:'События'},
+    {page:'s-duties',ico:'🧹',label:'Дежурства'},
+    {page:'s-diary',ico:'📔',label:'Дневник'},
+    {page:'s-problems',ico:'🔧',label:'Проблемы'},
+    {page:'s-ideas',ico:'💡',label:'Идеи'},
+    {page:'s-links',ico:'🔗',label:'Ссылки'},
+    {page:'s-contacts',ico:'👥',label:'Контакты'},
+    {page:'s-account',ico:'⚙️',label:'Аккаунт'},
+  ];
+}
+function chairMenuItems(){
+  return [
+    {page:'dashboard',ico:'▦',label:'Обзор'},
+    {page:'meetings',ico:'◷',label:'Собрания'},
+    {page:'polls',ico:'◉',label:'Опросы'},
+    {page:'announcements',ico:'📢',label:'Объявления'},
+    {page:'events',ico:'📅',label:'Календарь'},
+    {page:'duties',ico:'🧹',label:'Дежурства'},
+    {page:'contacts',ico:'👥',label:'Старосты'},
+    {page:'journals',ico:'📔',label:'Журналы'},
+    {page:'problems',ico:'🔧',label:'Проблемы'},
+    {page:'ideas',ico:'💡',label:'Идеи'},
+    {page:'links',ico:'🔗',label:'Ссылки'},
+    {page:'schedule',ico:'▤',label:'Расписание'},
+    {page:'users',ico:'👤',label:'Аккаунты'},
+    {page:'settings',ico:'⚙️',label:'Настройки'},
+    {page:'reports',ico:'▥',label:'Отчёты'},
+  ];
+}
+function buildNavSheet(){
+  const grid=document.getElementById('navSheetGrid');
+  if(!grid||!currentUser) return;
+  const items=isChair()?chairMenuItems():starostMenuItems();
+  const cur=window._page||'';
+  grid.innerHTML=items.map(it=>`<button type="button" class="nav-sheet-item ${cur===it.page?'active':''}" onclick="navSheetGo('${it.page}')">
+    <span class="nav-sheet-ico">${it.ico}</span>${it.label}</button>`).join('');
+}
+function toggleNavSheet(){
+  const sheet=document.getElementById('navSheet');
+  const bg=document.getElementById('navSheetBg');
+  const fab=document.getElementById('navFab');
+  if(!sheet) return;
+  const open=!sheet.classList.contains('show');
+  buildNavSheet();
+  sheet.classList.toggle('show',open);
+  bg.classList.toggle('show',open);
+  fab.classList.toggle('open',open);
+  fab.textContent=open?'✕':'☰';
+}
+function closeNavSheet(){
+  document.getElementById('navSheet')?.classList.remove('show');
+  document.getElementById('navSheetBg')?.classList.remove('show');
+  const fab=document.getElementById('navFab');
+  if(fab){fab.classList.remove('open');fab.textContent='☰'}
+}
+function navSheetGo(page){
+  closeNavSheet();
+  showPage(page);
 }
 
 /* boot */
