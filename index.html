@@ -1744,6 +1744,13 @@ function openModal(type){
   if(type==='poll'){optCount=0;addOptRow();addOptRow()}
   if(type==='schedule'){lessonCount=0;['','','',''].forEach((_,i)=>addLessonRow(i+1))}
   if(type==='meeting'||type==='meetingEdit'){speechCount=0;slideCount=0;if(type==='meetingEdit') prefillMeetingEdit()}
+  if(type==='user'){
+    setTimeout(()=>{
+      autoGenAccount(true);
+      const loginEl=document.getElementById('userLoginInput');
+      if(loginEl) loginEl.addEventListener('input',()=>{loginEl.dataset.manual='1'});
+    },30);
+  }
 }
 function closeModal(){document.getElementById('modalBackdrop').classList.remove('open')}
 function field(l,n,ph='',t='text',ex=''){return `<label>${l}<input name="${n}" type="${t}" placeholder="${ph}" ${ex}></label>`}
@@ -1797,6 +1804,42 @@ function prefillMeetingEdit(){
   if(!(m.slides||[]).length) addSlideRow();
 }
 
+
+function translitRu(s){
+  const map={а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',ё:'e',ж:'zh',з:'z',и:'i',й:'y',к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',х:'h',ц:'ts',ч:'ch',ш:'sh',щ:'sch',ъ:'',ы:'y',ь:'',э:'e',ю:'yu',я:'ya'};
+  return String(s||'').toLowerCase().split('').map(c=>map[c]!==undefined?map[c]:c).join('');
+}
+function genLoginFromName(name){
+  let t=translitRu(name).replace(/\s+/g,'_').replace(/[^a-z0-9_\\-]/g,'');
+  t=t.replace(/_+/g,'_').replace(/^_|_$/g,'');
+  if(!t) t='user';
+  return t.slice(0,6) || 'user';
+}
+function genPassword6(){
+  const chars='abcdefghjkmnpqrstuvwxyz23456789';
+  let p='';
+  for(let i=0;i<6;i++) p+=chars[Math.floor(Math.random()*chars.length)];
+  return p;
+}
+function autoGenAccount(force){
+  const nameEl=document.getElementById('userNameInput');
+  const loginEl=document.getElementById('userLoginInput');
+  const passEl=document.getElementById('userPassInput');
+  if(!nameEl||!loginEl||!passEl) return;
+  const name=nameEl.value.trim();
+  if(!name && !force) return;
+  if(force || !loginEl.dataset.manual){
+    loginEl.value=genLoginFromName(name||'user');
+  }
+  if(force || !passEl.value){
+    passEl.value=genPassword6();
+  }
+}
+function markLoginManual(){
+  const loginEl=document.getElementById('userLoginInput');
+  if(loginEl) loginEl.dataset.manual='1';
+}
+
 function formFor(t){
   if(t==='poll') return `<div class="form-grid"><label class="full">Вопрос<input name="title" required></label>
     <label class="full">Описание<textarea name="description"></textarea></label>
@@ -1837,10 +1880,19 @@ function formFor(t){
   if(t==='link') return `<div class="form-grid">${field('Название','title','','text','required')}${field('URL','url','https://','url','required')}
     <label>Категория<select name="category"><option>Учёба</option><option>Еда</option><option>Дневник</option><option>Библиотека</option><option>Другое</option></select></label>
     <label class="full">Описание<textarea name="description"></textarea></label></div>`;
-  if(t==='user') return `<div class="form-grid">${field('Имя','name','','text','required')}${field('Логин','login','','text','required')}
-    ${field('Пароль','password','','text','required')}<label>Роль<select name="role"><option value="starost">Староста</option><option value="chair">Председатель</option></select></label>
-    ${field('Класс','klass')}${field('Телефон','phone')}${field('Контакт (TG/VK)','contact')}</div>`;
-  if(t==='disciplineChair') {
+  if(t==='user') return `<div class="form-grid">
+    <label class="full">Имя (как отображать)<input name="name" id="userNameInput" required placeholder="Иван Иванов" oninput="autoGenAccount()"></label>
+    <label>Логин<input name="login" id="userLoginInput" required placeholder="авто из имени" pattern="[a-zA-Z0-9_\\-]+" title="Латиница, цифры, _ -"></label>
+    <label>Пароль<input name="password" id="userPassInput" required placeholder="авто 6 символов" type="text"></label>
+    <label>Роль<select name="role"><option value="starost">Староста</option><option value="chair">Председатель</option></select></label>
+    <label>Класс<input name="klass" placeholder="8А"></label>
+    ${field('Телефон','phone')}${field('Контакт (TG/VK)','contact')}
+    <div class="full" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button type="button" class="secondary small" onclick="autoGenAccount(true)">Сгенерировать логин и пароль</button>
+      <span class="muted" style="font-size:12px">Логин: 6 букв из имени (пробел → _). Пароль: 6 символов.</span>
+    </div>
+  </div>`;
+    if(t==='disciplineChair') {
     const starosts=db.users.filter(u=>u.role==='starost'&&u.active!==false);
     return `<div class="form-grid">
       <label>Староста / класс<select name="ownerId" required>
