@@ -309,10 +309,6 @@ function statusPill(s){const c=s==='Проведено'||s==='Выполнено
 function pollTotal(p){return (p.options||[]).reduce((n,o)=>n+(o.votes||0),0)}
 function pollModeLabel(p){return p.mode==='multi'?'Несколько вариантов':'Один вариант'}
 function userHasVoted(p){if(!currentUser)return false;return (p.voterIds||[]).includes(currentUser.id)}
-function getVoted(){try{return new Set(JSON.parse(localStorage.getItem(VOTED_KEY)||'[]'))}catch(e){return new Set()}}
-function markVoted(id){const s=getVoted();s.add(id);localStorage.setItem(VOTED_KEY,JSON.stringify([...s]))}
-function false /* legacy */{return getVoted().has(id)}
-
 /* ----- LOGIN / ACCOUNTS ----- */
 function roleOf(){return currentUser && currentUser.role}
 function isChair(){return roleOf()==='chair'}
@@ -334,24 +330,24 @@ async function doLogin(){
   const login=(document.getElementById('loginUser')?.value||'').trim().toLowerCase();
   const pass=document.getElementById('loginPass')?.value||'';
   const err=document.getElementById('loginErr');
+  const btn=document.querySelector('.login-card button[onclick*=doLogin], .login-card button');
   err.style.display='none';
   if(!login||!pass){err.textContent='Введи логин и пароль';err.style.display='block';return}
 
-  // need Firebase for accounts
-  if(!fbEnabled){
-    // try init first
-    initFirebase(true);
-    await new Promise(r=>setTimeout(r,400));
-  }
-  if(!fbEnabled||!firestore){
-    err.textContent='Нужен Firebase. Проверь конфиг и Rules для users.';
-    err.style.display='block';
-    return;
-  }
-  await ensureAdminUser();
+  if(btn){btn.disabled=true;btn.textContent='Вход…'}
   try{
+    if(!fbEnabled){
+      initFirebase(true);
+      await new Promise(r=>setTimeout(r,500));
+    }
+    if(!fbEnabled||!firestore){
+      err.textContent='Firebase не подключился. Проверь интернет и Rules (коллекция users).';
+      err.style.display='block';
+      return;
+    }
+    await ensureAdminUser();
     const snap=await firestore.collection('users').where('login','==',login).limit(1).get();
-    if(snap.empty){err.textContent='Пользователь не найден';err.style.display='block';return}
+    if(snap.empty){err.textContent='Пользователь не найден. Первый вход: admin / starosta';err.style.display='block';return}
     const doc=snap.docs[0];
     const u={id:doc.id,...doc.data()};
     if(u.active===false){err.textContent='Аккаунт отключён';err.style.display='block';return}
@@ -359,8 +355,13 @@ async function doLogin(){
     enterApp(u);
   }catch(e){
     console.error(e);
-    err.textContent='Ошибка входа: '+e.message;
+    let msg=e.message||String(e);
+    if(msg.includes('permission')||msg.includes('Permission')) msg='Нет доступа к Firestore. Открой Rules и разреши users (read/write).';
+    if(msg.includes('offline')||msg.includes('network')) msg='Нет сети или Firebase недоступен.';
+    err.textContent='Ошибка входа: '+msg;
     err.style.display='block';
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='Войти'}
   }
 }
 
