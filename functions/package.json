@@ -1,15 +1,7 @@
 {
-  "name": "sovet-starost-notifications",
+  "name": "sovetstarost-push-functions",
   "private": true,
-  "engines": {
-    "node": "20"
-  },
+  "engines": { "node": "20" },
   "main": "index.js",
-  "scripts": {
-    "lint": "node --check index.js"
-  },
-  "dependencies": {
-    "firebase-admin": "^13.0.2",
-    "firebase-functions": "^6.3.2"
-  }
+  "dependencies": { "firebase-admin": "^13.0.0", "firebase-functions": "^6.0.0" }
 }
