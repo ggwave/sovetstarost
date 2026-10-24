@@ -430,7 +430,7 @@ const firebaseConfig = {
   appId: "1:770061016694:web:280d5caa6db66bea2d0957",
   measurementId: "G-D4QTK30MWV"
 };
-const FCM_VAPID_KEY='BFrWPf2092fi2yJ4F4ETaoE65w_gTuQSDCQPvKWRFvUF5fwPZocFb1-wBQKyI8CGNxRqmuMfomhh1MAMHx53IOU';
+const FCM_VAPID_KEY='PASTE_PUBLIC_VAPID_KEY_FROM_FIREBASE_CONSOLE';
 const NOTIFY_DEFAULTS={newPoll:true,meeting:true,chat:true,announcement:true,decision:true,reminder:true};
 const NOTIFY_LABELS={newPoll:'Началось новое голосование',meeting:'Назначено собрание',chat:'Новое сообщение в чате',announcement:'Новое важное объявление',decision:'Опубликовано решение собрания',reminder:'Напоминание перед событием'};
 function notificationPrefs(){return {...NOTIFY_DEFAULTS,...(currentUser?.notificationPrefs||{})}}
@@ -661,23 +661,62 @@ async function saveNotificationPrefs(){
   try{await firestore.collection('users').doc(currentUser.id).update({notificationPrefs:prefs});currentUser={...currentUser,notificationPrefs:prefs};sessionStorage.setItem(SESSION_KEY,JSON.stringify(currentUser));toast('Настройки уведомлений сохранены')}
   catch(e){toast('Не удалось сохранить: '+e.message)}
 }
+let foregroundMessageHandlerInstalled=false;
+function readablePushError(e){
+  const code=e&&e.code?String(e.code):'';
+  const message=e&&e.message?String(e.message):String(e||'Неизвестная ошибка');
+  if(code==='messaging/permission-blocked') return 'Браузер заблокировал уведомления. Разреши уведомления для сайта в настройках браузера.';
+  if(code==='messaging/unsupported-browser') return 'Этот браузер не поддерживает Firebase Push.';
+  if(code==='messaging/token-subscribe-failed') return 'Firebase не смог создать push-подписку. Проверь публичный VAPID-ключ в Firebase Console → Project settings → Cloud Messaging → Web Push certificates.';
+  if(code==='messaging/failed-service-worker-registration') return 'Не удалось запустить Service Worker. Проверь, что firebase-messaging-sw.js находится в корне сайта /sovetstarost/. ' + message;
+  return (code ? code + ': ' : '') + message;
+}
 async function enableBrowserPush(){
   const status=document.getElementById('pushStatus');
   const setStatus=m=>{window._pushStatus=m;if(status)status.textContent=m};
   try{
     if(!('Notification' in window)||!('serviceWorker' in navigator)){setStatus('Этот браузер не поддерживает push-уведомления.');return}
     if(location.protocol!=='https:'&&location.hostname!=='localhost'){setStatus('Push работает только на HTTPS (или localhost).');return}
-    if(FCM_VAPID_KEY.startsWith('PASTE_')){setStatus('Сначала добавь публичный VAPID-ключ в FCM_VAPID_KEY в HTML и в README. Получить его можно в Firebase Console → Project settings → Cloud Messaging → Web Push certificates.');return}
+    if(!FCM_VAPID_KEY||FCM_VAPID_KEY.startsWith('PASTE_')){setStatus('В HTML ещё не указан публичный VAPID-ключ Firebase. Открой FCM_VAPID_KEY в начале кода и вставь ключ из Firebase Console → Project settings → Cloud Messaging → Web Push certificates.');return}
     if(!firebase.messaging.isSupported()){setStatus('Firebase Messaging не поддерживается этим браузером.');return}
-    const permission=await Notification.requestPermission();if(permission!=='granted'){setStatus('Разрешение на уведомления не выдано.');return}
-    const reg=await navigator.serviceWorker.register('./firebase-messaging-sw.js');
+    if(!fbEnabled||!firestore||!currentUser){setStatus('Сначала войди на сайт и дождись подключения к Firebase.');return}
+    setStatus('Запрашиваем разрешение на уведомления…');
+    const permission=await Notification.requestPermission();
+    if(permission!=='granted'){setStatus('Разрешение на уведомления не выдано.');return}
+
+    setStatus('Запускаем Service Worker…');
+    const swUrl=new URL('./firebase-messaging-sw.js',document.baseURI);
+    const scopeUrl=new URL('./',document.baseURI);
+    const registered=await navigator.serviceWorker.register(swUrl.href,{scope:scopeUrl.pathname});
+    // Ждём, пока браузер активирует Service Worker, прежде чем вызывать Firebase getToken().
+    await navigator.serviceWorker.ready;
+    const reg=await navigator.serviceWorker.getRegistration(scopeUrl.pathname);
+    if(!reg||!reg.active){
+      throw new Error('Service Worker зарегистрирован, но не активен. Перезагрузи страницу и попробуй снова.');
+    }
+    console.log('FCM Service Worker:',reg.active.scriptURL,'Scope:',reg.scope);
+
+    setStatus('Создаём push-подписку Firebase…');
     const messaging=firebase.messaging();
     const token=await messaging.getToken({vapidKey:FCM_VAPID_KEY,serviceWorkerRegistration:reg});
-    if(!token)throw new Error('Firebase не выдал токен устройства');
+    if(!token)throw new Error('Firebase не выдал токен устройства. Проверь VAPID-ключ и настройки Cloud Messaging.');
+
     await firestore.collection('users').doc(currentUser.id).update({fcmTokens:firebase.firestore.FieldValue.arrayUnion(token)});
-    setStatus('Push включён на этом устройстве.');toast('Push-уведомления включены');
-    messaging.onMessage(payload=>{const title=payload.notification?.title||'Совет старост';const body=payload.notification?.body||'';toast(title+(body?' — '+body:''));if(Notification.permission==='granted'&&document.hidden)new Notification(title,{body,icon:'./icon-192.png'})});
-  }catch(e){console.error('FCM setup',e);setStatus('Не удалось включить push: '+(e.message||e));}
+    setStatus('Push включён на этом устройстве.');
+    toast('Push-уведомления включены');
+    if(!foregroundMessageHandlerInstalled){
+      messaging.onMessage(payload=>{
+        const title=payload.notification?.title||'Совет старост';
+        const body=payload.notification?.body||'';
+        toast(title+(body?' — '+body:''));
+        if(Notification.permission==='granted'&&document.hidden)new Notification(title,{body,icon:new URL('./icon-192.png',document.baseURI).href});
+      });
+      foregroundMessageHandlerInstalled=true;
+    }
+  }catch(e){
+    console.error('FCM setup error:',e,'code:',e&&e.code,'message:',e&&e.message);
+    setStatus('Не удалось включить push: '+readablePushError(e));
+  }
 }
 
 async function pushNotification({title, text, kind, audience, userIds, linkPage}){
