@@ -430,7 +430,7 @@ const firebaseConfig = {
   appId: "1:770061016694:web:280d5caa6db66bea2d0957",
   measurementId: "G-D4QTK30MWV"
 };
-const FCM_VAPID_KEY='BFrWPf2092fi2yJ4F4ETaoE65w_gTuQSDCQPvKWRFvUF5fwPZocFb1-wBQKyI8CGNxRqmuMfomhh1MAMHx53IOU';
+const FCM_VAPID_KEY='PASTE_PUBLIC_VAPID_KEY_FROM_FIREBASE_CONSOLE';
 const NOTIFY_DEFAULTS={newPoll:true,meeting:true,chat:true,announcement:true,decision:true,reminder:true};
 const NOTIFY_LABELS={newPoll:'Началось новое голосование',meeting:'Назначено собрание',chat:'Новое сообщение в чате',announcement:'Новое важное объявление',decision:'Опубликовано решение собрания',reminder:'Напоминание перед событием'};
 function notificationPrefs(){return {...NOTIFY_DEFAULTS,...(currentUser?.notificationPrefs||{})}}
