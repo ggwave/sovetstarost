@@ -7,6 +7,7 @@
 <title>Совет старост</title>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js"></script>
 <style>
 :root{--bg:#f4f6fb;--panel:#fff;--ink:#172033;--muted:#6c768b;--line:#e4e8f1;--blue:#425ee8;--blue2:#edf0ff;--green:#15835d;--amber:#a8640a;--red:#c43f52;--shadow:0 8px 28px #23345c0b}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 Inter,ui-sans-serif,system-ui,sans-serif}
@@ -200,6 +201,29 @@ input:focus,select:focus,textarea:focus{border-color:#8a9aff;box-shadow:0 0 0 3p
 @media(min-width:901px){
   .nav-fab,.nav-sheet-bg,.nav-sheet{display:none!important}
 }
+
+/* Council chat */
+.chat-fab{position:fixed;right:24px;bottom:24px;z-index:8000;width:62px;height:62px;border-radius:22px;background:linear-gradient(145deg,#7185ff,#5744d6);box-shadow:0 14px 35px #3846b955;display:none;align-items:center;justify-content:center;color:white;font-size:25px;border:1px solid #ffffff55;transition:transform .18s,box-shadow .18s}
+.chat-fab:hover{transform:translateY(-3px);box-shadow:0 18px 40px #3846b966}.chat-fab .chat-unread{position:absolute;right:-2px;top:-3px;min-width:19px;height:19px;padding:0 5px;border-radius:99px;background:#ff5470;border:2px solid white;font-size:10px;display:none;align-items:center;justify-content:center;font-weight:800}
+.chat-overlay{position:fixed;inset:0;background:#111a3045;backdrop-filter:blur(3px);z-index:7998;display:none}.chat-overlay.open{display:block}
+.chat-window{position:fixed;z-index:7999;right:24px;bottom:98px;width:min(390px,calc(100vw - 24px));height:min(600px,calc(100dvh - 130px));background:#fff;border:1px solid #e4e8f4;border-radius:24px;box-shadow:0 24px 80px #17234438;display:none;overflow:hidden;grid-template-rows:auto auto 1fr auto;animation:chatIn .2s ease}
+.chat-window.open{display:grid}@keyframes chatIn{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+.chat-head{padding:17px 18px;background:linear-gradient(120deg,#17213c,#29396b);color:white;display:flex;align-items:center;gap:11px}.chat-head-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:14px;background:#ffffff20;font-size:21px}.chat-head-copy{flex:1;min-width:0}.chat-head-copy strong{display:block;font-size:15px}.chat-head-copy small{display:flex;align-items:center;gap:6px;color:#c6d0f2;font-size:11px;margin-top:3px}.chat-live-dot{width:7px;height:7px;border-radius:50%;background:#5ce0ad;box-shadow:0 0 0 4px #5ce0ad22}.chat-close{background:#ffffff18;color:#fff;width:34px;height:34px;padding:0;border-radius:11px;font-size:18px}
+.chat-subhead{padding:9px 16px;background:#f7f8fd;border-bottom:1px solid #e9edf5;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#77819a}.chat-feed{padding:15px 13px;overflow-y:auto;display:flex;flex-direction:column;gap:11px;background:radial-gradient(ellipse at top right,#f2f3ff 0,transparent 45%),#fbfcff;scroll-behavior:smooth}
+.chat-empty{margin:auto;text-align:center;color:#7a8499;max-width:230px;padding:22px}.chat-empty-icon{width:56px;height:56px;border-radius:18px;background:#eef0ff;color:#5b63d8;display:grid;place-items:center;font-size:26px;margin:0 auto 12px}.chat-empty b{display:block;color:#29334a;margin-bottom:5px}
+.chat-msg{max-width:88%;align-self:flex-start;min-width:80px}.chat-msg.mine{align-self:flex-end}.chat-msg-meta{display:flex;align-items:center;gap:6px;font-size:10px;color:#818aa0;margin:0 4px 4px}.chat-msg.mine .chat-msg-meta{justify-content:flex-end}.chat-avatar{width:21px;height:21px;border-radius:7px;background:#e8ebff;color:#4658d8;display:grid;place-items:center;font-weight:800;font-size:10px;flex-shrink:0}.chat-bubble{background:#fff;border:1px solid #e8ebf4;border-radius:5px 15px 15px 15px;padding:9px 11px;box-shadow:0 3px 10px #17234408;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.45;color:#28324a}.chat-msg.mine .chat-bubble{background:#5867e8;color:#fff;border-color:#5867e8;border-radius:15px 5px 15px 15px}.chat-msg-time{font-size:9px;color:#9aa2b4;margin:4px 4px 0}.chat-msg.mine .chat-msg-time{text-align:right}
+.chat-compose{padding:12px;background:#fff;border-top:1px solid #e9edf5}.chat-compose-row{display:flex;gap:8px;align-items:flex-end}.chat-compose textarea{resize:none;min-height:43px;max-height:110px;border-radius:14px;background:#f7f8fc;border-color:#e5e9f3;font-size:13px;padding:11px 12px;line-height:1.35}.chat-send{width:44px;height:43px;flex-shrink:0;padding:0;border-radius:14px;background:linear-gradient(145deg,#6677f6,#514bd8);font-size:18px}.chat-compose-hint{font-size:10px;color:#9aa2b4;padding:6px 3px 0}.chat-error{font-size:11px;color:#c43f52;padding:6px 3px 0;display:none}
+@media(max-width:600px){.chat-fab{right:16px;bottom:18px;width:56px;height:56px;border-radius:19px}.chat-window{right:8px;bottom:82px;width:calc(100vw - 16px);height:min(620px,calc(100dvh - 100px));border-radius:21px}.chat-overlay{background:#111a3040}}
+
+
+/* Notification center */
+.notify-settings{border:1px solid var(--line);border-radius:18px;padding:18px;background:linear-gradient(135deg,#fff,#f8f9ff);margin-bottom:16px}
+.notify-setting-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid var(--line)}
+.notify-setting-row:last-child{border-bottom:0}.notify-setting-row b{display:block;font-size:14px}.notify-setting-row small{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+.notify-switch{width:46px;height:26px;position:relative;flex:0 0 auto}.notify-switch input{opacity:0;width:0;height:0}.notify-switch span{position:absolute;inset:0;background:#c9cfdd;border-radius:30px;transition:.2s;cursor:pointer}.notify-switch span:before{content:"";position:absolute;width:20px;height:20px;left:3px;top:3px;border-radius:50%;background:#fff;box-shadow:0 1px 4px #0002;transition:.2s}.notify-switch input:checked+span{background:var(--blue)}.notify-switch input:checked+span:before{transform:translateX(20px)}
+.notify-hero{border-radius:18px;padding:20px;background:linear-gradient(125deg,#171f38,#334a88);color:#fff;margin-bottom:16px}.notify-hero p{color:#cbd4f5;margin:6px 0 0}.notify-status{font-size:12px;color:var(--muted);margin-top:10px}
+@media(max-width:600px){.notify-settings{padding:14px}.notify-setting-row{align-items:flex-start}.notify-hero{padding:16px}}
+
 </style>
 
 <style id="mobile-nav-fix">
@@ -386,6 +410,16 @@ body{background:#f4f6fb;color:var(--ink)}.sidebar{background:linear-gradient(180
 </div>
 <div class="toast" id="toast"></div>
 
+<div class="chat-overlay" id="chatOverlay" onclick="closeCouncilChat()"></div>
+<section class="chat-window" id="chatWindow" aria-label="Общий чат совета старост" aria-hidden="true">
+  <header class="chat-head"><div class="chat-head-icon">✦</div><div class="chat-head-copy"><strong>Чат совета</strong><small><span class="chat-live-dot"></span> Общий чат · сообщения в реальном времени</small></div><button class="chat-close" onclick="closeCouncilChat()" aria-label="Закрыть чат">×</button></header>
+  <div class="chat-subhead"><span>💬 Обсуждение для старост и председателя</span><span id="chatCount">0 сообщений</span></div>
+  <div class="chat-feed" id="chatFeed" aria-live="polite"><div class="chat-empty"><div class="chat-empty-icon">✦</div><b>Начните разговор</b>Напишите первое сообщение — оно появится здесь у всех участников.</div></div>
+  <form class="chat-compose" onsubmit="sendCouncilChat(event)"><div class="chat-compose-row"><textarea id="chatInput" rows="1" maxlength="1500" placeholder="Написать сообщение…" aria-label="Текст сообщения"></textarea><button class="chat-send" type="submit" title="Отправить" aria-label="Отправить">➤</button></div><div class="chat-compose-hint">Enter — отправить · Shift + Enter — новая строка</div><div class="chat-error" id="chatError"></div></form>
+</section>
+<button class="chat-fab" id="chatFab" onclick="openCouncilChat()" aria-label="Открыть чат" title="Чат совета старост">☏<span class="chat-unread" id="chatUnread"></span></button>
+
+
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyAKRxizCyVr634sdmB7mxRZudJpxD_EBsw",
@@ -396,6 +430,11 @@ const firebaseConfig = {
   appId: "1:770061016694:web:280d5caa6db66bea2d0957",
   measurementId: "G-D4QTK30MWV"
 };
+const FCM_VAPID_KEY='PASTE_PUBLIC_VAPID_KEY_FROM_FIREBASE_CONSOLE';
+const NOTIFY_DEFAULTS={newPoll:true,meeting:true,chat:true,announcement:true,decision:true,reminder:true};
+const NOTIFY_LABELS={newPoll:'Началось новое голосование',meeting:'Назначено собрание',chat:'Новое сообщение в чате',announcement:'Новое важное объявление',decision:'Опубликовано решение собрания',reminder:'Напоминание перед событием'};
+function notificationPrefs(){return {...NOTIFY_DEFAULTS,...(currentUser?.notificationPrefs||{})}}
+function notificationAllowedForCurrent(n){const prefs=notificationPrefs();const k=n.eventKey||(n.kind==='опрос'?'newPoll':n.kind==='собрание'?'meeting':n.kind==='чат'?'chat':n.kind==='объявление'?'announcement':n.kind==='решение'?'decision':n.kind==='напоминание'?'reminder':'');return !k||prefs[k]!==false}
 const STORE='councilFull_v2', SESSION_KEY='councilSession_v2';
 const days=['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
 const COLORS=['#425ee8','#15835d','#a8640a','#c43f52','#7c4dff','#00897b','#f57c00','#5c6bc0'];
@@ -483,7 +522,7 @@ async function doLogin(){
   }finally{btn.disabled=false;btn.textContent='Войти'}
 }
 function enterApp(u){
-  currentUser={id:u.id,login:u.login,name:u.name||u.login,role:u.role||'starost',klass:u.klass||'',phone:u.phone||'',contact:u.contact||''};
+  currentUser={id:u.id,login:u.login,name:u.name||u.login,role:u.role||'starost',klass:u.klass||'',phone:u.phone||'',contact:u.contact||'',notificationPrefs:{...NOTIFY_DEFAULTS,...(u.notificationPrefs||{})},fcmTokens:u.fcmTokens||[]};
   sessionStorage.setItem(SESSION_KEY,JSON.stringify(currentUser));
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('appShell').classList.add('show');
@@ -582,6 +621,7 @@ function quorumBar(p){
 function myUnreadNotifications(){
   if(!currentUser) return [];
   return (db.notifications||[]).filter(n=>{
+    if(!notificationAllowedForCurrent(n)) return false;
     if(n.readBy && n.readBy[currentUser.id]) return false;
     if(n.audience==='chair' && !isChair()) return false;
     if(n.audience==='starost' && isChair()) return false;
@@ -593,56 +633,59 @@ function myUnreadNotifications(){
 function renderNotificationsPage(){
   const list=[...(db.notifications||[])].sort((a,b)=>(b.created||'').localeCompare(a.created||''));
   const mine=list.filter(n=>{
+    if(!notificationAllowedForCurrent(n)) return false;
     if(n.audience==='chair' && !isChair()) return false;
     if(n.audience==='starost' && isChair()) return false;
     if(n.userIds && n.userIds.length && !n.userIds.includes(currentUser.id)) return false;
     return true;
   });
+  const prefs=notificationPrefs();
   document.getElementById('content').innerHTML=`
-  <div class="welcome"><div><h2>Уведомления</h2>
-    <p>Новые опросы, собрания, события и дежурства</p></div>
-    <button class="secondary small" onclick="markAllNotificationsRead()">Прочитать все</button></div>
+  <div class="notify-hero"><div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.75">Центр уведомлений</div><h2 style="margin:6px 0 0">Будь в курсе событий</h2><p>Настрой, о чём сообщать и куда отправлять уведомления.</p></div>
+  <div class="notify-settings"><div class="panel-head" style="margin-bottom:4px"><h3 style="margin:0">Мои уведомления</h3><span class="pill">Персонально</span></div>
+    ${Object.entries(NOTIFY_LABELS).map(([key,label])=>`<div class="notify-setting-row"><div><b>${esc(label)}</b><small>${key==='chat'?'Уведомления о сообщениях общего чата':key==='reminder'?'За 30 минут до начала собрания или события':'Уведомления внутри сайта и push, если они включены'}</small></div><label class="notify-switch" aria-label="${esc(label)}"><input type="checkbox" id="np_${key}" ${prefs[key]?'checked':''} onchange="saveNotificationPrefs()"><span></span></label></div>`).join('')}
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px"><button onclick="enableBrowserPush()">🔔 Включить push в браузере</button><button class="secondary" onclick="saveNotificationPrefs()">Сохранить настройки</button></div>
+    <div id="pushStatus" class="notify-status">${esc(window._pushStatus||'Push требует HTTPS, Service Worker и публичный VAPID-ключ из настроек Firebase.')}</div>
+  </div>
+  <div class="welcome"><div><h2>История уведомлений</h2><p>Новые опросы, собрания, сообщения и решения</p></div><button class="secondary small" onclick="markAllNotificationsRead()">Прочитать все</button></div>
   <div class="panel">
     ${mine.length?mine.map(n=>{
       const unread=!(n.readBy&&n.readBy[currentUser.id]);
-      return `<div class="ann-item" style="${unread?'border-left:3px solid var(--blue);padding-left:12px':''}">
-        <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
-          <div>
-            <span class="pill">${esc(n.kind||'событие')}</span>
-            <b style="margin-left:6px">${esc(n.title)}</b>
-            ${unread?'<span class="pill amber" style="margin-left:6px">новое</span>':''}
-          </div>
-          <span class="muted" style="font-size:11px">${esc((n.created||'').slice(0,16).replace('T',' '))}</span>
-        </div>
-        <p style="margin:6px 0 0;font-size:13px;color:var(--muted)">${esc(n.text||'')}</p>
-        ${n.linkPage?`<button class="ghost small" style="margin-top:6px" onclick="showPage('${n.linkPage}')">Открыть</button>`:''}
-        ${unread?`<button class="secondary small" style="margin-top:6px" onclick="markNotificationRead('${n.id}')">Прочитано</button>`:''}
-      </div>`;
-    }).join(''):'<div class="empty"><b>Пока нет уведомлений</b>Они появятся, когда председатель создаст опрос, собрание, событие или дежурство.</div>'}
+      return `<div class="ann-item" style="${unread?'border-left:3px solid var(--blue);padding-left:12px':''}"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><div><span class="pill">${esc(n.kind||'событие')}</span><b style="margin-left:6px">${esc(n.title)}</b>${unread?'<span class="pill amber" style="margin-left:6px">новое</span>':''}</div><span class="muted" style="font-size:11px">${esc((n.created||'').slice(0,16).replace('T',' '))}</span></div><p style="margin:6px 0 0;font-size:13px;color:var(--muted)">${esc(n.text||'')}</p>${n.linkPage?`<button class="ghost small" style="margin-top:6px" onclick="showPage('${n.linkPage}')">Открыть</button>`:''}${unread?`<button class="secondary small" style="margin-top:6px" onclick="markNotificationRead('${n.id}')">Прочитано</button>`:''}</div>`;
+    }).join(''):'<div class="empty"><b>Пока нет уведомлений</b><p>Они появятся здесь по мере событий в совете.</p></div>'}
   </div>`;
 }
-async function pushNotification({title, text, kind, audience, userIds, linkPage}){
-  if(!fbEnabled||!firestore) return;
-  try{
-    await firestore.collection('notifications').add({
-      title:title||'', text:text||'', kind:kind||'info',
-      audience:audience||'all', // all | chair | starost
-      userIds:userIds||[],
-      linkPage:linkPage||'',
-      readBy:{},
-      created:new Date().toISOString(),
-      authorId:currentUser?currentUser.id:'',
-      authorName:currentUser?currentUser.name:''
-    });
-  }catch(e){console.error('notify',e)}
-  // optional external webhook
-  if(settings.telegramWebhook){
-    fetch(settings.telegramWebhook,{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({text:`[${kind||'info'}] ${title}\n${text||''}`})
-    }).catch(()=>{});
-  }
+async function saveNotificationPrefs(){
+  if(!currentUser||!firestore){toast('Нет подключения к Firebase');return}
+  const prefs={};Object.keys(NOTIFY_DEFAULTS).forEach(k=>{const el=document.getElementById('np_'+k);prefs[k]=el?el.checked:(currentUser.notificationPrefs?.[k]??NOTIFY_DEFAULTS[k])});
+  try{await firestore.collection('users').doc(currentUser.id).update({notificationPrefs:prefs});currentUser={...currentUser,notificationPrefs:prefs};sessionStorage.setItem(SESSION_KEY,JSON.stringify(currentUser));toast('Настройки уведомлений сохранены')}
+  catch(e){toast('Не удалось сохранить: '+e.message)}
 }
+async function enableBrowserPush(){
+  const status=document.getElementById('pushStatus');
+  const setStatus=m=>{window._pushStatus=m;if(status)status.textContent=m};
+  try{
+    if(!('Notification' in window)||!('serviceWorker' in navigator)){setStatus('Этот браузер не поддерживает push-уведомления.');return}
+    if(location.protocol!=='https:'&&location.hostname!=='localhost'){setStatus('Push работает только на HTTPS (или localhost).');return}
+    if(FCM_VAPID_KEY.startsWith('PASTE_')){setStatus('Сначала добавь публичный VAPID-ключ в FCM_VAPID_KEY в HTML и в README. Получить его можно в Firebase Console → Project settings → Cloud Messaging → Web Push certificates.');return}
+    if(!firebase.messaging.isSupported()){setStatus('Firebase Messaging не поддерживается этим браузером.');return}
+    const permission=await Notification.requestPermission();if(permission!=='granted'){setStatus('Разрешение на уведомления не выдано.');return}
+    const reg=await navigator.serviceWorker.register('./firebase-messaging-sw.js');
+    const messaging=firebase.messaging();
+    const token=await messaging.getToken({vapidKey:FCM_VAPID_KEY,serviceWorkerRegistration:reg});
+    if(!token)throw new Error('Firebase не выдал токен устройства');
+    await firestore.collection('users').doc(currentUser.id).update({fcmTokens:firebase.firestore.FieldValue.arrayUnion(token)});
+    setStatus('Push включён на этом устройстве.');toast('Push-уведомления включены');
+    messaging.onMessage(payload=>{const title=payload.notification?.title||'Совет старост';const body=payload.notification?.body||'';toast(title+(body?' — '+body:''));if(Notification.permission==='granted'&&document.hidden)new Notification(title,{body,icon:'./icon-192.png'})});
+  }catch(e){console.error('FCM setup',e);setStatus('Не удалось включить push: '+(e.message||e));}
+}
+
+async function pushNotification({title, text, kind, audience, userIds, linkPage}){
+  // Notification records are created by trusted Cloud Functions. Browser writes are intentionally disabled.
+  // This preserves old call sites without exposing notification creation to client-side code.
+  console.info('Notification queued for server trigger:', kind, title);
+}
+
 async function markNotificationRead(id){
   if(!currentUser||!fbEnabled) return;
   try{
@@ -1285,10 +1328,60 @@ h1{margin:10px 0 4px;font-size:clamp(22px,4vw,38px);letter-spacing:-.03em;font-w
 @keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
 body.is-closed .live-tag{background:#5a6a88}
 body.is-closed .live-tag i{animation:none;opacity:.4}
+
+/* LIVE POLL · visual refresh */
+:root{--line:rgba(255,255,255,.09);--glass:rgba(255,255,255,.045);--muted:#a6b3cc}
+body{background:radial-gradient(ellipse at 12% -15%,color-mix(in srgb,var(--accent) 24%,transparent),transparent 38%),radial-gradient(ellipse at 100% 30%,rgba(76,96,180,.14),transparent 34%),linear-gradient(145deg,var(--bg1),var(--bg2));background-attachment:fixed}
+.top{position:relative;padding:26px clamp(18px,4vw,54px) 20px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.045),transparent);align-items:center}
+.top>div:first-child{max-width:min(68%,1000px)}
+.live-tag{background:rgba(255,72,99,.14);border:1px solid rgba(255,100,120,.32);color:#ff9aaa;padding:7px 13px;font-size:11px;letter-spacing:.13em;text-transform:uppercase;box-shadow:0 0 24px rgba(255,72,99,.08)}
+.live-tag i{background:#ff5b76;box-shadow:0 0 0 4px rgba(255,91,118,.13)}
+h1{font-size:clamp(26px,4.2vw,48px);line-height:1.12;letter-spacing:-.045em;max-width:1000px;margin:16px 0 10px;text-wrap:balance}
+.sub{font-size:13px;line-height:1.65;max-width:900px;color:var(--muted)}
+.top>div:last-child{min-width:160px;padding:14px 20px 12px;border:1px solid var(--line);border-radius:20px;background:var(--glass);backdrop-filter:blur(14px);box-shadow:0 16px 44px rgba(0,0,0,.12)}
+.theme-bar{justify-content:flex-end;margin-bottom:12px}
+.theme-bar button{width:19px;height:19px;transition:transform .2s,border-color .2s}
+.theme-bar button:hover{transform:scale(1.18)}
+.theme-bar button.on{border-color:#fff;box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 35%,transparent)}
+.total{font-size:clamp(38px,5vw,60px);line-height:1.05;letter-spacing:-.06em;text-shadow:0 0 32px color-mix(in srgb,var(--accent) 30%,transparent)}
+.total small{font-size:10px;letter-spacing:.16em;text-transform:uppercase;margin-top:8px}
+.stage{width:min(1480px,100%);margin:0 auto;padding:26px clamp(18px,4vw,54px) 34px;gap:22px}
+.cd-label{font-size:11px;letter-spacing:.13em;text-transform:uppercase;font-weight:800}
+.countdown-row{min-height:0;margin:0 0 4px;gap:10px}
+.cd{min-width:76px;border:1px solid var(--line);background:var(--glass);backdrop-filter:blur(12px);border-radius:16px;box-shadow:none;padding:14px 14px 12px}
+.cd .n{font-size:clamp(24px,3vw,34px)}
+.cd .l{font-size:9px;letter-spacing:.12em}
+.quorum-wrap{border:1px solid var(--line);background:var(--glass);border-radius:18px;padding:16px 18px;box-shadow:none}
+.quorum-wrap .lab{font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px}
+.qbar{height:9px;background:rgba(255,255,255,.09);border-radius:99px}
+.qbar span{border-radius:99px;box-shadow:0 0 18px currentColor}
+.board{grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:14px;max-width:none}
+.cell{position:relative;overflow:hidden;text-align:left;padding:22px 22px 20px;border:1px solid var(--line)!important;border-radius:20px;background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.025));box-shadow:0 12px 36px rgba(0,0,0,.12);min-height:132px}
+.cell:before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--opt-color,var(--accent));opacity:.95}
+.cell:nth-child(1){--opt-color:#7c8cff}.cell:nth-child(2){--opt-color:#4dd6c3}.cell:nth-child(3){--opt-color:#ffbf69}.cell:nth-child(4){--opt-color:#d28aff}.cell:nth-child(5){--opt-color:#ff7d94}.cell:nth-child(6){--opt-color:#8cdb78}
+.cell .n{font-size:clamp(38px,5vw,58px);letter-spacing:-.06em;line-height:1;margin-bottom:15px}
+.cell .l{font-size:13px;line-height:1.45;color:#e1e8f7;margin-top:0;overflow-wrap:anywhere}
+.bars{max-width:none;gap:16px;margin-top:2px}
+.row{grid-template-columns:minmax(130px, min(25%,260px)) minmax(100px,1fr) 72px;gap:16px;padding:0 0 2px}
+.row .name{font-size:14px;line-height:1.4;overflow-wrap:anywhere}
+.row .desc{margin-top:4px;line-height:1.4}
+.track{height:clamp(30px,3.4vw,42px);background:rgba(255,255,255,.075);border:1px solid rgba(255,255,255,.04);border-radius:11px}
+.fill{position:relative;min-width:0;border-radius:9px;box-shadow:0 0 24px rgba(70,100,230,.12);font-size:12px}
+.pct{font-size:clamp(17px,2vw,22px);font-variant-numeric:tabular-nums;letter-spacing:-.04em}
+.footer{border-top:1px solid var(--line);padding:14px 20px 18px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;background:rgba(0,0,0,.08)}
+.closed-overlay{background:rgba(5,9,22,.94);backdrop-filter:blur(18px)}
+.closed-card{width:min(800px,calc(100% - 32px));padding:clamp(24px,5vw,54px);border:1px solid var(--line);border-radius:28px;background:linear-gradient(145deg,var(--card),rgba(10,16,34,.96));box-shadow:0 30px 100px #0008}
+.stamp{font-size:clamp(20px,4vw,40px);border:2px solid #ff7185;color:#ff9aaa;box-shadow:0 0 42px rgba(255,91,118,.12);letter-spacing:.04em}
+.closed-card h2{font-size:clamp(22px,4vw,36px);letter-spacing:-.04em}
+.winner-box{min-width:min(360px,100%);border:1px solid var(--line);background:rgba(255,255,255,.05);padding:20px 28px;border-radius:20px}
+.winner-box .w-label{letter-spacing:.16em;font-weight:800}
+.winner-box .w-name{font-size:clamp(22px,4vw,34px);letter-spacing:-.04em;overflow-wrap:anywhere}
+@media(max-width:700px){.top{padding:18px 16px 16px;align-items:stretch}.top>div:first-child{max-width:100%}.top>div:last-child{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 14px;min-width:0}.theme-bar{margin:0;flex-shrink:0}.total{font-size:34px;margin:0!important}.total small{font-size:9px}.stage{padding:18px 16px 24px;gap:16px}.board{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.cell{min-height:112px;padding:16px 15px;border-radius:16px}.cell .n{font-size:38px;margin-bottom:10px}.cell .l{font-size:12px}.row{grid-template-columns:minmax(0,1fr) 54px;gap:7px 12px}.row>div:first-child{grid-column:1/-1}.row .name{font-size:13px}.track{grid-column:1;height:28px}.pct{grid-column:2;grid-row:2}.cd{min-width:64px;padding:11px 10px}.quorum-wrap{padding:13px 14px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
 </style></head><body class="theme-night">
 <div class="top">
   <div>
-    <div class="live-tag"><i></i> LIVE</div>
+    <div class="live-tag"><i></i> LIVE · голосование</div>
     <h1 id="title">—</h1>
     <div class="sub" id="sub"></div>
   </div>
@@ -1322,7 +1415,7 @@ body.is-closed .live-tag i{animation:none;opacity:.4}
     <div class="winner-box" id="winnerBox"></div>
   </div>
 </div>
-<div class="footer">Совет старост · табло для проектора · F11 — на весь экран</div>
+<div class="footer">Совет старост <span style="opacity:.45">/</span> LIVE-табло <span style="opacity:.45">/</span> F11 — полноэкранный режим</div>
 <script>
 const firebaseConfig=${cfg};
 const pollId=${pollId};
@@ -2696,6 +2789,77 @@ window.addEventListener('hashchange',()=>{
   const page=decodeURIComponent((location.hash||'').slice(1));
   if(page && PAGE_TITLES[page] && window._page!==page) showPage(page,true);
 });
+
+
+/* Shared live chat: stores messages in the dedicated Firestore collection chatMessages. */
+let councilChatUnsub=null, councilChatMessages=[], councilChatOpen=false, councilChatLastCount=0;
+function openCouncilChat(){
+  if(!currentUser)return;
+  councilChatOpen=true;
+  document.getElementById('chatWindow')?.classList.add('open');
+  document.getElementById('chatOverlay')?.classList.add('open');
+  document.getElementById('chatWindow')?.setAttribute('aria-hidden','false');
+  document.getElementById('chatUnread').style.display='none';
+  if(!councilChatUnsub) startCouncilChat();
+  setTimeout(()=>{const f=document.getElementById('chatFeed');if(f)f.scrollTop=f.scrollHeight;document.getElementById('chatInput')?.focus()},80);
+}
+function closeCouncilChat(){
+  councilChatOpen=false;
+  document.getElementById('chatWindow')?.classList.remove('open');
+  document.getElementById('chatOverlay')?.classList.remove('open');
+  document.getElementById('chatWindow')?.setAttribute('aria-hidden','true');
+}
+function startCouncilChat(){
+  if(!firestore||!currentUser||councilChatUnsub)return;
+  try{
+    councilChatUnsub=firestore.collection('chatMessages').orderBy('createdAt','desc').limit(100).onSnapshot(snap=>{
+      const wasAtBottom=(()=>{const f=document.getElementById('chatFeed');return f?f.scrollHeight-f.scrollTop-f.clientHeight<90:true})();
+      councilChatMessages=snap.docs.map(d=>({id:d.id,...d.data()})).reverse();
+      renderCouncilChat();
+      if(councilChatOpen||councilChatMessages.length>councilChatLastCount){
+        if(councilChatOpen&&wasAtBottom){const f=document.getElementById('chatFeed');if(f)f.scrollTop=f.scrollHeight}
+        else if(!councilChatOpen&&councilChatMessages.some(m=>m.senderId!==currentUser.id)){
+          const b=document.getElementById('chatUnread');b.textContent='•';b.style.display='flex';
+        }
+      }
+      councilChatLastCount=councilChatMessages.length;
+    },err=>{showCouncilChatError('Не удалось загрузить чат: '+(err.code==='permission-denied'?'нет доступа к chatMessages':err.message));councilChatUnsub=null});
+  }catch(e){showCouncilChatError('Не удалось подключить чат: '+e.message)}
+}
+function renderCouncilChat(){
+  const feed=document.getElementById('chatFeed');if(!feed)return;
+  document.getElementById('chatCount').textContent=councilChatMessages.length+' '+(councilChatMessages.length===1?'сообщение':councilChatMessages.length>=2&&councilChatMessages.length<=4?'сообщения':'сообщений');
+  if(!councilChatMessages.length){feed.innerHTML='<div class="chat-empty"><div class="chat-empty-icon">✦</div><b>Начните разговор</b>Напишите первое сообщение — оно появится здесь у всех участников.</div>';return}
+  feed.innerHTML=councilChatMessages.map(m=>{
+    const mine=String(m.senderId||'')===String(currentUser?.id||'');
+    const d=m.createdAt?new Date(m.createdAt):null;
+    const time=d&&!isNaN(d)?d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}):'';
+    const name=String(m.senderName||'Участник');
+    const initials=name.trim().split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toUpperCase()||'С';
+    return `<article class="chat-msg ${mine?'mine':''}"><div class="chat-msg-meta">${!mine?`<span class="chat-avatar">${esc(initials)}</span>`:''}<b>${mine?'Вы':esc(name)}</b>${m.klass?`<span>· ${esc(m.klass)}</span>`:''}</div><div class="chat-bubble">${esc(m.text||'')}</div><div class="chat-msg-time">${time}</div></article>`;
+  }).join('');
+}
+function showCouncilChatError(message){const e=document.getElementById('chatError');if(e){e.textContent=message;e.style.display='block'}}
+async function sendCouncilChat(event){
+  event?.preventDefault();const input=document.getElementById('chatInput');const error=document.getElementById('chatError');
+  const textValue=(input?.value||'').trim();if(!textValue||!currentUser)return;
+  if(!firestore||!fbEnabled){showCouncilChatError('Нет подключения к базе данных.');return}
+  const btn=document.querySelector('.chat-send');if(btn)btn.disabled=true;if(error){error.style.display='none';error.textContent=''}
+  try{
+    await firestore.collection('chatMessages').add({text:textValue,senderId:String(currentUser.id),senderName:String(currentUser.name||currentUser.login||'Участник'),role:String(currentUser.role||'starost'),klass:String(currentUser.klass||''),createdAt:new Date().toISOString()});
+    input.value='';input.style.height='43px';input.focus();
+  }catch(e){showCouncilChatError(e.code==='permission-denied'?'Firebase запретил запись. Проверь правила доступа к коллекции chatMessages.':'Не удалось отправить сообщение: '+e.message)}
+  finally{if(btn)btn.disabled=false}
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&councilChatOpen)closeCouncilChat();
+  if(e.target?.id==='chatInput'&&e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendCouncilChat(e)}
+});
+document.addEventListener('input',e=>{if(e.target?.id==='chatInput'){e.target.style.height='43px';e.target.style.height=Math.min(e.target.scrollHeight,110)+'px'}});
+const _enterAppWithChat=enterApp;
+enterApp=function(u){_enterAppWithChat(u);const fab=document.getElementById('chatFab');if(fab)fab.style.display='flex';startCouncilChat()};
+const _logoutWithChat=logout;
+logout=function(){if(councilChatUnsub){try{councilChatUnsub()}catch(e){}councilChatUnsub=null}councilChatMessages=[];councilChatLastCount=0;closeCouncilChat();const fab=document.getElementById('chatFab');if(fab)fab.style.display='none';_logoutWithChat()};
 
 /* boot */
 loadSettings();
