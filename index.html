@@ -7,7 +7,6 @@
 <title>Совет старост</title>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js"></script>
 <style>
 :root{--bg:#f4f6fb;--panel:#fff;--ink:#172033;--muted:#6c768b;--line:#e4e8f1;--blue:#425ee8;--blue2:#edf0ff;--green:#15835d;--amber:#a8640a;--red:#c43f52;--shadow:0 8px 28px #23345c0b}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 Inter,ui-sans-serif,system-ui,sans-serif}
@@ -216,14 +215,6 @@ input:focus,select:focus,textarea:focus{border-color:#8a9aff;box-shadow:0 0 0 3p
 @media(max-width:600px){.chat-fab{right:16px;bottom:18px;width:56px;height:56px;border-radius:19px}.chat-window{right:8px;bottom:82px;width:calc(100vw - 16px);height:min(620px,calc(100dvh - 100px));border-radius:21px}.chat-overlay{background:#111a3040}}
 
 
-/* Notification center */
-.notify-settings{border:1px solid var(--line);border-radius:18px;padding:18px;background:linear-gradient(135deg,#fff,#f8f9ff);margin-bottom:16px}
-.notify-setting-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid var(--line)}
-.notify-setting-row:last-child{border-bottom:0}.notify-setting-row b{display:block;font-size:14px}.notify-setting-row small{display:block;color:var(--muted);font-size:12px;margin-top:3px}
-.notify-switch{width:46px;height:26px;position:relative;flex:0 0 auto}.notify-switch input{opacity:0;width:0;height:0}.notify-switch span{position:absolute;inset:0;background:#c9cfdd;border-radius:30px;transition:.2s;cursor:pointer}.notify-switch span:before{content:"";position:absolute;width:20px;height:20px;left:3px;top:3px;border-radius:50%;background:#fff;box-shadow:0 1px 4px #0002;transition:.2s}.notify-switch input:checked+span{background:var(--blue)}.notify-switch input:checked+span:before{transform:translateX(20px)}
-.notify-hero{border-radius:18px;padding:20px;background:linear-gradient(125deg,#171f38,#334a88);color:#fff;margin-bottom:16px}.notify-hero p{color:#cbd4f5;margin:6px 0 0}.notify-status{font-size:12px;color:var(--muted);margin-top:10px}
-@media(max-width:600px){.notify-settings{padding:14px}.notify-setting-row{align-items:flex-start}.notify-hero{padding:16px}}
-
 </style>
 
 <style id="mobile-nav-fix">
@@ -430,22 +421,17 @@ const firebaseConfig = {
   appId: "1:770061016694:web:280d5caa6db66bea2d0957",
   measurementId: "G-D4QTK30MWV"
 };
-const FCM_VAPID_KEY='BFrWPf2092fi2yJ4F4ETaoE65w_gTuQSDCQPvKWRFvUF5fwPZocFb1-wBQKyI8CGNxRqmuMfomhh1MAMHx53IOU';
-const NOTIFY_DEFAULTS={newPoll:true,meeting:true,chat:true,announcement:true,decision:true,reminder:true};
-const NOTIFY_LABELS={newPoll:'Началось новое голосование',meeting:'Назначено собрание',chat:'Новое сообщение в чате',announcement:'Новое важное объявление',decision:'Опубликовано решение собрания',reminder:'Напоминание перед событием'};
-function notificationPrefs(){return {...NOTIFY_DEFAULTS,...(currentUser?.notificationPrefs||{})}}
-function notificationAllowedForCurrent(n){const prefs=notificationPrefs();const k=n.eventKey||(n.kind==='опрос'?'newPoll':n.kind==='собрание'?'meeting':n.kind==='чат'?'chat':n.kind==='объявление'?'announcement':n.kind==='решение'?'decision':n.kind==='напоминание'?'reminder':'');return !k||prefs[k]!==false}
 const STORE='councilFull_v2', SESSION_KEY='councilSession_v2';
 const days=['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
 const COLORS=['#425ee8','#15835d','#a8640a','#c43f52','#7c4dff','#00897b','#f57c00','#5c6bc0'];
-const COLS=['polls','meetings','users','events','duties','announcements','problems','ideas','links','classlists','diary','notifications','decisions','documents'];
+const COLS=['polls','meetings','users','events','duties','announcements','problems','ideas','links','classlists','diary','decisions','documents'];
 
 let currentUser=null, fbEnabled=false, firestore=null;
 let unsubs={};
-let db={schedules:[],meetings:[],polls:[],decisions:[],documents:[],users:[],events:[],duties:[],announcements:[],problems:[],ideas:[],links:[],classlists:[],diary:[],notifications:[]};
+let db={schedules:[],meetings:[],polls:[],decisions:[],documents:[],users:[],events:[],duties:[],announcements:[],problems:[],ideas:[],links:[],classlists:[],diary:[]};
 let modalType='', optCount=0, lessonCount=0, slideCount=0, speechCount=0;
 let livePollId=null, slideIdx=0, detailMeetingId=null;
-let settings={telegramWebhook:'', notifyEmail:''};
+let settings={};
 
 function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
@@ -480,15 +466,9 @@ function listenCol(name, orderField){
   let ref=firestore.collection(name);
   const unsub=ref.onSnapshot(snap=>{
     db[name]=snap.docs.map(d=>({id:d.id,...d.data()}));
-    if(name==='notifications') window._notificationLoadError='';
     renderCurrent();
   },err=>{
     console.error('Firestore listener error ['+name+']:',err.code,err.message);
-    if(name==='notifications'){
-      window._notificationLoadError=(err.code||'Firestore error')+': '+(err.message||'Не удалось загрузить уведомления');
-      const status=document.getElementById('notificationLoadError');
-      if(status) status.textContent='Не удалось загрузить уведомления из Firebase: '+window._notificationLoadError;
-    }
   });
   unsubs[name]=unsub;
 }
@@ -530,7 +510,7 @@ async function doLogin(){
   }finally{btn.disabled=false;btn.textContent='Войти'}
 }
 function enterApp(u){
-  currentUser={id:u.id,login:u.login,name:u.name||u.login,role:u.role||'starost',klass:u.klass||'',phone:u.phone||'',contact:u.contact||'',notificationPrefs:{...NOTIFY_DEFAULTS,...(u.notificationPrefs||{})},fcmTokens:u.fcmTokens||[]};
+  currentUser={id:u.id,login:u.login,name:u.name||u.login,role:u.role||'starost',klass:u.klass||'',phone:u.phone||'',contact:u.contact||'',};
   sessionStorage.setItem(SESSION_KEY,JSON.stringify(currentUser));
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('appShell').classList.add('show');
@@ -574,10 +554,10 @@ function saveLocal(){localStorage.setItem(STORE,JSON.stringify({schedules:db.sch
 /* Nav */
 const PAGE_TITLES={
   dashboard:'Обзор',meetings:'Собрания',polls:'Голосования',announcements:'Объявления',events:'Календарь',duties:'Дежурства',
-  contacts:'Старосты',problems:'Проблемы',ideas:'Идеи',links:'Ссылки',schedule:'Расписания',users:'Аккаунты',settings:'Настройки',reports:'Отчёты',notifications:'Уведомления',archive:'Архив решений',analytics:'Аналитика',security:'Данные и доступ',
+  contacts:'Старосты',problems:'Проблемы',ideas:'Идеи',links:'Ссылки',schedule:'Расписания',users:'Аккаунты',settings:'Настройки',reports:'Отчёты',archive:'Архив решений',analytics:'Аналитика',security:'Данные и доступ',
   'meeting-detail':'Собрание',live:'LIVE голосование',
   's-polls':'Голосования','s-meetings':'Собрания','s-ann':'Объявления','s-events':'События','s-duties':'Дежурства',
-  's-problems':'Проблемы','s-ideas':'Идеи','s-links':'Ссылки','s-contacts':'Контакты','s-diary':'Дневник класса','s-account':'Мой аккаунт','s-notifications':'Уведомления',
+  's-problems':'Проблемы','s-ideas':'Идеи','s-links':'Ссылки','s-contacts':'Контакты','s-diary':'Дневник класса','s-account':'Мой аккаунт',
   's-meeting-detail':'Собрание','s-live':'LIVE'
 };
 function showPage(p){
@@ -596,11 +576,11 @@ function renderCurrent(){
   const map={
     dashboard:renderDashboard,meetings:renderMeetingsPage,polls:renderPollsPage,announcements:renderAnnPage,
     events:renderEventsPage,duties:renderDutiesPage,contacts:renderContactsPage,problems:renderProblemsPage,
-    ideas:renderIdeasPage,links:renderLinksPage,schedule:renderSchedulePage,journals:renderJournalsPage,users:renderUsersPage,notifications:renderNotificationsPage,
+    ideas:renderIdeasPage,links:renderLinksPage,schedule:renderSchedulePage,journals:renderJournalsPage,users:renderUsersPage,
     settings:renderSettingsPage,reports:renderReportsPage,archive:renderArchivePage,analytics:renderAnalyticsPage,security:renderSecurityPage,'meeting-detail':renderMeetingDetail,live:renderLivePage,
     's-polls':renderSPolls,'s-meetings':renderSMeetings,'s-ann':renderSAnn,'s-events':renderSEvents,
     's-duties':renderSDuties,'s-problems':renderSProblems,'s-ideas':renderSIdeas,'s-links':renderSLinks,
-    's-contacts':renderContactsPage,'s-account':renderAccountPage,'s-notifications':renderNotificationsPage,'s-diary':renderDiaryPage,'s-meeting-detail':renderMeetingDetail,'s-live':renderLivePage
+    's-contacts':renderContactsPage,'s-account':renderAccountPage,'s-diary':renderDiaryPage,'s-meeting-detail':renderMeetingDetail,'s-live':renderLivePage
   };
   (map[p]||(()=>c.innerHTML='<div class="empty"><b>Раздел</b></div>'))();
 }
@@ -625,170 +605,25 @@ function quorumBar(p){
 
 /* ===== PAGES ===== */
 
-/* ===== Уведомления ===== */
-function myUnreadNotifications(){
-  if(!currentUser) return [];
-  return (db.notifications||[]).filter(n=>{
-    if(!notificationAllowedForCurrent(n)) return false;
-    if(n.readBy && n.readBy[currentUser.id]) return false;
-    if(n.audience==='chair' && !isChair()) return false;
-    if(n.audience==='starost' && isChair()) return false;
-    // targeted
-    if(n.userIds && n.userIds.length && !n.userIds.includes(currentUser.id)) return false;
-    return true;
-  });
-}
-function renderNotificationsPage(){
-  const list=[...(db.notifications||[])].sort((a,b)=>(b.created||'').localeCompare(a.created||''));
-  const mine=list.filter(n=>{
-    if(!notificationAllowedForCurrent(n)) return false;
-    if(n.audience==='chair' && !isChair()) return false;
-    if(n.audience==='starost' && isChair()) return false;
-    if(n.userIds && n.userIds.length && !n.userIds.includes(currentUser.id)) return false;
-    return true;
-  });
-  const prefs=notificationPrefs();
-  document.getElementById('content').innerHTML=`
-  <div class="notify-hero"><div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.75">Центр уведомлений</div><h2 style="margin:6px 0 0">Будь в курсе событий</h2><p>Настрой, о чём сообщать и куда отправлять уведомления.</p></div>
-  <div class="notify-settings"><div class="panel-head" style="margin-bottom:4px"><h3 style="margin:0">Мои уведомления</h3><span class="pill">Персонально</span></div>
-    ${Object.entries(NOTIFY_LABELS).map(([key,label])=>`<div class="notify-setting-row"><div><b>${esc(label)}</b><small>${key==='chat'?'Уведомления о сообщениях общего чата':key==='reminder'?'За 30 минут до начала собрания или события':'Уведомления внутри сайта и push, если они включены'}</small></div><label class="notify-switch" aria-label="${esc(label)}"><input type="checkbox" id="np_${key}" ${prefs[key]?'checked':''} onchange="saveNotificationPrefs()"><span></span></label></div>`).join('')}
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px"><button onclick="enableBrowserPush()">🔔 Включить push в браузере</button><button class="secondary" onclick="saveNotificationPrefs()">Сохранить настройки</button></div>
-    <div id="pushStatus" class="notify-status">${esc(window._pushStatus||'Push требует HTTPS, Service Worker и публичный VAPID-ключ из настроек Firebase.')}</div>
-  </div>
-  <div class="welcome"><div><h2>История уведомлений</h2><p>Новые опросы, собрания, сообщения и решения</p></div><button class="secondary small" onclick="markAllNotificationsRead()">Прочитать все</button></div>
-  <div id="notificationLoadError" class="error" style="display:${window._notificationLoadError?'block':'none'};margin-bottom:12px">${esc(window._notificationLoadError||'')}</div>
-  <div class="panel">
-    ${mine.length?mine.map(n=>{
-      const unread=!(n.readBy&&n.readBy[currentUser.id]);
-      return `<div class="ann-item" style="${unread?'border-left:3px solid var(--blue);padding-left:12px':''}"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><div><span class="pill">${esc(n.kind||'событие')}</span><b style="margin-left:6px">${esc(n.title)}</b>${unread?'<span class="pill amber" style="margin-left:6px">новое</span>':''}</div><span class="muted" style="font-size:11px">${esc((n.created||'').slice(0,16).replace('T',' '))}</span></div><p style="margin:6px 0 0;font-size:13px;color:var(--muted)">${esc(n.text||'')}</p>${n.linkPage?`<button class="ghost small" style="margin-top:6px" onclick="showPage('${n.linkPage}')">Открыть</button>`:''}${unread?`<button class="secondary small" style="margin-top:6px" onclick="markNotificationRead('${n.id}')">Прочитано</button>`:''}</div>`;
-    }).join(''):'<div class="empty"><b>Пока нет уведомлений</b><p>Они появятся здесь по мере событий в совете.</p></div>'}
-  </div>`;
-}
-async function saveNotificationPrefs(){
-  if(!currentUser||!firestore){toast('Нет подключения к Firebase');return}
-  const prefs={};Object.keys(NOTIFY_DEFAULTS).forEach(k=>{const el=document.getElementById('np_'+k);prefs[k]=el?el.checked:(currentUser.notificationPrefs?.[k]??NOTIFY_DEFAULTS[k])});
-  try{await firestore.collection('users').doc(currentUser.id).update({notificationPrefs:prefs});currentUser={...currentUser,notificationPrefs:prefs};sessionStorage.setItem(SESSION_KEY,JSON.stringify(currentUser));toast('Настройки уведомлений сохранены')}
-  catch(e){toast('Не удалось сохранить: '+e.message)}
-}
-let foregroundMessageHandlerInstalled=false;
-function readablePushError(e){
-  const code=e&&e.code?String(e.code):'';
-  const message=e&&e.message?String(e.message):String(e||'Неизвестная ошибка');
-  if(code==='messaging/permission-blocked') return 'Браузер заблокировал уведомления. Разреши уведомления для сайта в настройках браузера.';
-  if(code==='messaging/unsupported-browser') return 'Этот браузер не поддерживает Firebase Push.';
-  if(code==='messaging/token-subscribe-failed') return 'Firebase не смог создать push-подписку. Проверь публичный VAPID-ключ в Firebase Console → Project settings → Cloud Messaging → Web Push certificates.';
-  if(code==='messaging/failed-service-worker-registration') return 'Не удалось запустить Service Worker. Проверь, что firebase-messaging-sw.js находится в корне сайта /sovetstarost/. ' + message;
-  return (code ? code + ': ' : '') + message;
-}
-async function enableBrowserPush(){
-  const status=document.getElementById('pushStatus');
-  const setStatus=m=>{window._pushStatus=m;if(status)status.textContent=m};
-  try{
-    if(!('Notification' in window)||!('serviceWorker' in navigator)){setStatus('Этот браузер не поддерживает push-уведомления.');return}
-    if(location.protocol!=='https:'&&location.hostname!=='localhost'){setStatus('Push работает только на HTTPS (или localhost).');return}
-    if(!FCM_VAPID_KEY||FCM_VAPID_KEY.startsWith('PASTE_')){setStatus('В HTML ещё не указан публичный VAPID-ключ Firebase. Открой FCM_VAPID_KEY в начале кода и вставь ключ из Firebase Console → Project settings → Cloud Messaging → Web Push certificates.');return}
-    if(!firebase.messaging.isSupported()){setStatus('Firebase Messaging не поддерживается этим браузером.');return}
-    if(!fbEnabled||!firestore||!currentUser){setStatus('Сначала войди на сайт и дождись подключения к Firebase.');return}
-    setStatus('Запрашиваем разрешение на уведомления…');
-    const permission=await Notification.requestPermission();
-    if(permission!=='granted'){setStatus('Разрешение на уведомления не выдано.');return}
-
-    setStatus('Запускаем Service Worker…');
-    const swUrl=new URL('./firebase-messaging-sw.js',document.baseURI);
-    const scopeUrl=new URL('./',document.baseURI);
-    const registered=await navigator.serviceWorker.register(swUrl.href,{scope:scopeUrl.pathname});
-    // Ждём, пока браузер активирует Service Worker, прежде чем вызывать Firebase getToken().
-    await navigator.serviceWorker.ready;
-    const reg=await navigator.serviceWorker.getRegistration(scopeUrl.pathname);
-    if(!reg||!reg.active){
-      throw new Error('Service Worker зарегистрирован, но не активен. Перезагрузи страницу и попробуй снова.');
-    }
-    console.log('FCM Service Worker:',reg.active.scriptURL,'Scope:',reg.scope);
-
-    setStatus('Создаём push-подписку Firebase…');
-    const messaging=firebase.messaging();
-    const token=await messaging.getToken({vapidKey:FCM_VAPID_KEY,serviceWorkerRegistration:reg});
-    if(!token)throw new Error('Firebase не выдал токен устройства. Проверь VAPID-ключ и настройки Cloud Messaging.');
-
-    await firestore.collection('users').doc(currentUser.id).update({fcmTokens:firebase.firestore.FieldValue.arrayUnion(token)});
-    setStatus('Push включён на этом устройстве.');
-    toast('Push-уведомления включены');
-    if(!foregroundMessageHandlerInstalled){
-      messaging.onMessage(payload=>{
-        const title=payload.notification?.title||'Совет старост';
-        const body=payload.notification?.body||'';
-        toast(title+(body?' — '+body:''));
-        if(Notification.permission==='granted'&&document.hidden)new Notification(title,{body,icon:new URL('./icon-192.png',document.baseURI).href});
-      });
-      foregroundMessageHandlerInstalled=true;
-    }
-  }catch(e){
-    console.error('FCM setup error:',e,'code:',e&&e.code,'message:',e&&e.message);
-    setStatus('Не удалось включить push: '+readablePushError(e));
-  }
-}
-
-async function pushNotification({title, text, kind, audience, userIds, linkPage}){
-  // Keep the in-site notification feed functional even when Cloud Functions have not been deployed.
-  // For production, move notification creation to a trusted backend and lock down Firestore rules.
-  if(!firestore||!fbEnabled){console.warn('Notification not saved: Firebase is offline');return}
-  const item={
-    title:String(title||'Новое уведомление'), text:String(text||''), kind:String(kind||'событие'),
-    created:new Date().toISOString(), readBy:{},
-    ...(audience?{audience}:{}),
-    ...(Array.isArray(userIds)&&userIds.length?{userIds}:{}),
-    ...(linkPage?{linkPage}:{}),
-    eventKey:kind==='опрос'?'newPoll':kind==='собрание'?'meeting':kind==='чат'?'chat':kind==='объявление'?'announcement':kind==='решение'?'decision':kind==='напоминание'?'reminder':''
-  };
-  try{
-    await firestore.collection('notifications').add(item);
-    // When the page is open, give immediate feedback. Background push is sent by the server function.
-    if(typeof toast==='function') toast('Уведомление создано: '+item.title);
-  }catch(e){
-    console.error('Could not create notification:',e.code,e.message);
-    if(typeof toast==='function') toast('Не удалось создать уведомление: '+(e.message||e.code||'ошибка Firebase'));
-  }
-}
-
-async function markNotificationRead(id){
-  if(!currentUser||!fbEnabled) return;
-  try{
-    const ref=firestore.collection('notifications').doc(id);
-    await firestore.runTransaction(async tx=>{
-      const snap=await tx.get(ref);
-      if(!snap.exists) return;
-      const data=snap.data();
-      const readBy={...(data.readBy||{})};
-      readBy[currentUser.id]=new Date().toISOString();
-      tx.update(ref,{readBy});
-    });
-  }catch(e){toast(e.message)}
-}
-async function markAllNotificationsRead(){
-  const unread=myUnreadNotifications();
-  for(const n of unread){ await markNotificationRead(n.id); }
-  toast('Все прочитаны');
-}
+/* Уведомления и браузерный Push удалены. Публикация объявлений остаётся в разделе «Объявления». */
+async function pushNotification(){ /* намеренно отключено */ }
 
 function renderDashboard(){
   const anns=[...db.announcements].filter(a=>a.status!=='pending'&&a.status!=='rejected').sort((a,b)=>(b.created||'').localeCompare(a.created||'')).slice(0,4);
   const meets=[...db.meetings].sort((a,b)=>(a.date||'').localeCompare(b.date||'')).filter(m=>m.status!=='Отменено').slice(0,4);
   const evs=[...db.events].sort((a,b)=>(a.date||'').localeCompare(b.date||'')).slice(0,4);
   const duts=[...db.duties].sort((a,b)=>(a.date||'').localeCompare(b.date||'')).slice(0,4);
-  const unread=myUnreadNotifications().length;
   document.getElementById('content').innerHTML=`
   <div class="welcome"><div><h2>Рабочий центр</h2><p>Привет, ${esc(currentUser.name)}</p></div>
     <div class="welcome-actions">
       <button class="secondary" onclick="openModal('poll')">＋ Опрос</button>
       <button onclick="openModal('meeting')">＋ Собрание</button>
       <button class="secondary" onclick="openModal('ann')">＋ Объявление</button>
-      <button class="secondary" onclick="showPage('notifications')">🔔 ${unread?`(${unread})`:''}</button>
     </div></div>
   <div class="grid">
     <div class="stat"><div class="stat-top">Опросы</div><div class="stat-num">${db.polls.filter(p=>p.status==='Открыто').length}</div></div>
     <div class="stat"><div class="stat-top">Собрания</div><div class="stat-num">${db.meetings.length}</div></div>
     <div class="stat"><div class="stat-top">Старосты</div><div class="stat-num">${db.users.filter(u=>u.role==='starost'&&u.active!==false).length}</div></div>
-    <div class="stat"><div class="stat-top">Уведомления</div><div class="stat-num">${unread}</div></div>
   </div>
 
   <div class="panel">
@@ -2003,23 +1838,12 @@ async function toggleUser(id,on){try{await firestore.collection('users').doc(id)
 function renderSettingsPage(){
   document.getElementById('content').innerHTML=`
   <div class="welcome"><div><h2>Настройки</h2></div></div>
-  <div class="panel"><h3 style="margin-top:0">Уведомления о новых опросах</h3>
-    <p class="muted" style="font-size:13px">Webhook Telegram (через Bot API или Zapier/Make). При создании опроса уйдёт POST с текстом.</p>
-    <label>Webhook URL<input id="setHook" value="${esc(settings.telegramWebhook)}" placeholder="https://..."></label>
-    <label style="margin-top:10px">Email для копии (справочно)<input id="setEmail" value="${esc(settings.notifyEmail)}" placeholder="mail@school.ru"></label>
-    <div class="form-actions"><button onclick="saveSettings()">Сохранить</button></div>
-  </div>
   <div class="panel"><h3 style="margin-top:0">Смена пароля</h3>
     <label>Новый пароль<input type="password" id="newPass"></label>
     <div class="form-actions"><button onclick="changeMyPassword()">Сменить пароль</button></div>
   </div>
   <div class="notice"><strong>Firestore Rules</strong>Нужны read/write для: users, polls, meetings, events, duties, announcements, problems, ideas, links, classlists, diary, decisions, documents, liveSessions</div>
   <div class="panel"><button class="danger" style="width:100%" onclick="logout()">Выйти из аккаунта</button></div>`;
-}
-function saveSettings(){
-  settings.telegramWebhook=document.getElementById('setHook').value.trim();
-  settings.notifyEmail=document.getElementById('setEmail').value.trim();
-  saveSettingsLocal(); toast('Сохранено');
 }
 async function changeMyPassword(){
   const p=document.getElementById('newPass').value;
@@ -2523,7 +2347,7 @@ async function submitModal(e){
         toast('Опрос создан');
       }
       closeModal();
-      notifyNewPoll(poll.title);
+      
       await pushNotification({title:'Новый опрос: '+poll.title, text:poll.description||'Открыто голосование', kind:'опрос', audience:'starost', linkPage:'s-polls'});
       return;
     }
@@ -2664,12 +2488,6 @@ async function delDoc(col,id){
   try{await firestore.collection(col).doc(id).delete();toast('Удалено')}catch(e){toast(e.message)}
 }
 
-function notifyNewPoll(title){
-  const url=settings.telegramWebhook;
-  if(!url) return;
-  fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:`Новый опрос совета старост: ${title}`})}).catch(()=>{});
-}
-
 
 function starostMenuItems(){
   return [
@@ -2683,7 +2501,6 @@ function starostMenuItems(){
     {page:'s-ideas',ico:'💡',label:'Идеи'},
     {page:'s-links',ico:'🔗',label:'Ссылки'},
     {page:'s-contacts',ico:'👥',label:'Контакты'},
-    {page:'s-notifications',ico:'🔔',label:'Уведомления'},
     {page:'s-account',ico:'⚙️',label:'Аккаунт'},
   ];
 }
@@ -2703,7 +2520,6 @@ function chairMenuItems(){
     {page:'schedule',ico:'▤',label:'Расписание'},
     {page:'users',ico:'👤',label:'Аккаунты'},
     {page:'settings',ico:'⚙️',label:'Настройки'},
-    {page:'notifications',ico:'🔔',label:'Уведомления'},
     {page:'reports',ico:'▥',label:'Отчёты'},
     {page:'archive',ico:'🗂',label:'Архив решений'},
     {page:'analytics',ico:'📈',label:'Аналитика'},
@@ -2786,7 +2602,7 @@ async function restoreBackupFromFile(){
  const file=input&&input.files&&input.files[0]; if(!file){out.textContent='Сначала выберите JSON-файл.';return}
  try{
   const data=JSON.parse(await file.text());
-  const allowed=['polls','meetings','users','events','duties','announcements','problems','ideas','links','classlists','diary','notifications','decisions','documents'];
+  const allowed=['polls','meetings','users','events','duties','announcements','problems','ideas','links','classlists','diary','decisions','documents'];
   if(!data||typeof data!=='object'||!allowed.some(k=>Array.isArray(data[k]))){out.textContent='Файл не похож на резервную копию этого сайта.';return}
   if(!confirm('Восстановить записи из файла? Существующие документы с теми же ID будут обновлены, новые — добавлены. Текущие записи не удаляются.'))return;
   if(!fbEnabled||!firestore)throw new Error('Нет подключения к Firebase.');
