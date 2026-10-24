@@ -480,8 +480,16 @@ function listenCol(name, orderField){
   let ref=firestore.collection(name);
   const unsub=ref.onSnapshot(snap=>{
     db[name]=snap.docs.map(d=>({id:d.id,...d.data()}));
+    if(name==='notifications') window._notificationLoadError='';
     renderCurrent();
-  },err=>console.error(name,err));
+  },err=>{
+    console.error('Firestore listener error ['+name+']:',err.code,err.message);
+    if(name==='notifications'){
+      window._notificationLoadError=(err.code||'Firestore error')+': '+(err.message||'Не удалось загрузить уведомления');
+      const status=document.getElementById('notificationLoadError');
+      if(status) status.textContent='Не удалось загрузить уведомления из Firebase: '+window._notificationLoadError;
+    }
+  });
   unsubs[name]=unsub;
 }
 function startListeners(){
@@ -648,6 +656,7 @@ function renderNotificationsPage(){
     <div id="pushStatus" class="notify-status">${esc(window._pushStatus||'Push требует HTTPS, Service Worker и публичный VAPID-ключ из настроек Firebase.')}</div>
   </div>
   <div class="welcome"><div><h2>История уведомлений</h2><p>Новые опросы, собрания, сообщения и решения</p></div><button class="secondary small" onclick="markAllNotificationsRead()">Прочитать все</button></div>
+  <div id="notificationLoadError" class="error" style="display:${window._notificationLoadError?'block':'none'};margin-bottom:12px">${esc(window._notificationLoadError||'')}</div>
   <div class="panel">
     ${mine.length?mine.map(n=>{
       const unread=!(n.readBy&&n.readBy[currentUser.id]);
@@ -720,9 +729,25 @@ async function enableBrowserPush(){
 }
 
 async function pushNotification({title, text, kind, audience, userIds, linkPage}){
-  // Notification records are created by trusted Cloud Functions. Browser writes are intentionally disabled.
-  // This preserves old call sites without exposing notification creation to client-side code.
-  console.info('Notification queued for server trigger:', kind, title);
+  // Keep the in-site notification feed functional even when Cloud Functions have not been deployed.
+  // For production, move notification creation to a trusted backend and lock down Firestore rules.
+  if(!firestore||!fbEnabled){console.warn('Notification not saved: Firebase is offline');return}
+  const item={
+    title:String(title||'Новое уведомление'), text:String(text||''), kind:String(kind||'событие'),
+    created:new Date().toISOString(), readBy:{},
+    ...(audience?{audience}:{}),
+    ...(Array.isArray(userIds)&&userIds.length?{userIds}:{}),
+    ...(linkPage?{linkPage}:{}),
+    eventKey:kind==='опрос'?'newPoll':kind==='собрание'?'meeting':kind==='чат'?'chat':kind==='объявление'?'announcement':kind==='решение'?'decision':kind==='напоминание'?'reminder':''
+  };
+  try{
+    await firestore.collection('notifications').add(item);
+    // When the page is open, give immediate feedback. Background push is sent by the server function.
+    if(typeof toast==='function') toast('Уведомление создано: '+item.title);
+  }catch(e){
+    console.error('Could not create notification:',e.code,e.message);
+    if(typeof toast==='function') toast('Не удалось создать уведомление: '+(e.message||e.code||'ошибка Firebase'));
+  }
 }
 
 async function markNotificationRead(id){
