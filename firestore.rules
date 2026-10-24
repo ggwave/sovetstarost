@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // IMPORTANT: this secure baseline requires Firebase Authentication.
+    // The current HTML app uses a custom users/login/password flow and does NOT
+    // establish request.auth. Do not deploy these rules until that app is migrated
+    // to Firebase Auth and each user document stores its Firebase UID.
+    function signedIn() { return request.auth != null; }
+    function ownUser(uid) { return signedIn() && request.auth.uid == uid; }
+    function chair() {
+      return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'chair';
+    }
+    match /users/{uid} {
+      allow read: if ownUser(uid) || chair();
+      // Keep profile/preference edits narrow; passwords must never be stored here.
+      allow update: if ownUser(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['notificationPrefs','fcmTokens','name','klass','phone','contact']);
+      allow create, delete: if chair();
+    }
+    match /notifications/{id} {
+      allow read: if signedIn();
+      // Notification documents are created by trusted Cloud Functions only.
+      allow create, update, delete: if false;
+    }
+    match /chatMessages/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.senderId == request.auth.uid
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 1500;
+      allow update, delete: if chair();
+    }
+    // For other collections, add rules appropriate to each feature before deployment.
+    // Default deny is deliberate: broad write rules would let any visitor alter council data.
+    match /{document=**} { allow read, write: if false; }
+  }
+}
