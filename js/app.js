@@ -792,8 +792,20 @@
       if(event.target.matches('[data-report-status]'))changeReportStatus(event.target.dataset.reportStatus,event.target.value);
     });
     $('#workspaceContent')?.addEventListener('submit',event=>{
+      const form=event.target;
+      if(!(form instanceof HTMLFormElement))return;
+      event.preventDefault();
+      // Listener is attached to workspaceContent; handlers need the actual form as currentTarget.
+      const formEvent={target:form,currentTarget:form,submitter:event.submitter||null,
+        preventDefault:()=>event.preventDefault(),stopPropagation:()=>event.stopPropagation()};
       const handlers={participantForm:saveParticipantProfile,sectorPlanForm:saveSectorPlan,sectorReportForm:saveSectorReport,meetingForm:saveMeeting,pollForm:savePoll,projectForm:saveProject,taskForm:saveTask,decisionForm:saveDecision,announcementForm:saveAnnouncement,documentForm:saveDocument,accountForm:saveAccount,settingsForm:saveSettings};
-      const handler=handlers[event.target.id];if(handler)handler(event);else if(event.target.matches('.sector-plan-form'))saveSectorPlan(event);else if(event.target.matches('[data-vote-poll]'))castVote(event);else if(event.target.matches('[data-edit-collection]'))saveRecordEdit(event);
+      const handler=handlers[form.id];
+      try{
+        if(handler)Promise.resolve(handler(formEvent)).catch(error=>{console.error('[CRM form]',form.id,error);const message=form.querySelector('[role="status"],.crm-form-message');if(message)message.textContent=error?.message||'Не удалось сохранить запись.';showToast('Ошибка сохранения',error?.message||'Проверьте доступ к Firestore.');});
+        else if(form.matches('.sector-plan-form'))Promise.resolve(saveSectorPlan(formEvent)).catch(error=>showToast('Ошибка сохранения',error?.message||'Проверьте доступ к Firestore.'));
+        else if(form.matches('[data-vote-poll]'))Promise.resolve(castVote(formEvent)).catch(error=>showToast('Не удалось проголосовать',error?.message||'Проверьте доступ к Firestore.'));
+        else if(form.matches('[data-edit-collection]'))Promise.resolve(saveRecordEdit(formEvent)).catch(error=>showToast('Не удалось изменить запись',error?.message||'Проверьте доступ к Firestore.'));
+      }catch(error){console.error('[CRM form]',form.id,error);showToast('Ошибка формы',error?.message||'Не удалось выполнить действие.');}
     });
     $('#workspaceMenuToggle')?.addEventListener('click',()=>$('#workspace').classList.toggle('menu-open'));
     $('#workspace')?.addEventListener('click',event=>{if(event.target.closest('.workspace-nav [data-workpage]')||event.target.closest('[data-show-public-home]'))$('#workspace').classList.remove('menu-open');});
