@@ -164,3 +164,80 @@ html,body{max-width:100%;overflow-x:hidden}
 .live-poll-list .poll-vote-form{margin-top:10px}
 @media(max-width:900px){.live-board-grid{grid-template-columns:1fr}.live-overview-strip{align-items:flex-start;flex-direction:column}.live-overview-stats{gap:18px}}
 @media(max-width:560px){.live-overview-strip{padding:15px}.live-overview-stats{width:100%;justify-content:space-between;gap:10px}.live-overview-stats span{max-width:90px;line-height:1.5}.live-meeting-card{padding:10px}.live-poll-list .crm-record{padding:13px}}
+
+
+/* CRM layout and responsive navigation fixes */
+#workspace.workspace{display:grid!important;grid-template-columns:255px minmax(0,1fr);align-items:stretch;min-height:100vh;position:relative}
+#workspace .workspace-sidebar{position:sticky;top:0;align-self:start;width:255px;height:100vh;height:100dvh;min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain}
+#workspace .workspace-main{min-width:0;width:100%;max-width:100%;overflow-x:clip}
+#workspace .workspace-content{width:100%;max-width:1100px;min-width:0}
+#workspace .workspace-nav button{width:100%;min-width:0;white-space:normal;line-height:1.45}
+#workspace .workspace-topbar{min-width:0}
+#workspace .live-board-grid{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)}
+#workspace .live-poll-list,#workspace .live-meeting-list{min-width:0}
+#workspace .live-poll-list .crm-record{min-width:0;overflow-wrap:anywhere}
+#workspace .live-poll-list .crm-record-controls{flex-wrap:wrap}
+#workspace .live-poll-list .poll-result-row>div:first-child{display:flex;justify-content:space-between;gap:10px;min-width:0}
+#workspace .live-poll-list .poll-result-row>div:first-child span{overflow-wrap:anywhere}
+@media(max-width:1050px) and (min-width:781px){
+  #workspace.workspace{grid-template-columns:225px minmax(0,1fr)}
+  #workspace .workspace-sidebar{width:225px;padding-inline:13px}
+  #workspace .workspace-content{padding:25px 20px 55px}
+  #workspace .workspace-topbar{padding-inline:20px}
+  #workspace .live-board-grid{grid-template-columns:1fr}
+}
+@media(max-width:780px){
+  #workspace.workspace{display:block!important;min-height:100dvh}
+  #workspace .workspace-sidebar{position:fixed;z-index:1002;left:0;top:0;bottom:0;width:min(84vw,320px);height:100dvh;min-height:0;transform:translateX(-105%);transition:transform .25s ease;box-shadow:15px 0 40px rgba(0,0,0,.2);padding:20px 16px calc(20px + env(safe-area-inset-bottom))}
+  #workspace.menu-open .workspace-sidebar{transform:translateX(0)}
+  #workspace.menu-open::before{content:"";position:fixed;z-index:1001;inset:0;background:rgba(25,17,12,.48)}
+  #workspace .workspace-main{width:100%;min-height:100dvh}
+  #workspace .workspace-topbar{position:sticky;z-index:20;top:0;height:auto;min-height:64px;padding:10px 12px;gap:9px}
+  #workspace .workspace-menu-toggle{display:grid;place-items:center;flex:0 0 38px;width:38px;height:38px;font-size:21px;border:1px solid #e7dbce;background:#fffdf9}
+  #workspace .workspace-topbar>div:nth-child(2){min-width:0;flex:1}
+  #workspace .workspace-topbar h1{font-size:clamp(18px,5vw,23px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #workspace .workspace-topbar .eyebrow{font-size:6px;letter-spacing:.1em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #workspace .topbar-actions{gap:6px}
+  #workspace .workspace-status{max-width:92px;font-size:7px;line-height:1.3;padding:5px 6px}
+  #workspace .workspace-content{padding:14px 12px calc(32px + env(safe-area-inset-bottom))}
+  #workspace .workspace-welcome{padding:18px 16px;gap:12px}
+  #workspace .workspace-welcome h2{font-size:clamp(25px,7vw,32px);line-height:1.05}
+  #workspace .workspace-welcome p:not(.eyebrow){font-size:11px;line-height:1.6}
+  #workspace .welcome-seal{width:48px;height:48px;flex:0 0 48px}
+  #workspace .workspace-panel{padding:15px;margin-bottom:12px}
+  #workspace .workspace-panel h3{font-size:22px}
+  #workspace .panel-heading{gap:10px;align-items:flex-start;flex-wrap:wrap}
+  #workspace .panel-heading .crm-secondary{font-size:9px;padding:8px}
+  #workspace .live-overview-strip{padding:14px;gap:13px;align-items:flex-start;flex-direction:column}
+  #workspace .live-indicator{font-size:8px;white-space:normal}
+  #workspace .live-overview-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%;gap:8px}
+  #workspace .live-overview-stats>div{min-width:0}
+  #workspace .live-overview-stats b{font-size:22px}
+  #workspace .live-overview-stats span{font-size:9px;line-height:1.35;overflow-wrap:anywhere}
+  #workspace .live-board-grid{grid-template-columns:minmax(0,1fr);gap:0}
+  #workspace .live-meeting-card{gap:10px;padding:10px}
+  #workspace .live-meeting-date{width:43px;height:48px}
+  #workspace .live-meeting-info h4{font-size:18px}
+  #workspace .live-poll-list .crm-record{padding:13px}
+  #workspace .live-poll-list .crm-record h3{font-size:19px;overflow-wrap:anywhere}
+  #workspace .crm-form-grid{grid-template-columns:minmax(0,1fr)}
+  #workspace .crm-form-grid .span-two{grid-column:auto}
+  #workspace .workspace-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #workspace .workspace-stat-grid article{min-width:0;padding:12px}
+  #workspace .workspace-stat-grid b{font-size:18px;overflow-wrap:anywhere}
+  #workspace .workspace-columns{grid-template-columns:minmax(0,1fr)}
+  #workspace .quick-grid{grid-template-columns:1fr}
+  #workspace .notification-panel{position:fixed;top:68px;left:10px;right:10px;width:auto;max-width:none}
+}
+@media(max-width:430px){
+  #workspace .workspace-content{padding-inline:10px}
+  #workspace .workspace-topbar{padding-inline:9px}
+  #workspace .workspace-topbar .eyebrow{max-width:180px}
+  #workspace .workspace-status{max-width:78px}
+  #workspace .workspace-stat-grid{grid-template-columns:1fr 1fr}
+  #workspace .workspace-stat-grid span{font-size:6px;letter-spacing:.08em}
+  #workspace .live-overview-stats span{font-size:8px}
+  #workspace .live-meeting-info>p{overflow-wrap:anywhere}
+  #workspace .live-poll-list .poll-result-row>div:first-child{align-items:flex-start}
+  #workspace .live-poll-list .poll-result-row>div:first-child b{white-space:nowrap}
+}
