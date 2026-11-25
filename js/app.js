@@ -142,10 +142,11 @@
       state.auth = firebase.auth(); state.db = firebase.firestore();
       if (badge) { badge.textContent = 'Firebase · подключён'; badge.classList.add('is-online'); }
       startPublicListeners();
-      state.auth.onAuthStateChanged(handleAuthState);
+      state.auth.onAuthStateChanged(user => { Promise.resolve(handleAuthState(user)).finally(hidePageLoader); });
     } catch (error) {
       console.error('Firebase initialization:', error);
       if (badge) { badge.textContent = 'Firebase · не подключён'; badge.classList.add('is-offline'); }
+      hidePageLoader();
     }
   }
 
@@ -791,21 +792,26 @@
       if(event.target.matches('[data-document-published]'))updatePublished('documents',event.target.dataset.documentPublished,event.target.checked);
       if(event.target.matches('[data-report-status]'))changeReportStatus(event.target.dataset.reportStatus,event.target.value);
     });
-    $('#workspaceContent')?.addEventListener('submit',event=>{
+    // Global delegation: CRM pages are re-rendered dynamically, so listen on document.
+    document.addEventListener('submit',event=>{
       const form=event.target;
       if(!(form instanceof HTMLFormElement))return;
-      event.preventDefault();
-      // Listener is attached to workspaceContent; handlers need the actual form as currentTarget.
-      const formEvent={target:form,currentTarget:form,submitter:event.submitter||null,
-        preventDefault:()=>event.preventDefault(),stopPropagation:()=>event.stopPropagation()};
       const handlers={participantForm:saveParticipantProfile,sectorPlanForm:saveSectorPlan,sectorReportForm:saveSectorReport,meetingForm:saveMeeting,pollForm:savePoll,projectForm:saveProject,taskForm:saveTask,decisionForm:saveDecision,announcementForm:saveAnnouncement,documentForm:saveDocument,accountForm:saveAccount,settingsForm:saveSettings};
-      const handler=handlers[form.id];
-      try{
-        if(handler)Promise.resolve(handler(formEvent)).catch(error=>{console.error('[CRM form]',form.id,error);const message=form.querySelector('[role="status"],.crm-form-message');if(message)message.textContent=error?.message||'Не удалось сохранить запись.';showToast('Ошибка сохранения',error?.message||'Проверьте доступ к Firestore.');});
-        else if(form.matches('.sector-plan-form'))Promise.resolve(saveSectorPlan(formEvent)).catch(error=>showToast('Ошибка сохранения',error?.message||'Проверьте доступ к Firestore.'));
-        else if(form.matches('[data-vote-poll]'))Promise.resolve(castVote(formEvent)).catch(error=>showToast('Не удалось проголосовать',error?.message||'Проверьте доступ к Firestore.'));
-        else if(form.matches('[data-edit-collection]'))Promise.resolve(saveRecordEdit(formEvent)).catch(error=>showToast('Не удалось изменить запись',error?.message||'Проверьте доступ к Firestore.'));
-      }catch(error){console.error('[CRM form]',form.id,error);showToast('Ошибка формы',error?.message||'Не удалось выполнить действие.');}
+      const handler=handlers[form.id] || (form.matches('.sector-plan-form')?saveSectorPlan:form.matches('[data-vote-poll]')?castVote:form.matches('[data-edit-collection]')?saveRecordEdit:null);
+      if(!handler)return;
+      event.preventDefault();
+      const button=form.querySelector('button[type="submit"]');
+      const original=button?.innerHTML;
+      if(button){button.disabled=true;button.classList.add('is-loading');button.innerHTML='<span class="button-spinner" aria-hidden="true"></span> Сохранение…';}
+      const formEvent={target:form,currentTarget:form,submitter:event.submitter||null,preventDefault:()=>event.preventDefault(),stopPropagation:()=>event.stopPropagation()};
+      Promise.resolve().then(()=>handler(formEvent)).catch(error=>{
+        console.error('[CRM form]',form.id,error);
+        const message=form.querySelector('[role="status"],.crm-form-message');
+        if(message)message.textContent=error?.message||'Не удалось сохранить запись.';
+        showToast('Ошибка сохранения',error?.message||'Проверьте доступ к Firestore.');
+      }).finally(()=>{
+        if(button&&button.isConnected){button.disabled=false;button.classList.remove('is-loading');button.innerHTML=original||'Сохранить';}
+      });
     });
     $('#workspaceMenuToggle')?.addEventListener('click',()=>$('#workspace').classList.toggle('menu-open'));
     $('#workspace')?.addEventListener('click',event=>{if(event.target.closest('.workspace-nav [data-workpage]')||event.target.closest('[data-show-public-home]'))$('#workspace').classList.remove('menu-open');});
@@ -825,6 +831,8 @@
     $('#trackingForm')?.addEventListener('submit',submitTracking);
     document.addEventListener('keydown',event=>{if(event.key==='Escape'){hideLogin();hideInitiativeForm();$('#notificationPanel').hidden=true;}});
   }
+
+  function hidePageLoader(){const loader=$('#pageLoader');if(loader){loader.classList.add('is-hidden');window.setTimeout(()=>loader.remove(),450);}}
 
   function boot(){
     renderSectors();initMobileNavigation();initWorkspaceNavigation();initEvents();initFirebase();
