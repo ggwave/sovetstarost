@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f7f2e9">
+  <meta name="description" content="Официальная цифровая платформа Совета обучающихся.">
+  <title>Совет обучающихся — Вместе к большему</title>
+  <link rel="icon" type="image/png" href="assets/emblem.png">
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="https://www.gstatic.com/firebasejs/13.4.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/13.4.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <div class="site-shell" id="publicShell">
+    <header class="site-header">
+      <a class="brand-lockup" href="#home" aria-label="Совет обучающихся — на главную">
+        <img src="assets/emblem.png" alt="Эмблема Совета обучающихся" class="brand-emblem">
+        <span class="brand-wordmark"><strong>СОВЕТ</strong><small>ОБУЧАЮЩИХСЯ</small></span>
+      </a>
+      <button class="menu-toggle" id="menuToggle" aria-label="Открыть меню" aria-expanded="false"><span></span><span></span></button>
+      <nav class="public-nav" id="publicNav">
+        <a href="#about">О Совете</a>
+        <a href="#structure">Структура</a>
+        <a href="#sectors">Сектора</a>
+        <a href="#plans">Планы работы</a>
+        <a href="#team">Команда</a>
+        <a href="#news">Новости</a>
+        <a href="#events">События</a>
+        <a href="#proposals">Инициативы</a>
+        <a href="#track">Отследить обращение</a>
+      </nav>
+      <button class="button button-outline header-login" id="publicAuthButton" data-open-login>Личный кабинет <span aria-hidden="true">↗</span></button>
+    </header>
+
+    <main>
+      <section class="hero section-wrap" id="home">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="eyebrow-line"></span> УЧЕНИЧЕСКОЕ САМОУПРАВЛЕНИЕ</p>
+          <h1>Вместе<br>к <em>большему.</em></h1>
+          <p class="hero-description">Совет обучающихся — пространство инициатив, ответственности и совместных решений. Мы объединяем идеи, чтобы превращать их в реальные изменения.</p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#about">Познакомиться с Советом <span>↗</span></a>
+            <a class="text-link" href="#structure">Наша структура <span>→</span></a>
+          </div>
+          <div class="hero-note"><span class="hero-note-star">✳</span><span>Инициатива каждого<br><b>имеет значение</b></span></div>
+        </div>
+        <div class="hero-art" aria-label="Эмблема Совета обучающихся">
+          <div class="hero-ring hero-ring-one"></div><div class="hero-ring hero-ring-two"></div>
+          <div class="hero-emblem-card"><img src="assets/emblem.png" alt="Три фигуры, открытая книга и звезда"></div>
+          <span class="hero-caption">СОВЕТ ОБУЧАЮЩИХСЯ · 2026</span>
+          <span class="hero-star hero-star-one">✦</span><span class="hero-star hero-star-two">✧</span>
+        </div>
+        <div class="hero-bottom-line"><span>ОТКРЫТОСТЬ</span><i></i><span>ЕДИНСТВО</span><i></i><span>ДЕЙСТВИЕ</span></div>
+      </section>
+
+      <section class="intro-band" id="about">
+        <div class="section-wrap intro-grid">
+          <div><p class="eyebrow">01 / О СОВЕТЕ</p><h2>Не просто идеи.<br><em>Реальные действия.</em></h2></div>
+          <div class="intro-text"><p>Совет обучающихся объединяет активных учащихся для представления интересов школьников, реализации инициатив и участия в развитии образовательной организации.</p><p>Мы строим работу так, чтобы у каждого направления были понятные задачи, ответственные участники и видимый результат.</p><a href="#structure" class="text-link">Как устроен Совет <span>→</span></a></div>
+        </div>
+      </section>
+
+      <section class="section-wrap section-block" id="structure">
+        <div class="section-heading"><div><p class="eyebrow">02 / УПРАВЛЕНИЕ</p><h2>Структура <em>Совета</em></h2></div><p>Единая команда, распределённая по направлениям. Координация помогает секторам работать согласованно и достигать общих целей.</p></div>
+        <div class="org-chart">
+          <div class="org-top"><span class="org-kicker">КООРДИНАЦИЯ И РУКОВОДСТВО</span><h3>Административный сектор</h3><p>Председатель Совета входит в его состав и руководит им</p></div>
+          <div class="org-connector"><span>КООРДИНИРУЕТ РАБОТУ ОСТАЛЬНЫХ СЕКТОРОВ</span></div>
+          <div class="org-grid" id="publicSectorGrid"></div>
+        </div>
+        <div class="structure-foot"><span class="structure-mark">✳</span><p><b>Общая работа — общий результат.</b><br>Руководители направлений организуют работу своих команд и представляют результаты административному сектору. Сектора взаимодействуют и могут вести совместные проекты.</p></div>
+      </section>
+
+      <section class="sectors-section" id="sectors">
+        <div class="section-wrap section-block">
+          <div class="section-heading"><div><p class="eyebrow">03 / НАПРАВЛЕНИЯ</p><h2>Шесть направлений.<br><em>Одна команда.</em></h2></div><p>Каждый сектор отвечает за своё направление школьной жизни и помогает воплощать инициативы учащихся.</p></div>
+          <div class="sector-cards" id="sectorCards"></div>
+        </div>
+      </section>
+
+      <section class="section-wrap section-block" id="plans">
+        <div class="section-heading"><div><p class="eyebrow">04 / ПЛАНИРОВАНИЕ</p><h2>Планы <em>секторов</em></h2></div><p>Открытые планы показывают приоритеты и направления работы каждой команды.</p></div>
+        <div class="public-plan-grid" id="publicSectorPlans"><div class="empty-feature"><div class="empty-feature-icon">▦</div><div><h3>Планы секторов готовятся</h3><p>Здесь появятся планы, открытые для публикации.</p></div></div></div>
+      </section>
+
+      <section class="section-wrap section-block team-block" id="team">
+        <div class="section-heading"><div><p class="eyebrow">05 / ЛЮДИ</p><h2>Люди, которые<br><em>двигают вперёд.</em></h2></div><p>Совет — это команда. Здесь будут представлены председатель, руководители направлений и участники секторов.</p></div>
+        <div class="public-team-grid" id="publicTeamGrid"><div class="empty-feature"><div class="empty-feature-icon">♙</div><div><h3>Состав Совета формируется</h3><p>Участники появятся здесь после того, как председатель включит их публичное отображение.</p></div><span class="empty-tag">СОСТАВ ФОРМИРУЕТСЯ</span></div></div>
+      </section>
+
+      <section class="section-wrap section-block" id="news">
+        <div class="section-heading"><div><p class="eyebrow">06 / ИНФОРМАЦИЯ</p><h2>Новости и <em>инициативы</em></h2></div><p>Публикации о работе Совета, достижениях участников и проектах.</p></div>
+        <div class="public-feed-grid" id="publicNews"><div class="empty-feature"><div class="empty-feature-icon">✳</div><div><h3>Здесь будут новости Совета</h3><p>Публикации появятся после их размещения в CRM.</p></div></div></div>
+      </section>
+
+      <section class="events-band" id="events"><div class="section-wrap events-inner"><div><p class="eyebrow">07 / КАЛЕНДАРЬ</p><h2>Важное — <em>в одном месте.</em></h2><p>Собрания, школьные события, конкурсы и инициативы Совета.</p></div><div class="event-placeholder" id="publicEvents"><span class="event-placeholder-icon">◷</span><b>Календарь событий</b><small>Опубликованные собрания и события появятся здесь</small></div></div></section>
+
+      <section class="section-wrap section-block projects-block" id="projects">
+        <div class="section-heading"><div><p class="eyebrow">08 / ДЕЯТЕЛЬНОСТЬ</p><h2>Проекты, которые<br><em>объединяют.</em></h2></div><p>От первых предложений до реализации — путь каждой инициативы будет виден и понятен.</p></div>
+        <div class="public-project-grid" id="publicProjects"><div class="project-strip"><span class="project-number">01</span><div><b>Идея</b><small>Предложение и обсуждение направления</small></div><span class="project-arrow">→</span><span class="project-number">02</span><div><b>План</b><small>Команда, задачи и сроки</small></div><span class="project-arrow">→</span><span class="project-number">03</span><div><b>Результат</b><small>Реализация и отчёт</small></div></div></div>
+      </section>
+
+      <section class="materials-section" id="documents"><div class="section-wrap section-block materials-inner"><div class="section-heading"><div><p class="eyebrow">09 / МАТЕРИАЛЫ</p><h2>Документы и <em>открытые материалы</em></h2></div><p>Положения, планы, публичные отчёты и материалы о деятельности Совета.</p></div><div class="public-doc-grid" id="publicDocuments"><div class="materials-placeholder"><span>▧</span><div><b>Библиотека документов</b><small>Опубликованные материалы появятся здесь.</small></div></div></div></div></section>
+
+      <section class="join-band" id="proposals"><div class="section-wrap join-inner"><div><p class="eyebrow">ТВОЙ ГОЛОС ВАЖЕН</p><h2>Изменения начинаются<br><em>с инициативы.</em></h2><p>Есть предложение для школы или идея проекта? Расскажи о ней Совету.</p></div><button class="button button-light" data-open-initiative>Предложить инициативу <span>↗</span></button></div></section>
+
+      <section class="section-wrap section-block tracking-section" id="track">
+        <div class="section-heading"><div><p class="eyebrow">ОБРАТНАЯ СВЯЗЬ</p><h2>Статус твоего <em>обращения.</em></h2></div><p>Введи ID, который был выдан после отправки инициативы. Контактные данные и имя автора здесь не показываются.</p></div>
+        <form class="tracking-form" id="trackingForm"><label for="trackingIdInput">ID обращения</label><div><input id="trackingIdInput" name="trackingId" autocomplete="off" placeholder="Например, IN-20261125-AB12CD34" required><button class="button button-primary" type="submit">Проверить статус <span>→</span></button></div><p class="form-error" id="trackingError" role="alert"></p></form>
+        <div id="trackingResult" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <footer class="site-footer"><div class="section-wrap footer-top"><a class="brand-lockup footer-brand" href="#home"><img src="assets/emblem.png" alt="" class="brand-emblem"><span class="brand-wordmark"><strong>СОВЕТ</strong><small>ОБУЧАЮЩИХСЯ</small></span></a><p>Вместе к большему.</p><a href="#home" class="back-top">Наверх ↑</a></div><div class="section-wrap footer-bottom"><span>СОВЕТ ОБУЧАЮЩИХСЯ</span><span>Вместе к большему · 2026</span><a href="#proposals" aria-label="Предложить инициативу">ПРЕДЛОЖИТЬ ИДЕЮ</a></div></footer>
+  </div>
+
+  <section class="login-overlay" id="loginOverlay" aria-hidden="true">
+    <div class="login-dialog"><button class="modal-close" id="closeLogin" aria-label="Закрыть">×</button><img class="login-emblem" src="assets/emblem.png" alt=""><p class="eyebrow centered">ЛИЧНОЕ ПРОСТРАНСТВО</p><h2>С возвращением.</h2><p class="login-subtitle">Войдите в рабочую систему Совета обучающихся.</p>
+      <form id="loginForm" class="login-form"><label>Электронная почта<input type="email" id="loginEmail" autocomplete="username" inputmode="email" placeholder="name@example.com" maxlength="254" required></label><label>Пароль<input type="password" id="loginPassword" autocomplete="current-password" placeholder="Пароль, выданный председателем" required></label><p class="form-error" id="loginError" role="alert"></p><button class="button button-primary login-submit" type="submit">Войти в систему <span>→</span></button></form>
+      <p class="login-footnote">Доступ выдаёт председатель Совета. Самостоятельной регистрации участников нет.</p>
+    </div>
+  </section>
+
+  <section class="login-overlay" id="initiativeOverlay" aria-hidden="true">
+    <div class="login-dialog initiative-dialog"><button class="modal-close" id="closeInitiative" aria-label="Закрыть">×</button><img class="login-emblem" src="assets/emblem.png" alt=""><p class="eyebrow centered">ОТКРЫТАЯ ФОРМА ДЛЯ УЧАЩИХСЯ</p><h2>Предложить инициативу.</h2><p class="login-subtitle">Входить на сайт и иметь аккаунт Совета не нужно. Инициативу может предложить любой учащийся.</p>
+      <form id="initiativeForm" class="login-form">
+        <label>Название инициативы<input type="text" name="title" maxlength="100" placeholder="Кратко сформулируй идею" required></label>
+        <label>Описание<textarea name="description" maxlength="3000" rows="4" placeholder="Что предлагаешь, зачем это нужно и как можно реализовать?" required></textarea></label>
+        <label>Направление<select name="sectorId" required><option value="">Выбери направление</option><option value="administrative">Административный</option><option value="information">Информационный</option><option value="culture">Культурно-массовый</option><option value="social">Социальный</option><option value="study">Учебно-проектный</option><option value="sport">Спортивный</option></select></label>
+        <div class="initiative-optional-grid"><label>Имя (необязательно)<input type="text" name="authorName" maxlength="80" placeholder="Как к тебе обращаться"></label><label>Класс (необязательно)<input type="text" name="className" maxlength="20" placeholder="Например, 8А"></label></div>
+        <label>Контакт для обратной связи (необязательно)<input type="text" name="contact" maxlength="120" placeholder="Например, телефон или электронная почта"></label>
+        <p class="form-error" id="initiativeError" role="alert"></p><button class="button button-primary login-submit" type="submit" id="initiativeSubmit">Отправить инициативу <span>→</span></button>
+      </form>
+      <p class="login-footnote">Контактные данные не публикуются на сайте. Они нужны только для ответа по инициативе.</p>
+    </div>
+  </section>
+
+  <section class="workspace" id="workspace" hidden>
+    <aside class="workspace-sidebar">
+      <a class="workspace-brand" href="#workspace-home"><img src="assets/emblem.png" alt=""><span><b>СОВЕТ</b><small>ОБУЧАЮЩИХСЯ</small></span></a>
+      <div class="workspace-user"><div class="user-avatar" id="userAvatar">С</div><div><b id="userName">Участник Совета</b><small id="userRole">Личный кабинет</small></div></div>
+      <p class="sidebar-label">CRM / РАБОЧЕЕ ПРОСТРАНСТВО</p>
+      <nav class="workspace-nav" id="workspaceNav">
+        <button type="button" data-show-public-home><span>↗</span>Главная сайта</button>
+        <button class="active" data-workpage="overview"><span>⌂</span>Обзор CRM</button>
+        <button data-workpage="initiatives" data-management-only><span>✳</span>Инициативы</button>
+        <button data-workpage="sector"><span>◈</span>Мой сектор</button>
+        <button data-workpage="people" data-chair-only><span>♙</span>Участники</button>
+        <button data-workpage="sectors" data-administrative-only><span>▦</span>Управление секторами</button>
+        <button data-workpage="meetings"><span>◷</span>Собрания</button>
+        <button data-workpage="voting"><span>◉</span>Голосования</button>
+        <button data-workpage="projects"><span>◇</span>Проекты</button>
+        <button data-workpage="tasks"><span>✓</span>Задачи и решения</button>
+        <button data-workpage="announcements"><span>▤</span>Объявления</button>
+        <button data-workpage="documents"><span>▧</span>Документы</button>
+        <button data-workpage="reports" data-management-only><span>▤</span>Отчёты секторов</button>
+        <button data-workpage="analytics" data-administrative-only><span>▥</span>Аналитика</button>
+        <button data-workpage="archive"><span>▧</span>Архив</button>
+      </nav>
+      <p class="sidebar-label sidebar-label-bottom">АККАУНТ</p>
+      <nav class="workspace-nav"><button data-workpage="account"><span>○</span>Мой профиль</button><button data-workpage="settings"><span>⚙</span>Настройки аккаунта</button></nav>
+      <button class="logout-button" id="logoutButton">Выйти из аккаунта <span>↗</span></button>
+    </aside>
+    <main class="workspace-main">
+      <header class="workspace-topbar"><button id="workspaceMenuToggle" class="workspace-menu-toggle" aria-label="Открыть меню">☰</button><div><p class="eyebrow">СОВЕТ ОБУЧАЮЩИХСЯ / РАБОЧАЯ СИСТЕМА</p><h1 id="workspaceTitle">Мой обзор</h1></div><div class="topbar-actions"><button type="button" class="notification-button" id="notificationButton" aria-label="Уведомления" aria-expanded="false">♢<span id="notificationCount" hidden>0</span></button><span class="workspace-status" id="firebaseStatus">Firebase · подключение</span></div><div class="notification-panel" id="notificationPanel" hidden></div></header>
+      <div class="workspace-content" id="workspaceContent"></div>
+    </main>
+  </section>
+
+  <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="false"></div>
+
+  <script src="js/firebase-config.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

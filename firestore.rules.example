@@ -1,0 +1,572 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function myProfilePath() {
+      return /databases/$(database)/documents/users/$(request.auth.uid);
+    }
+
+    function hasProfile() {
+      return signedIn() && exists(myProfilePath());
+    }
+
+    function myProfile() {
+      return get(myProfilePath()).data;
+    }
+
+    function activeMember() {
+      return hasProfile() && myProfile().active == true;
+    }
+
+    function isChair() {
+      return activeMember() && myProfile().role == 'chair';
+    }
+
+    function isAdministrativeSector() {
+      return activeMember()
+        && myProfile().sectorId == 'administrative'
+        && myProfile().role in ['chair', 'deputy_chair', 'secretary', 'administrative'];
+    }
+
+    function isSectorLead() {
+      return activeMember() && myProfile().role == 'sector_lead';
+    }
+
+    function isInformationSector() {
+      return activeMember() && myProfile().sectorId == 'information';
+    }
+
+    function validSector(sectorId) {
+      return sectorId in ['administrative', 'information', 'culture', 'social', 'study', 'sport'];
+    }
+
+    function validWorkSector(sectorId) {
+      return validSector(sectorId) && sectorId != 'administrative';
+    }
+
+    function canManageInitiatives() {
+      return isAdministrativeSector() || isSectorLead();
+    }
+
+    function canAccessInitiative() {
+      return isAdministrativeSector() ||
+        (isSectorLead() && resource.data.sectorId == myProfile().sectorId);
+    }
+
+    function canManageOwnSector(sectorId) {
+      return isAdministrativeSector() ||
+        (isSectorLead() && myProfile().sectorId == sectorId);
+    }
+
+    function validUserProfile() {
+      return request.resource.data.keys().hasAll(['name', 'email', 'role', 'sectorId', 'active', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['name', 'email', 'role', 'sectorId', 'active', 'contact', 'showOnSite', 'createdAt', 'updatedAt'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1
+        && request.resource.data.name.size() <= 100
+        && request.resource.data.email is string
+        && request.resource.data.email.size() >= 5
+        && request.resource.data.email.size() <= 254
+        && request.resource.data.role in ['chair', 'deputy_chair', 'secretary', 'administrative', 'sector_lead', 'member']
+        && request.resource.data.sectorId is string
+        && request.resource.data.active is bool
+        && (!('contact' in request.resource.data) || (request.resource.data.contact is string && request.resource.data.contact.size() <= 80))
+        && (!('showOnSite' in request.resource.data) || request.resource.data.showOnSite is bool)
+        && (
+          (request.resource.data.role in ['chair', 'deputy_chair', 'secretary', 'administrative'] && request.resource.data.sectorId == 'administrative') ||
+          (request.resource.data.role == 'sector_lead' && validWorkSector(request.resource.data.sectorId)) ||
+          (request.resource.data.role == 'member' && (request.resource.data.sectorId == '' || validWorkSector(request.resource.data.sectorId)))
+        );
+    }
+
+    match /users/{userId} {
+      // Members may read their own record and the roster of their own sector.
+      allow get: if signedIn() && (
+        request.auth.uid == userId || isAdministrativeSector() ||
+        (activeMember() && resource.data.sectorId == myProfile().sectorId)
+      );
+      // Sector queries must include where('sectorId', '==', currentSectorId).
+      allow list: if isAdministrativeSector() || (activeMember() && resource.data.sectorId == myProfile().sectorId);
+
+      // Authentication accounts are created in Firebase Authentication first.
+      // The first chair profile is initialized manually in Firebase Console.
+      allow create: if isChair()
+        && request.resource.data.role != 'chair'
+        && validUserProfile()
+        && request.resource.data.createdAt == request.time;
+
+      // Chair may update profiles except the protected chair account.
+      allow update: if (
+        isChair()
+        && userId != request.auth.uid
+        && resource.data.role != 'chair'
+        && request.resource.data.role != 'chair'
+        && validUserProfile()
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'role', 'sectorId', 'active', 'contact', 'showOnSite', 'updatedAt'])
+        && request.resource.data.diff(resource.data).affectedKeys().hasAny(['name', 'role', 'sectorId', 'active', 'contact', 'showOnSite'])
+      ) || (
+        signedIn()
+        && request.auth.uid == userId
+        && activeMember()
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1
+        && request.resource.data.name.size() <= 100
+        && request.resource.data.contact is string
+        && request.resource.data.contact.size() <= 80
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.sectorId == resource.data.sectorId
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.active == resource.data.active
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'contact', 'updatedAt'])
+      ) || (
+        isChair()
+        && userId == request.auth.uid
+        && resource.data.role == 'chair'
+        && request.resource.data.role == 'chair'
+        && request.resource.data.sectorId == 'administrative'
+        && request.resource.data.active == true
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['sectorId', 'showOnSite', 'updatedAt'])
+        && (!('showOnSite' in request.resource.data) || request.resource.data.showOnSite is bool)
+        && request.resource.data.updatedAt == request.time
+      );
+
+      allow delete: if isChair() && userId != request.auth.uid && resource.data.role != 'chair';
+    }
+
+    function validPublicTeamRecord(userId) {
+      return request.resource.data.keys().hasAll(['name', 'role', 'sectorId', 'published', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['name', 'role', 'sectorId', 'published', 'updatedAt'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1
+        && request.resource.data.name.size() <= 100
+        && request.resource.data.role in ['chair', 'deputy_chair', 'secretary', 'administrative', 'sector_lead', 'member']
+        && validSector(request.resource.data.sectorId)
+        && request.resource.data.published == true
+        && request.resource.data.updatedAt == request.time
+        && existsAfter(/databases/$(database)/documents/users/$(userId))
+        && getAfter(/databases/$(database)/documents/users/$(userId)).data.active == true
+        && getAfter(/databases/$(database)/documents/users/$(userId)).data.showOnSite == true
+        && getAfter(/databases/$(database)/documents/users/$(userId)).data.name == request.resource.data.name
+        && getAfter(/databases/$(database)/documents/users/$(userId)).data.role == request.resource.data.role
+        && getAfter(/databases/$(database)/documents/users/$(userId)).data.sectorId == request.resource.data.sectorId;
+    }
+
+    match /publicTeam/{userId} {
+      // Separate, sanitized public copy. Never contains email, contact or auth data.
+      allow get: if isChair() || resource.data.published == true;
+      allow list: if resource.data.published == true;
+      allow create: if isChair() && validPublicTeamRecord(userId);
+      allow update: if (isChair() && validPublicTeamRecord(userId)) || (
+        signedIn() && request.auth.uid == userId && activeMember()
+        && request.resource.data.keys().hasOnly(['name', 'role', 'sectorId', 'published', 'updatedAt'])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'updatedAt'])
+        && request.resource.data.name is string && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 100
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.sectorId == resource.data.sectorId
+        && request.resource.data.published == true
+        && request.resource.data.updatedAt == request.time
+        && existsAfter(/databases/$(database)/documents/users/$(userId))
+        && getAfter(/databases/$(database)/documents/users/$(userId)).data.active == true
+        && getAfter(/databases/$(database)/documents/users/$(userId)).data.showOnSite == true
+        && getAfter(/databases/$(database)/documents/users/$(userId)).data.name == request.resource.data.name
+      );
+      allow delete: if isChair()
+        && existsAfter(/databases/$(database)/documents/users/$(userId))
+        && getAfter(/databases/$(database)/documents/users/$(userId)).data.showOnSite == false;
+    }
+
+    function validPublicInitiative() {
+      return request.resource.data.keys().hasAll(['title', 'description', 'sectorId', 'authorName', 'className', 'contact', 'status', 'source', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['title', 'description', 'sectorId', 'authorName', 'className', 'contact', 'status', 'source', 'createdAt'])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 4
+        && request.resource.data.title.size() <= 100
+        && request.resource.data.description is string
+        && request.resource.data.description.size() >= 10
+        && request.resource.data.description.size() <= 3000
+        && validSector(request.resource.data.sectorId)
+        && request.resource.data.authorName is string
+        && request.resource.data.authorName.size() <= 80
+        && request.resource.data.className is string
+        && request.resource.data.className.size() <= 20
+        && request.resource.data.contact is string
+        && request.resource.data.contact.size() <= 120
+        && request.resource.data.status == 'new'
+        && request.resource.data.source == 'public'
+        && request.resource.data.createdAt == request.time;
+    }
+
+    match /initiatives/{initiativeId} {
+      // Public form can create an initiative. Public users cannot read private author/contact data.
+      allow create: if validPublicInitiative()
+        && existsAfter(/databases/$(database)/documents/initiativeTracking/$(initiativeId))
+        && getAfter(/databases/$(database)/documents/initiativeTracking/$(initiativeId)).data.status == 'new'
+        && getAfter(/databases/$(database)/documents/initiativeTracking/$(initiativeId)).data.sectorId == request.resource.data.sectorId;
+      allow get, list: if activeMember() && canAccessInitiative();
+      allow update: if activeMember() && canAccessInitiative() && canManageInitiatives()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'sectorId', 'updatedAt', 'updatedBy'])
+        && request.resource.data.diff(resource.data).affectedKeys().hasAny(['status', 'sectorId'])
+        && request.resource.data.status in ['new', 'reviewing', 'accepted', 'in_progress', 'done', 'rejected']
+        && validSector(request.resource.data.sectorId)
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.updatedBy == request.auth.uid
+        && (!isSectorLead() || request.resource.data.sectorId == resource.data.sectorId)
+        && existsAfter(/databases/$(database)/documents/initiativeTracking/$(initiativeId))
+        && getAfter(/databases/$(database)/documents/initiativeTracking/$(initiativeId)).data.status == request.resource.data.status
+        && getAfter(/databases/$(database)/documents/initiativeTracking/$(initiativeId)).data.sectorId == request.resource.data.sectorId;
+      allow delete: if isChair();
+    }
+
+    match /initiativeTracking/{trackingId} {
+      // The only public read path for an initiative: exact ID lookup, no listing.
+      // This record contains no author name, class, email or contact.
+      allow get: if true;
+      allow list: if false;
+      allow create: if request.resource.data.keys().hasOnly(['trackingId', 'title', 'sectorId', 'status', 'createdAt', 'updatedAt'])
+        && request.resource.data.trackingId == trackingId
+        && request.resource.data.title is string
+        && validSector(request.resource.data.sectorId)
+        && request.resource.data.status == 'new'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && existsAfter(/databases/$(database)/documents/initiatives/$(trackingId))
+        && getAfter(/databases/$(database)/documents/initiatives/$(trackingId)).data.title == request.resource.data.title
+        && getAfter(/databases/$(database)/documents/initiatives/$(trackingId)).data.sectorId == request.resource.data.sectorId;
+      allow update: if activeMember() && canManageInitiatives()
+        && (isAdministrativeSector() || (isSectorLead() && resource.data.sectorId == myProfile().sectorId && request.resource.data.sectorId == myProfile().sectorId))
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'sectorId', 'updatedAt'])
+        && request.resource.data.status in ['new', 'reviewing', 'accepted', 'in_progress', 'done', 'rejected']
+        && validSector(request.resource.data.sectorId)
+        && request.resource.data.updatedAt == request.time
+        && existsAfter(/databases/$(database)/documents/initiatives/$(trackingId))
+        && getAfter(/databases/$(database)/documents/initiatives/$(trackingId)).data.status == request.resource.data.status
+        && getAfter(/databases/$(database)/documents/initiatives/$(trackingId)).data.sectorId == request.resource.data.sectorId;
+      allow delete: if isChair();
+    }
+
+    function validActivityFeed() {
+      return request.resource.data.keys().hasOnly(['type', 'title', 'recordId', 'createdAt'])
+        && request.resource.data.type in ['initiative', 'meeting', 'poll']
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 1
+        && request.resource.data.title.size() <= 180
+        && request.resource.data.recordId is string
+        && request.resource.data.createdAt == request.time;
+    }
+
+    match /activityFeed/{eventId} {
+      allow get, list: if activeMember();
+      allow create: if validActivityFeed() && (
+        (request.resource.data.type == 'initiative'
+          && existsAfter(/databases/$(database)/documents/initiatives/$(request.resource.data.recordId))
+          && getAfter(/databases/$(database)/documents/initiatives/$(request.resource.data.recordId)).data.title == request.resource.data.title
+          && getAfter(/databases/$(database)/documents/initiatives/$(request.resource.data.recordId)).data.createdAt == request.resource.data.createdAt)
+        || (activeMember() && isAdministrativeSector() && request.resource.data.type == 'meeting'
+          && existsAfter(/databases/$(database)/documents/meetings/$(request.resource.data.recordId))
+          && getAfter(/databases/$(database)/documents/meetings/$(request.resource.data.recordId)).data.title == request.resource.data.title
+          && getAfter(/databases/$(database)/documents/meetings/$(request.resource.data.recordId)).data.createdAt == request.resource.data.createdAt)
+        || (activeMember() && isAdministrativeSector() && request.resource.data.type == 'poll'
+          && existsAfter(/databases/$(database)/documents/polls/$(request.resource.data.recordId))
+          && getAfter(/databases/$(database)/documents/polls/$(request.resource.data.recordId)).data.title == request.resource.data.title
+          && getAfter(/databases/$(database)/documents/polls/$(request.resource.data.recordId)).data.createdAt == request.resource.data.createdAt)
+      );
+      allow update, delete: if false;
+    }
+
+    function validMeeting() {
+      return request.resource.data.keys().hasAll(['title', 'date', 'time', 'location', 'agenda', 'status', 'published', 'createdBy', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['title', 'date', 'time', 'location', 'agenda', 'status', 'published', 'createdBy', 'createdAt', 'updatedAt'])
+        && request.resource.data.title is string && request.resource.data.title.size() >= 2 && request.resource.data.title.size() <= 140
+        && request.resource.data.date is string && request.resource.data.date.size() == 10
+        && request.resource.data.time is string && request.resource.data.time.size() <= 10
+        && request.resource.data.location is string && request.resource.data.location.size() <= 120
+        && request.resource.data.agenda is string && request.resource.data.agenda.size() <= 4000
+        && request.resource.data.status in ['planned', 'held', 'cancelled']
+        && request.resource.data.published is bool
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time;
+    }
+
+    match /meetings/{meetingId} {
+      allow get, list: if activeMember() || resource.data.published == true;
+      allow create: if activeMember() && isAdministrativeSector() && validMeeting();
+      allow update: if activeMember() && isAdministrativeSector()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title', 'date', 'time', 'location', 'agenda', 'status', 'published', 'updatedAt'])
+        && request.resource.data.title is string && request.resource.data.title.size() >= 2 && request.resource.data.title.size() <= 140
+        && request.resource.data.date is string && request.resource.data.date.size() == 10
+        && request.resource.data.time is string && request.resource.data.time.size() <= 10
+        && request.resource.data.location is string && request.resource.data.location.size() <= 120
+        && request.resource.data.agenda is string && request.resource.data.agenda.size() <= 4000
+        && request.resource.data.status in ['planned', 'held', 'cancelled']
+        && request.resource.data.published is bool
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if isAdministrativeSector();
+    }
+
+    function validPoll() {
+      return request.resource.data.keys().hasAll(['title', 'description', 'type', 'options', 'status', 'endsAt', 'published', 'createdBy', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['title', 'description', 'type', 'options', 'status', 'endsAt', 'published', 'createdBy', 'createdAt', 'updatedAt'])
+        && request.resource.data.title is string && request.resource.data.title.size() >= 3 && request.resource.data.title.size() <= 180
+        && request.resource.data.description is string && request.resource.data.description.size() <= 1500
+        && request.resource.data.type in ['single', 'multiple']
+        && request.resource.data.options is list && request.resource.data.options.size() >= 2 && request.resource.data.options.size() <= 10
+        && request.resource.data.options[0].id is string && request.resource.data.options[0].label is string
+        && request.resource.data.status == 'open'
+        && (request.resource.data.endsAt == null || request.resource.data.endsAt is timestamp)
+        && request.resource.data.published is bool
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time;
+    }
+
+    match /polls/{pollId} {
+      allow get, list: if activeMember() || resource.data.published == true;
+      allow create: if activeMember() && isAdministrativeSector() && validPoll();
+      allow update: if activeMember() && isAdministrativeSector()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title', 'description', 'status', 'published', 'updatedAt'])
+        && request.resource.data.title is string && request.resource.data.title.size() >= 3 && request.resource.data.title.size() <= 180
+        && request.resource.data.description is string && request.resource.data.description.size() <= 1500
+        && request.resource.data.status in ['open', 'closed']
+        && request.resource.data.published is bool
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if isAdministrativeSector();
+
+      match /votes/{voterUid} {
+        allow get, list: if activeMember();
+        allow create: if activeMember()
+          && request.auth.uid == voterUid
+          && get(/databases/$(database)/documents/polls/$(pollId)).data.status == 'open'
+          && (get(/databases/$(database)/documents/polls/$(pollId)).data.endsAt == null || request.time < get(/databases/$(database)/documents/polls/$(pollId)).data.endsAt)
+          && request.resource.data.keys().hasOnly(['selectedOptionIds', 'createdAt', 'updatedAt'])
+          && request.resource.data.selectedOptionIds is list
+          && request.resource.data.selectedOptionIds.size() >= 1
+          && request.resource.data.selectedOptionIds.size() <= 10
+          && request.resource.data.selectedOptionIds.hasOnly(['o1', 'o2', 'o3', 'o4', 'o5', 'o6', 'o7', 'o8', 'o9', 'o10'])
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.updatedAt == request.time
+          && (get(/databases/$(database)/documents/polls/$(pollId)).data.type != 'single' || request.resource.data.selectedOptionIds.size() == 1);
+        allow update: if false;
+        allow delete: if isAdministrativeSector();
+      }
+    }
+
+    function validTask() {
+      return request.resource.data.keys().hasAll(['title', 'description', 'sectorId', 'assigneeUid', 'assigneeName', 'dueDate', 'priority', 'status', 'createdBy', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['title', 'description', 'sectorId', 'assigneeUid', 'assigneeName', 'dueDate', 'priority', 'status', 'createdBy', 'createdAt', 'updatedAt'])
+        && request.resource.data.title is string && request.resource.data.title.size() >= 2 && request.resource.data.title.size() <= 140
+        && request.resource.data.description is string && request.resource.data.description.size() <= 3000
+        && validSector(request.resource.data.sectorId)
+        && request.resource.data.assigneeUid is string && request.resource.data.assigneeUid.size() <= 150
+        && request.resource.data.assigneeName is string && request.resource.data.assigneeName.size() <= 100
+        && request.resource.data.dueDate is string && request.resource.data.dueDate.size() <= 10
+        && request.resource.data.priority in ['low', 'normal', 'high']
+        && request.resource.data.status == 'new'
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time;
+    }
+
+    match /tasks/{taskId} {
+      allow get, list: if isAdministrativeSector()
+        || (activeMember() && resource.data.sectorId == myProfile().sectorId)
+        || (activeMember() && resource.data.assigneeUid == request.auth.uid);
+      allow create: if activeMember() && (isAdministrativeSector() || isSectorLead())
+        && (isAdministrativeSector() || request.resource.data.sectorId == myProfile().sectorId)
+        && (isAdministrativeSector() || request.resource.data.assigneeUid == '' || get(/databases/$(database)/documents/users/$(request.resource.data.assigneeUid)).data.sectorId == myProfile().sectorId)
+        && validTask();
+      allow update: if activeMember() && (
+        (isAdministrativeSector() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title', 'description', 'sectorId', 'assigneeUid', 'assigneeName', 'dueDate', 'priority', 'status', 'updatedAt']))
+        || (isSectorLead() && resource.data.sectorId == myProfile().sectorId && request.resource.data.sectorId == resource.data.sectorId && (request.resource.data.assigneeUid == '' || get(/databases/$(database)/documents/users/$(request.resource.data.assigneeUid)).data.sectorId == myProfile().sectorId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title', 'description', 'assigneeUid', 'assigneeName', 'dueDate', 'priority', 'status', 'updatedAt']))
+        || (resource.data.assigneeUid == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']))
+      ) && request.resource.data.status in ['new', 'in_progress', 'done', 'cancelled']
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if isAdministrativeSector() || (isSectorLead() && resource.data.sectorId == myProfile().sectorId);
+    }
+
+    match /decisions/{decisionId} {
+      allow get, list: if activeMember();
+      allow create: if activeMember() && isAdministrativeSector()
+        && request.resource.data.keys().hasAll(['title', 'description', 'sectorId', 'status', 'meetingTitle', 'createdBy', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['title', 'description', 'sectorId', 'status', 'meetingTitle', 'createdBy', 'createdAt', 'updatedAt'])
+        && request.resource.data.title is string && request.resource.data.title.size() >= 2 && request.resource.data.title.size() <= 160
+        && request.resource.data.description is string && request.resource.data.description.size() <= 3000
+        && validSector(request.resource.data.sectorId)
+        && request.resource.data.status in ['accepted', 'in_progress', 'done', 'rejected']
+        && request.resource.data.meetingTitle is string && request.resource.data.meetingTitle.size() <= 140
+        && request.resource.data.createdBy == request.auth.uid && request.resource.data.createdAt == request.time;
+      allow update: if activeMember() && isAdministrativeSector()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title', 'description', 'meetingTitle', 'status', 'updatedAt'])
+        && request.resource.data.title is string && request.resource.data.title.size() >= 2 && request.resource.data.title.size() <= 160
+        && request.resource.data.description is string && request.resource.data.description.size() <= 3000
+        && request.resource.data.meetingTitle is string && request.resource.data.meetingTitle.size() <= 140
+        && request.resource.data.status in ['accepted', 'in_progress', 'done', 'rejected']
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if isAdministrativeSector();
+    }
+
+    function canEditAnnouncement(resourceData) {
+      return isAdministrativeSector() || (isInformationSector() && resourceData.sectorId == 'information');
+    }
+
+    match /announcements/{announcementId} {
+      allow get, list: if activeMember() || resource.data.published == true;
+      allow create: if activeMember() && (isAdministrativeSector() || isInformationSector())
+        && request.resource.data.keys().hasAll(['title', 'content', 'sectorId', 'published', 'createdBy', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['title', 'content', 'sectorId', 'published', 'createdBy', 'createdAt', 'updatedAt'])
+        && request.resource.data.title is string && request.resource.data.title.size() >= 2 && request.resource.data.title.size() <= 140
+        && request.resource.data.content is string && request.resource.data.content.size() >= 1 && request.resource.data.content.size() <= 5000
+        && validSector(request.resource.data.sectorId)
+        && request.resource.data.published is bool
+        && request.resource.data.createdBy == request.auth.uid && request.resource.data.createdAt == request.time
+        && (isAdministrativeSector() || request.resource.data.sectorId == 'information');
+      allow update: if activeMember() && canEditAnnouncement(resource.data)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title', 'content', 'sectorId', 'published', 'updatedAt'])
+        && request.resource.data.title is string && request.resource.data.content is string
+        && request.resource.data.published is bool
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt == request.time
+        && (isAdministrativeSector() || request.resource.data.sectorId == 'information');
+      allow delete: if isAdministrativeSector() || (isInformationSector() && resource.data.sectorId == 'information');
+    }
+
+    function validDocument() {
+      return request.resource.data.keys().hasAll(['title', 'category', 'description', 'url', 'content', 'published', 'sectorId', 'createdBy', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['title', 'category', 'description', 'url', 'content', 'published', 'sectorId', 'createdBy', 'createdAt', 'updatedAt'])
+        && request.resource.data.title is string && request.resource.data.title.size() >= 2 && request.resource.data.title.size() <= 150
+        && request.resource.data.category is string && request.resource.data.category.size() <= 60
+        && request.resource.data.description is string && request.resource.data.description.size() <= 1600
+        && request.resource.data.url is string && request.resource.data.url.size() <= 1000
+        && (request.resource.data.url == '' || request.resource.data.url.matches('https?://.*'))
+        && request.resource.data.content is string && request.resource.data.content.size() <= 12000
+        && request.resource.data.published is bool && validSector(request.resource.data.sectorId)
+        && request.resource.data.createdBy == request.auth.uid && request.resource.data.createdAt == request.time;
+    }
+
+    match /documents/{documentId} {
+      allow get, list: if activeMember() || resource.data.published == true;
+      allow create: if activeMember() && (isAdministrativeSector() || isSectorLead())
+        && validDocument()
+        && (isAdministrativeSector() || request.resource.data.sectorId == myProfile().sectorId);
+      allow update: if activeMember() && canManageOwnSector(resource.data.sectorId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title', 'category', 'description', 'url', 'content', 'published', 'updatedAt'])
+        && request.resource.data.title is string && request.resource.data.title.size() >= 2
+        && request.resource.data.url is string && request.resource.data.url.size() <= 1000
+        && (request.resource.data.url == '' || request.resource.data.url.matches('https?://.*'))
+        && request.resource.data.category is string && request.resource.data.category.size() <= 60
+        && request.resource.data.description is string && request.resource.data.description.size() <= 1600
+        && request.resource.data.content is string && request.resource.data.content.size() <= 12000
+        && request.resource.data.published is bool
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if isAdministrativeSector() || (isSectorLead() && resource.data.sectorId == myProfile().sectorId);
+    }
+
+    function validProject() {
+      return request.resource.data.keys().hasAll(['title', 'description', 'sectorId', 'leadName', 'status', 'startDate', 'endDate', 'published', 'createdBy', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['title', 'description', 'sectorId', 'leadName', 'status', 'startDate', 'endDate', 'published', 'createdBy', 'createdAt', 'updatedAt'])
+        && request.resource.data.title is string && request.resource.data.title.size() >= 2 && request.resource.data.title.size() <= 140
+        && request.resource.data.description is string && request.resource.data.description.size() >= 1 && request.resource.data.description.size() <= 3000
+        && validSector(request.resource.data.sectorId)
+        && request.resource.data.leadName is string && request.resource.data.leadName.size() <= 100
+        && request.resource.data.status in ['idea', 'planning', 'in_progress', 'completed', 'paused']
+        && request.resource.data.startDate is string && request.resource.data.startDate.size() <= 10
+        && request.resource.data.endDate is string && request.resource.data.endDate.size() <= 10
+        && request.resource.data.published is bool
+        && request.resource.data.createdBy == request.auth.uid && request.resource.data.createdAt == request.time;
+    }
+
+    match /projects/{projectId} {
+      allow get, list: if activeMember() || resource.data.published == true;
+      allow create: if activeMember() && (isAdministrativeSector() || isSectorLead())
+        && validProject()
+        && (isAdministrativeSector() || request.resource.data.sectorId == myProfile().sectorId);
+      allow update: if activeMember() && canManageOwnSector(resource.data.sectorId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title', 'description', 'status', 'leadName', 'startDate', 'endDate', 'published', 'updatedAt'])
+        && request.resource.data.status in ['idea', 'planning', 'in_progress', 'completed', 'paused']
+        && request.resource.data.title is string && request.resource.data.title.size() >= 2 && request.resource.data.title.size() <= 140
+        && request.resource.data.description is string && request.resource.data.description.size() <= 3000
+        && request.resource.data.leadName is string && request.resource.data.leadName.size() <= 100
+        && request.resource.data.startDate is string && request.resource.data.startDate.size() <= 10
+        && request.resource.data.endDate is string && request.resource.data.endDate.size() <= 10
+        && request.resource.data.published is bool
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.sectorId == resource.data.sectorId
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if isAdministrativeSector() || (isSectorLead() && resource.data.sectorId == myProfile().sectorId);
+    }
+
+    function validSectorReport() {
+      return request.resource.data.keys().hasAll(['sectorId', 'period', 'title', 'summary', 'achievements', 'problems', 'nextSteps', 'status', 'createdBy', 'createdAt', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['sectorId', 'period', 'title', 'summary', 'achievements', 'problems', 'nextSteps', 'status', 'createdBy', 'createdAt', 'updatedAt'])
+        && validWorkSector(request.resource.data.sectorId)
+        && request.resource.data.period is string && request.resource.data.period.matches('^[0-9]{4}-[0-9]{2}$')
+        && request.resource.data.title is string && request.resource.data.title.size() >= 2 && request.resource.data.title.size() <= 140
+        && request.resource.data.summary is string && request.resource.data.summary.size() >= 1 && request.resource.data.summary.size() <= 1800
+        && request.resource.data.achievements is string && request.resource.data.achievements.size() <= 3000
+        && request.resource.data.problems is string && request.resource.data.problems.size() <= 2000
+        && request.resource.data.nextSteps is string && request.resource.data.nextSteps.size() <= 2000
+        && request.resource.data.status == 'submitted'
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    match /sectorReports/{reportId} {
+      allow get, list: if isAdministrativeSector() || (isSectorLead() && resource.data.sectorId == myProfile().sectorId);
+      allow create: if activeMember() && isSectorLead()
+        && request.resource.data.sectorId == myProfile().sectorId
+        && validSectorReport();
+      allow update: if activeMember() && (
+        (isAdministrativeSector()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'reviewNote', 'updatedAt'])
+          && request.resource.data.status in ['submitted', 'accepted', 'revision']
+          && (!('reviewNote' in request.resource.data) || (request.resource.data.reviewNote is string && request.resource.data.reviewNote.size() <= 600))
+          && request.resource.data.updatedAt == request.time)
+        || (isSectorLead()
+          && resource.data.sectorId == myProfile().sectorId
+          && resource.data.createdBy == request.auth.uid
+          && resource.data.status == 'revision'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['summary', 'achievements', 'problems', 'nextSteps', 'status', 'updatedAt'])
+          && request.resource.data.summary is string && request.resource.data.summary.size() >= 1 && request.resource.data.summary.size() <= 1800
+          && request.resource.data.achievements is string && request.resource.data.achievements.size() <= 3000
+          && request.resource.data.problems is string && request.resource.data.problems.size() <= 2000
+          && request.resource.data.nextSteps is string && request.resource.data.nextSteps.size() <= 2000
+          && request.resource.data.status == 'submitted'
+          && request.resource.data.updatedAt == request.time)
+      );
+      allow delete: if isChair();
+    }
+
+    match /sectorPlans/{sectorId} {
+      allow get, list: if activeMember() || resource.data.published == true;
+      allow create, update: if activeMember() && validSector(sectorId)
+        && (isAdministrativeSector() || (isSectorLead() && myProfile().sectorId == sectorId))
+        && request.resource.data.keys().hasAll(['sectorId', 'goal', 'plan', 'published', 'updatedBy', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['sectorId', 'goal', 'plan', 'published', 'updatedBy', 'updatedAt'])
+        && request.resource.data.sectorId == sectorId
+        && request.resource.data.goal is string && request.resource.data.goal.size() <= 180
+        && request.resource.data.plan is string && request.resource.data.plan.size() <= 5000
+        && request.resource.data.published is bool
+        && request.resource.data.updatedBy == request.auth.uid
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if isChair();
+    }
+
+    // Default deny: every new collection must receive explicit, scoped permissions.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

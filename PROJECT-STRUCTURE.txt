@@ -1,0 +1,53 @@
+СТРУКТУРА ПРОЕКТА
+
+/
+  index.html                   Публичная главная, вход и рабочее пространство CRM
+  firestore.rules              Основные правила Cloud Firestore
+  firestore.rules.example      Копия правил для справки
+  README-RU.md                  Общее описание проекта и модулей
+  FIRESTORE-SETUP-RU.md         Настройка Firebase, первого председателя и тестирование
+  PROJECT-STRUCTURE.txt         Этот файл
+  .nojekyll                     Настройка для GitHub Pages
+
+  /assets
+    emblem.png                  Эмблема Совета обучающихся
+    brandbook-reference.png     Материал брендбука
+    full-logo-reference.png     Вариант полного логотипа
+
+  /css
+    styles.css                  Публичный сайт и адаптивная CRM
+
+  /js
+    firebase-config.js          Конфигурация Firebase project sovet-701c5
+    app.js                      Авторизация, интерфейс, Firestore CRUD и realtime listeners
+    firestore.rules.example     Копия правил Firestore
+
+ОСНОВНЫЕ КОЛЛЕКЦИИ FIRESTORE
+  users/{uid}
+  initiatives/{trackingId}
+  initiativeTracking/{trackingId}
+  activityFeed/{eventId}
+  meetings/{meetingId}
+  polls/{pollId}/votes/{uid}
+  tasks/{taskId}
+  decisions/{decisionId}
+  announcements/{announcementId}
+  documents/{documentId}
+  projects/{projectId}
+  sectorPlans/{sectorId}
+  publicTeam/{uid} (публичные профили без контактов)
+  sectorReports/{reportId}
+
+МОДУЛИ CRM
+  Обзор; инициативы; мой сектор; участники; управление секторами;
+  собрания; голосования; задачи; решения; объявления; документы;
+  отчёты секторов; аналитика; архив; профиль; настройки.
+
+БЕЗОПАСНОСТЬ
+  Вход Firebase Authentication Email/Password.
+  Нет самостоятельной регистрации.
+  Нет паролей в Firestore.
+  Роли и права проверяются Firestore Rules.
+  Публичные профили команды хранятся отдельно от закрытых пользователей.
+  Публичное чтение статуса обращения доступно только по точному ID.
+  Неописанные коллекции закрыты по умолчанию.
