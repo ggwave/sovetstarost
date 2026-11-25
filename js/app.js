@@ -851,8 +851,8 @@
         if(button&&button.isConnected){button.disabled=false;button.classList.remove('is-loading');button.innerHTML=original||'Сохранить';}
       });
     }, true);
-    $('#workspaceMenuToggle')?.addEventListener('click',()=>$('#workspace').classList.toggle('menu-open'));
-    $('#workspace')?.addEventListener('click',event=>{if(event.target.closest('.workspace-nav [data-workpage]')||event.target.closest('[data-show-public-home]'))$('#workspace').classList.remove('menu-open');});
+    $('#workspaceMenuToggle')?.addEventListener('click',()=>{const workspace=$('#workspace');workspace.classList.toggle('menu-open');$('#workspaceMenuToggle').setAttribute('aria-expanded',String(workspace.classList.contains('menu-open')));});
+    $('#workspace')?.addEventListener('click',event=>{if(event.target===event.currentTarget||event.target.closest('.workspace-nav [data-workpage]')||event.target.closest('[data-show-public-home]')){$('#workspace').classList.remove('menu-open');$('#workspaceMenuToggle')?.setAttribute('aria-expanded','false');}});
     $('#notificationButton')?.addEventListener('click',()=>{const panel=$('#notificationPanel'),opened=panel.hidden;panel.hidden=!opened;$('#notificationButton').setAttribute('aria-expanded',String(opened));});
     $('#notificationPanel')?.addEventListener('click',event=>{const item=event.target.closest('[data-open-initiative-record]');if(item){$('#notificationPanel').hidden=true;if(canManageInitiatives())renderWorkspacePage('initiatives');else showToast('Новое обращение','Инициатива поступила в Совет и будет рассмотрена ответственным сектором.');return;}const button=event.target.closest('[data-go-page]');if(button){$('#notificationPanel').hidden=true;renderWorkspacePage(button.dataset.goPage);}});
   }
@@ -867,7 +867,7 @@
     $('#logoutButton')?.addEventListener('click',()=>state.auth?.signOut());
     $('#closeInitiative')?.addEventListener('click',hideInitiativeForm);$('#initiativeOverlay')?.addEventListener('click',event=>{if(event.target.id==='initiativeOverlay')hideInitiativeForm();});$('#initiativeForm')?.addEventListener('submit',submitPublicInitiative);
     $('#trackingForm')?.addEventListener('submit',submitTracking);
-    document.addEventListener('keydown',event=>{if(event.key==='Escape'){hideLogin();hideInitiativeForm();$('#notificationPanel').hidden=true;}});
+    document.addEventListener('keydown',event=>{if(event.key==='Escape'){hideLogin();hideInitiativeForm();$('#notificationPanel').hidden=true;$('#workspace')?.classList.remove('menu-open');$('#workspaceMenuToggle')?.setAttribute('aria-expanded','false');}});
   }
 
   function hidePageLoader(){const loader=$('#pageLoader');if(loader){loader.classList.add('is-hidden');window.setTimeout(()=>loader.remove(),450);}}
