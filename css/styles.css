@@ -114,3 +114,16 @@ html,body{max-width:100%;overflow-x:hidden}
 .workspace-content{padding-inline:10px}
 .workspace-panel{padding:12px}
 }
+
+
+/* Branded loading screen and reliable submit feedback */
+.page-loader{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;background:#f7f2eb;color:#68482f;transition:opacity .35s ease,visibility .35s ease}
+.page-loader.is-hidden{opacity:0;visibility:hidden;pointer-events:none}
+.page-loader-mark{width:76px;height:76px;display:grid;place-items:center;border:1px solid #d8c8b6;border-radius:50%;background:#fffdf9}
+.page-loader-mark img{width:54px;height:54px;object-fit:contain}
+.page-loader-spinner{width:28px;height:28px;border:2px solid #e4d8cb;border-top-color:#765337;border-radius:50%;animation:page-loader-spin .8s linear infinite}
+.page-loader p{margin:4px 0 0;font:600 11px Montserrat,sans-serif;letter-spacing:.16em}
+.page-loader small{color:#9b8269;font:10px Montserrat,sans-serif;letter-spacing:.04em}
+@keyframes page-loader-spin{to{transform:rotate(360deg)}}
+.button-spinner{display:inline-block;width:14px;height:14px;margin-right:7px;vertical-align:-2px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:page-loader-spin .7s linear infinite}
+.crm-primary.is-loading{opacity:.8;cursor:wait}
