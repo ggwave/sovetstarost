@@ -86,3 +86,31 @@ body.workspace-active{background:#f6f2eb}.workspace{min-height:100vh;grid-templa
 .public-plan-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.public-plan-card{padding:22px;background:#fffdf9;border:1px solid #e6d9ca}.public-plan-card h3{margin:8px 0 10px;color:#68482f;font:600 24px var(--serif)}.public-plan-card p:not(.eyebrow){margin:0;color:#796958;font-size:10px;line-height:1.85;white-space:pre-wrap}.public-plan-card .eyebrow{font-size:8px;color:#9b8269}@media(max-width:780px){.public-plan-grid{grid-template-columns:1fr}}
 
 .public-team-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}.public-team-card{display:flex;gap:13px;align-items:center;padding:18px;background:#fffdf9;border:1px solid #e6d9ca}.public-team-avatar{width:42px;height:42px;flex:none;display:grid;place-items:center;background:#e9ddcf;color:#68482f;font:600 21px var(--serif)}.public-team-card b,.public-team-card small,.public-team-card div>span{display:block}.public-team-card b{font-size:10px;color:#49301f}.public-team-card small{margin-top:4px;font-size:8px;color:#9b8269}.public-team-card div>span{margin-top:4px;font-size:8px;color:#796958}@media(max-width:900px){.public-team-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:560px){.public-team-grid{grid-template-columns:1fr}.people-table{min-width:820px}.person-public-toggle{min-width:115px}}
+
+
+/* Responsive overflow and form sizing hotfix */
+html,body{max-width:100%;overflow-x:hidden}
+#publicShell *,#workspace *{min-width:0}
+#publicShell :is(h1,h2,h3,h4,p,small,b,strong,span,li,a,td,th),
+#workspace :is(h1,h2,h3,h4,p,small,b,strong,span,li,a,td,th){overflow-wrap:anywhere;word-break:normal}
+.section-wrap,.hero-copy,.hero-art,.intro-grid>*,.section-heading>*,
+.org-grid>*,.sector-cards>*,.public-feed-grid>*,.public-doc-grid>*,
+.public-plan-grid>*,.public-team-grid>*,.workspace-content,
+.workspace-panel,.crm-record,.crm-form-grid,.crm-form-grid>label{min-width:0;max-width:100%}
+.crm-form-grid input,.crm-form-grid textarea,.crm-form-grid select,
+.crm-record-controls select{width:100%;max-width:100%;min-width:0;box-sizing:border-box}
+.crm-form-actions{display:flex;flex-wrap:wrap;gap:9px}
+.crm-form-actions button{max-width:100%;white-space:normal}
+.crm-table-wrap{max-width:100%;overflow-x:auto}
+@media(max-width:780px){
+.workspace-content{width:100%;padding-inline:14px}
+.workspace-panel{padding:15px}
+.crm-record-controls{flex-wrap:wrap}
+.project-strip{grid-template-columns:40px minmax(0,1fr)}
+.project-strip>.project-arrow{display:none}
+}
+@media(max-width:430px){
+.section-wrap{width:calc(100% - 28px)}
+.workspace-content{padding-inline:10px}
+.workspace-panel{padding:12px}
+}
