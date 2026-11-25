@@ -312,34 +312,38 @@
 
   function renderLiveBoard() {
     const now = new Date();
-    const isFutureMeeting = item => {
-      if (item.status !== 'planned' || !item.date) return false;
-      const parsed = new Date(String(item.date) + 'T' + String(item.time || '23:59'));
-      return !Number.isNaN(parsed.getTime()) && parsed >= now;
+    const dateValue = value => {
+      if (!value) return null;
+      if (typeof value === 'string') return new Date(value.length === 10 ? value + 'T00:00:00' : value);
+      if (value.toDate) return value.toDate();
+      return new Date(value);
     };
-    const upcoming = state.meetings.filter(isFutureMeeting).sort((a,b) => {
-      const da = new Date(String(a.date) + 'T' + String(a.time || '23:59')).getTime();
-      const db = new Date(String(b.date) + 'T' + String(b.time || '23:59')).getTime();
-      return da - db;
-    }).slice(0,6);
-    const meetingItems = upcoming.length ? upcoming : state.meetings
+    const futureMeetings = state.meetings
+      .filter(item => item.status !== 'cancelled' && item.date)
+      .map(item => ({...item, _date: dateValue(item.date + (item.time ? 'T' + item.time : 'T23:59'))}))
+      .filter(item => item._date && !Number.isNaN(item._date.getTime()) && item._date >= now)
+      .sort((a,b) => a._date - b._date);
+    const meetingItems = (futureMeetings.length ? futureMeetings : state.meetings
       .filter(item => item.status !== 'cancelled')
-      .sort((a,b) => String(b.date || '').localeCompare(String(a.date || ''))).slice(0,4);
+      .sort((a,b) => String(b.date || '').localeCompare(String(a.date || '')))).slice(0,6);
     const activePolls = state.polls.filter(poll => {
-      if (poll.status !== 'open') return false;
-      const end = poll.endsAt?.toDate ? poll.endsAt.toDate() : (poll.endsAt ? new Date(poll.endsAt) : null);
-      return !end || end > now;
+      const end = dateValue(poll.endsAt);
+      return poll.status === 'open' && (!end || Number.isNaN(end.getTime()) || end > now);
     });
     const pollItems = state.polls.slice().sort((a,b) => {
-      const active = (b.status === 'open' ? 1 : 0) - (a.status === 'open' ? 1 : 0);
-      return active || ((b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+      const aOpen = activePolls.some(item => item.id === a.id) ? 1 : 0;
+      const bOpen = activePolls.some(item => item.id === b.id) ? 1 : 0;
+      return bOpen - aOpen || ((b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
     }).slice(0,6);
-    const meetingMarkup = meetingItems.length ? meetingItems.map(item =>
-      '<article class="live-meeting-card"><div class="live-meeting-date"><b>' + escapeHtml(item.date ? new Date(String(item.date) + 'T00:00:00').toLocaleDateString('ru-RU',{day:'2-digit'}) : '—') + '</b><span>' + escapeHtml(item.date ? new Date(String(item.date) + 'T00:00:00').toLocaleDateString('ru-RU',{month:'short'}) : 'дата') + '</span></div><div class="live-meeting-info"><div class="live-card-meta"><span class="live-state ' + (item.status === 'planned' ? 'is-planned' : item.status === 'held' ? 'is-done' : 'is-cancelled') + '">' + escapeHtml(MEETING_STATUSES[item.status] || 'Собрание') + '</span><small>' + escapeHtml(item.time || 'Время не указано') + '</small></div><h4>' + escapeHtml(item.title) + '</h4><p>' + escapeHtml(item.location || 'Место не указано') + '</p>' + (item.agenda ? '<details><summary>Повестка собрания</summary><p>' + escapeHtml(item.agenda) + '</p></details>' : '') + '</div></article>'
-    ).join('') : emptyState('◷','Собраний пока нет','Как только административный сектор добавит собрание, оно появится на Live-табло.');
-    const pollMarkup = pollItems.length ? pollItems.map(poll => renderPollCard(poll)).join('') : emptyState('◉','Голосований пока нет','Созданные голосования и результаты участников будут отображаться здесь.');
-    return workspaceWelcome('LIVE / ПРЯМОЙ ЭФИР','Табло Совета','Актуальная картина собраний и голосований. Результаты обновляются автоматически по мере поступления голосов.')
-      + '<section class="live-overview-strip"><div class="live-indicator"><i></i><span>LIVE · ДАННЫЕ ОБНОВЛЯЮТСЯ</span></div><div class="live-overview-stats"><div><b>' + activePolls.length + '</b><span>открытых голосований</span></div><div><b>' + upcoming.length + '</b><span>предстоящих собраний</span></div><div><b>' + state.polls.reduce((sum,poll) => sum + votesFor(poll.id).length,0) + '</b><span>учтённых голосов</span></div></div></section>'
+    const totalVotes = state.polls.reduce((sum,poll) => sum + votesFor(poll.id).length,0);
+    const meetingMarkup = meetingItems.length ? meetingItems.map(item => {
+      const date = dateValue(item.date);
+      const statusClass = item.status === 'planned' ? 'is-planned' : item.status === 'held' ? 'is-done' : 'is-cancelled';
+      return '<article class="live-meeting-card"><div class="live-meeting-date"><b>' + escapeHtml(date && !Number.isNaN(date.getTime()) ? date.toLocaleDateString('ru-RU',{day:'2-digit'}) : '—') + '</b><span>' + escapeHtml(date && !Number.isNaN(date.getTime()) ? date.toLocaleDateString('ru-RU',{month:'short'}) : 'дата') + '</span></div><div class="live-meeting-info"><div class="live-card-meta"><span class="live-state ' + statusClass + '">' + escapeHtml(MEETING_STATUSES[item.status] || 'Собрание') + '</span><small>' + escapeHtml(item.time || 'Время не указано') + '</small></div><h4>' + escapeHtml(item.title || 'Собрание Совета') + '</h4><p>' + escapeHtml(item.location || 'Место не указано') + '</p>' + (item.agenda ? '<details><summary>Повестка собрания</summary><p>' + escapeHtml(item.agenda) + '</p></details>' : '') + '</div></article>';
+    }).join('') : emptyState('◷','Собраний пока нет','Созданные собрания появятся здесь автоматически.');
+    const pollMarkup = pollItems.length ? pollItems.map(poll => renderPollCard(poll)).join('') : emptyState('◉','Голосований пока нет','Созданные голосования и результаты появятся здесь автоматически.');
+    return workspaceWelcome('LIVE / ПРЯМОЙ ЭФИР','Табло Совета','Собрания и голосования в одном месте. Данные обновляются автоматически при изменениях в Firebase.')
+      + '<section class="live-overview-strip"><div class="live-indicator"><i></i><span>LIVE · СИНХРОНИЗАЦИЯ ВКЛЮЧЕНА</span></div><div class="live-overview-stats"><div><b>' + activePolls.length + '</b><span>открытых голосований</span></div><div><b>' + futureMeetings.length + '</b><span>предстоящих собраний</span></div><div><b>' + totalVotes + '</b><span>учтённых голосов</span></div></div></section>'
       + '<div class="live-board-grid"><section class="workspace-panel live-meetings-panel"><div class="panel-heading"><div><p class="eyebrow">КАЛЕНДАРЬ / ВСТРЕЧИ</p><h3>Собрания Совета</h3></div><button class="crm-secondary" type="button" data-go-page="meetings">Все собрания ↗</button></div><div class="live-meeting-list">' + meetingMarkup + '</div></section><section class="workspace-panel live-polls-panel"><div class="panel-heading"><div><p class="eyebrow">РЕШЕНИЯ / ГОЛОСОВАНИЯ</p><h3>Голосования в реальном времени</h3></div><button class="crm-secondary" type="button" data-go-page="voting">Все голосования ↗</button></div><div class="live-poll-list">' + pollMarkup + '</div></section></div>';
   }
 
