@@ -244,7 +244,7 @@
 
   const workspacePages = {
     overview: 'Обзор CRM', initiatives: 'Инициативы и обращения', sector: 'Мой сектор', people: 'Участники',
-    sectors: 'Управление секторами', meetings: 'Собрания', voting: 'Голосования', projects: 'Проекты',
+    sectors: 'Управление секторами', live: 'Live-табло', meetings: 'Собрания', voting: 'Голосования', projects: 'Проекты',
     tasks: 'Задачи и решения', announcements: 'Объявления', documents: 'Документы', reports: 'Отчёты секторов',
     analytics: 'Аналитика', archive: 'Архив', account: 'Мой профиль', settings: 'Настройки аккаунта'
   };
@@ -308,6 +308,39 @@
       ${workspacePanel('Обязанности сектора',`<ul class="detail-duty-list">${sector.duties.map(item=>`<li>${escapeHtml(item)}</li>`).join('')}</ul>`)}
       <section class="workspace-panel"><div class="panel-heading"><h3>Команда сектора</h3><small>${members.length} участников</small></div>${members.length?`<div class="team-mini-grid">${members.map(user=>`<div class="team-mini-card"><span>${escapeHtml((user.name||'У').trim().charAt(0).toUpperCase())}</span><div><b>${escapeHtml(user.name||'Участник')}</b><small>${escapeHtml(roleLabel(user.role))}</small></div></div>`).join('')}</div>`:emptyState('♙','Команда пока не сформирована','Председатель сможет назначить участников в разделе «Участники».')}</section>
       <section class="workspace-panel"><div class="panel-heading"><h3>Рабочий план сектора</h3>${canEdit?'<span class="crm-status">Можно редактировать</span>':''}</div>${canEdit?`<form id="sectorPlanForm" class="crm-form-grid" data-sector="${sector.id}"><label>Цель сектора<input name="goal" maxlength="180" value="${escapeHtml(plan.goal||'')}" placeholder="Главная цель на учебный год"></label><label>План работы<textarea name="plan" rows="7" maxlength="5000" placeholder="Пункты плана, мероприятия, ожидаемые результаты">${escapeHtml(plan.plan||'')}</textarea></label><label class="checkbox-label"><input type="checkbox" name="published" ${plan.published?'checked':''}> Показывать план публично</label><div class="crm-form-actions"><button class="crm-primary" type="submit">Сохранить план</button></div><p class="crm-form-message" id="sectorPlanMessage" role="status"></p></form>`:`<div class="plan-reading"><b>${escapeHtml(plan.goal||'Цель ещё не определена')}</b><p>${escapeHtml(plan.plan||'Руководитель сектора ещё не добавил рабочий план.')}</p></div>`}</section>`;
+  }
+
+  function renderLiveBoard() {
+    const now = new Date();
+    const isFutureMeeting = item => {
+      if (item.status !== 'planned' || !item.date) return false;
+      const parsed = new Date(String(item.date) + 'T' + String(item.time || '23:59'));
+      return !Number.isNaN(parsed.getTime()) && parsed >= now;
+    };
+    const upcoming = state.meetings.filter(isFutureMeeting).sort((a,b) => {
+      const da = new Date(String(a.date) + 'T' + String(a.time || '23:59')).getTime();
+      const db = new Date(String(b.date) + 'T' + String(b.time || '23:59')).getTime();
+      return da - db;
+    }).slice(0,6);
+    const meetingItems = upcoming.length ? upcoming : state.meetings
+      .filter(item => item.status !== 'cancelled')
+      .sort((a,b) => String(b.date || '').localeCompare(String(a.date || ''))).slice(0,4);
+    const activePolls = state.polls.filter(poll => {
+      if (poll.status !== 'open') return false;
+      const end = poll.endsAt?.toDate ? poll.endsAt.toDate() : (poll.endsAt ? new Date(poll.endsAt) : null);
+      return !end || end > now;
+    });
+    const pollItems = state.polls.slice().sort((a,b) => {
+      const active = (b.status === 'open' ? 1 : 0) - (a.status === 'open' ? 1 : 0);
+      return active || ((b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+    }).slice(0,6);
+    const meetingMarkup = meetingItems.length ? meetingItems.map(item =>
+      '<article class="live-meeting-card"><div class="live-meeting-date"><b>' + escapeHtml(item.date ? new Date(String(item.date) + 'T00:00:00').toLocaleDateString('ru-RU',{day:'2-digit'}) : '—') + '</b><span>' + escapeHtml(item.date ? new Date(String(item.date) + 'T00:00:00').toLocaleDateString('ru-RU',{month:'short'}) : 'дата') + '</span></div><div class="live-meeting-info"><div class="live-card-meta"><span class="live-state ' + (item.status === 'planned' ? 'is-planned' : item.status === 'held' ? 'is-done' : 'is-cancelled') + '">' + escapeHtml(MEETING_STATUSES[item.status] || 'Собрание') + '</span><small>' + escapeHtml(item.time || 'Время не указано') + '</small></div><h4>' + escapeHtml(item.title) + '</h4><p>' + escapeHtml(item.location || 'Место не указано') + '</p>' + (item.agenda ? '<details><summary>Повестка собрания</summary><p>' + escapeHtml(item.agenda) + '</p></details>' : '') + '</div></article>'
+    ).join('') : emptyState('◷','Собраний пока нет','Как только административный сектор добавит собрание, оно появится на Live-табло.');
+    const pollMarkup = pollItems.length ? pollItems.map(poll => renderPollCard(poll)).join('') : emptyState('◉','Голосований пока нет','Созданные голосования и результаты участников будут отображаться здесь.');
+    return workspaceWelcome('LIVE / ПРЯМОЙ ЭФИР','Табло Совета','Актуальная картина собраний и голосований. Результаты обновляются автоматически по мере поступления голосов.')
+      + '<section class="live-overview-strip"><div class="live-indicator"><i></i><span>LIVE · ДАННЫЕ ОБНОВЛЯЮТСЯ</span></div><div class="live-overview-stats"><div><b>' + activePolls.length + '</b><span>открытых голосований</span></div><div><b>' + upcoming.length + '</b><span>предстоящих собраний</span></div><div><b>' + state.polls.reduce((sum,poll) => sum + votesFor(poll.id).length,0) + '</b><span>учтённых голосов</span></div></div></section>'
+      + '<div class="live-board-grid"><section class="workspace-panel live-meetings-panel"><div class="panel-heading"><div><p class="eyebrow">КАЛЕНДАРЬ / ВСТРЕЧИ</p><h3>Собрания Совета</h3></div><button class="crm-secondary" type="button" data-go-page="meetings">Все собрания ↗</button></div><div class="live-meeting-list">' + meetingMarkup + '</div></section><section class="workspace-panel live-polls-panel"><div class="panel-heading"><div><p class="eyebrow">РЕШЕНИЯ / ГОЛОСОВАНИЯ</p><h3>Голосования в реальном времени</h3></div><button class="crm-secondary" type="button" data-go-page="voting">Все голосования ↗</button></div><div class="live-poll-list">' + pollMarkup + '</div></section></div>';
   }
 
   function renderMeetings() {
@@ -429,6 +462,7 @@
     else if (page==='people') content.innerHTML=renderPeople();
     else if (page==='sectors') content.innerHTML=renderSectorsManagement();
     else if (page==='sector') content.innerHTML=renderSector();
+    else if (page==='live') content.innerHTML=renderLiveBoard();
     else if (page==='meetings') content.innerHTML=renderMeetings();
     else if (page==='voting') content.innerHTML=renderVoting();
     else if (page==='projects') content.innerHTML=renderProjects();
@@ -498,8 +532,8 @@
       const ref=isSectorLead()?db.collection('initiatives').where('sectorId','==',currentSectorId()):db.collection('initiatives');
       addListener(ref.onSnapshot(snapshot=>{state.initiatives=sortNewest(mapSnapshot(snapshot));renderIfPage('overview','initiatives','analytics','archive');},err=>console.warn('Initiatives:',err)));
     }
-    addListener(db.collection('meetings').orderBy('date','desc').limit(100).onSnapshot(snapshot=>{state.meetings=mapSnapshot(snapshot);renderIfPage('overview','meetings','analytics','archive');},err=>console.warn('Meetings:',err)));
-    addListener(db.collection('polls').orderBy('createdAt','desc').limit(100).onSnapshot(snapshot=>{state.polls=mapSnapshot(snapshot);syncVoteListeners();renderIfPage('overview','voting','analytics','archive');},err=>console.warn('Polls:',err)));
+    addListener(db.collection('meetings').orderBy('date','desc').limit(100).onSnapshot(snapshot=>{state.meetings=mapSnapshot(snapshot);renderIfPage('overview','meetings','analytics','archive','live');},err=>console.warn('Meetings:',err)));
+    addListener(db.collection('polls').orderBy('createdAt','desc').limit(100).onSnapshot(snapshot=>{state.polls=mapSnapshot(snapshot);syncVoteListeners();renderIfPage('overview','voting','analytics','archive','live');},err=>console.warn('Polls:',err)));
     addListener(db.collection('decisions').orderBy('createdAt','desc').limit(100).onSnapshot(snapshot=>{state.decisions=mapSnapshot(snapshot);renderIfPage('tasks','analytics','archive');},err=>console.warn('Decisions:',err)));
     addListener(db.collection('announcements').orderBy('createdAt','desc').limit(100).onSnapshot(snapshot=>{state.announcements=mapSnapshot(snapshot);renderIfPage('announcements');},err=>console.warn('Announcements:',err)));
     addListener(db.collection('documents').orderBy('createdAt','desc').limit(100).onSnapshot(snapshot=>{state.documents=mapSnapshot(snapshot);renderIfPage('documents');},err=>console.warn('Documents:',err)));
@@ -536,7 +570,7 @@
     for(const poll of state.polls){
       if(state.voteUnsubs.has(poll.id))continue;
       const unsub=state.db.collection('polls').doc(poll.id).collection('votes').onSnapshot(snapshot=>{
-        state.votes[poll.id]={};snapshot.docs.forEach(doc=>state.votes[poll.id][doc.id]=doc.data());renderIfPage('voting');
+        state.votes[poll.id]={};snapshot.docs.forEach(doc=>state.votes[poll.id][doc.id]=doc.data());renderIfPage('voting','live');
       },error=>console.warn('Poll votes:',error));
       state.voteUnsubs.set(poll.id,unsub);
     }
