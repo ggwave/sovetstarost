@@ -812,7 +812,7 @@
       }).finally(()=>{
         if(button&&button.isConnected){button.disabled=false;button.classList.remove('is-loading');button.innerHTML=original||'Сохранить';}
       });
-    });
+    }, true);
     $('#workspaceMenuToggle')?.addEventListener('click',()=>$('#workspace').classList.toggle('menu-open'));
     $('#workspace')?.addEventListener('click',event=>{if(event.target.closest('.workspace-nav [data-workpage]')||event.target.closest('[data-show-public-home]'))$('#workspace').classList.remove('menu-open');});
     $('#notificationButton')?.addEventListener('click',()=>{const panel=$('#notificationPanel'),opened=panel.hidden;panel.hidden=!opened;$('#notificationButton').setAttribute('aria-expanded',String(opened));});
