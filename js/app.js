@@ -271,7 +271,7 @@
       ${items.length ? items.map(item => {
         const canEdit = isAdministrativeRole() || (isSectorLead() && item.sectorId === currentSectorId());
         const url = initiativeTrackingUrl(item.id);
-        return `<article class="crm-record"><div class="crm-record-top"><span class="crm-record-sector">${escapeHtml(sectorName(item.sectorId))}</span><span class="crm-record-date">${escapeHtml(formatDate(item.createdAt))}</span></div><div class="initiative-id-line"><b>${escapeHtml(item.id)}</b><button type="button" class="text-button" data-copy-text="${escapeHtml(url)}">Копировать ссылку</button><a href="${escapeHtml(url)}" target="_blank" rel="noopener">Открыть отслеживание ↗</a></div><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.description)}</p><div class="crm-record-meta"><span>Автор: ${escapeHtml(item.authorName || 'Не указано')}</span><span>Класс: ${escapeHtml(item.className || '—')}</span><span>Контакт: ${escapeHtml(item.contact || 'Не оставлен')}</span></div><div class="crm-record-controls"><label>Статус<select data-initiative-status="${escapeHtml(item.id)}" ${canEdit?'':'disabled'}>${Object.entries(INITIATIVE_STATUSES).map(([v,l])=>`<option value="${v}" ${item.status===v?'selected':''}>${l}</option>`).join('')}</select></label>${isAdministrativeRole()?`<label>Ответственный сектор<select data-initiative-sector="${escapeHtml(item.id)}">${sectors.map(s=>`<option value="${s.id}" ${item.sectorId===s.id?'selected':''}>${s.title}</option>`).join('')}</select></label>`:''}${isChair()?`<button type="button" class="crm-danger" data-delete-initiative="${escapeHtml(item.id)}">Удалить инициативу</button>`:''}</div></article>`;
+        return `<article class="crm-record"><div class="crm-record-top"><span class="crm-record-sector">${escapeHtml(sectorName(item.sectorId))}</span><span class="crm-record-date">${escapeHtml(formatDate(item.createdAt))}</span></div><div class="initiative-id-line"><b>${escapeHtml(item.id)}</b><button type="button" class="text-button" data-copy-text="${escapeHtml(url)}">Копировать ссылку</button><a href="${escapeHtml(url)}" target="_blank" rel="noopener">Открыть отслеживание ↗</a></div><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.description)}</p><div class="crm-record-meta"><span>Автор: ${escapeHtml(item.authorName || 'Не указано')}</span><span>Класс: ${escapeHtml(item.className || '—')}</span><span>Контакт: ${escapeHtml(item.contact || 'Не оставлен')}</span></div><div class="crm-record-controls"><label>Статус<select data-initiative-status="${escapeHtml(item.id)}" ${canEdit?'':'disabled'}>${Object.entries(INITIATIVE_STATUSES).map(([v,l])=>`<option value="${v}" ${item.status===v?'selected':''}>${l}</option>`).join('')}</select></label>${isAdministrativeRole()?`<label>Ответственный сектор<select data-initiative-sector="${escapeHtml(item.id)}">${sectors.map(s=>`<option value="${s.id}" ${item.sectorId===s.id?'selected':''}>${s.title}</option>`).join('')}</select></label>`:''}${isChair()?`<button type="button" class="crm-danger" data-delete-initiative="${escapeHtml(item.id)}">Удалить инициативу</button>`:''}${isChair()?`<button type="button" class="crm-danger" data-delete-initiative="${escapeHtml(item.id)}">Удалить инициативу</button>`:''}</div></article>`;
       }).join('') : emptyState('✳','Пока нет инициатив','Предложения, отправленные через публичную форму, будут отображаться здесь.')}`;
   }
 
@@ -763,6 +763,13 @@
   }
 
 
+  async function deleteInitiative(id){
+    if(!isChair()||!id)return;const item=state.initiatives.find(entry=>entry.id===id);if(!item)return;
+    if(!confirm('Удалить инициативу «'+item.title+'» ('+id+')? Это действие нельзя отменить.'))return;
+    try{const batch=state.db.batch();batch.delete(state.db.collection('initiatives').doc(id));batch.delete(state.db.collection('initiativeTracking').doc(id));await batch.commit();showToast('Инициатива удалена',id);}
+    catch(error){console.error('Delete initiative:',error);showToast('Не удалось удалить','Проверьте правила Firestore.');}
+  }
+
   async function saveInitiativeUpdate(id,patch){
     if(!canManageInitiatives()||!id)return;const item=state.initiatives.find(entry=>entry.id===id);if(!item)return;
     const nextStatus=patch.status||item.status,nextSector=patch.sectorId||item.sectorId;const batch=state.db.batch();
@@ -919,6 +926,7 @@
       const copy=event.target.closest('[data-copy-text]');if(copy){if(navigator.clipboard?.writeText){navigator.clipboard.writeText(copy.dataset.copyText).then(()=>showToast('Ссылка скопирована','Её можно отправить автору обращения.')).catch(()=>showToast('Не удалось скопировать','Скопируйте ссылку вручную.'));}else{showToast('Скопируйте ссылку вручную',copy.dataset.copyText);}}
       if(event.target.closest('[data-refresh-crm]')){startCRMListeners();showToast('Данные обновляются','CRM подключает актуальные данные Firestore.');}
       const openInitiative=event.target.closest('[data-open-initiative-record]');if(openInitiative){$('#notificationPanel').hidden=true;renderWorkspacePage('initiatives');}
+      const deleteInitiativeButton=event.target.closest('[data-delete-initiative]');if(deleteInitiativeButton){deleteInitiative(deleteInitiativeButton.dataset.deleteInitiative);}
     });
     $('#workspaceContent')?.addEventListener('change',event=>{
       const status=event.target.closest('[data-initiative-status]'),sector=event.target.closest('[data-initiative-sector]'),personRole=event.target.closest('[data-person-role]');
