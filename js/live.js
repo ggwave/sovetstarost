@@ -35,7 +35,7 @@
     root.dataset.animation=c.animation||'smooth';
     if(!c.enabled){$('#liveStage').innerHTML='<div class="standby"><img src="assets/emblem.png" alt=""><p class="eyebrow">СОВЕТ ОБУЧАЮЩИХСЯ</p><h1>Вместе к большему.</h1><p>Трансляция пока не запущена</p><span class="standby-pulse"></span></div>';$('#liveFooterMessage').textContent='ОЖИДАНИЕ ТРАНСЛЯЦИИ';return;}
     const title=esc(c.title||'Совет обучающихся'),subtitle=c.subtitle?'<p class="screen-subtitle">'+esc(c.subtitle)+'</p>':'';
-    const mode=c.mode||'overview';let content='';
+    const mode=c.mode&&c.mode!=='overview'?c.mode:(c.meetingId?'meeting':c.pollId?'poll':'overview');let content='';
     if(mode==='poll'){content=pollMarkup(activePoll());}
     else if(mode==='meeting'){content=meetingMarkup(upcomingMeeting());}
     else if(mode==='message'){content='<article class="message-display"><div class="section-kicker">ОБЪЯВЛЕНИЕ</div><h2>'+title+'</h2><p>'+esc(c.subtitle||'Вместе к большему.')+'</p></article>';}
