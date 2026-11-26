@@ -22,6 +22,17 @@
     const counts=(poll.options||[]).map(o=>({label:o.label,count:votes.filter(v=>(v.selectedOptionIds||[]).includes(o.id)).length}));
     return '<article class="poll-display"><div class="section-kicker">ГОЛОСОВАНИЕ · '+(poll.status==='open'?'ИДЁТ СЕЙЧАС':'ЗАВЕРШЕНО')+'</div><h2>'+esc(poll.title)+'</h2>'+(poll.description?'<p class="poll-description">'+esc(poll.description)+'</p>':'')+'<div class="vote-total"><b>'+ (state.voteError?'—':total) +'</b><span>участников проголосовали</span></div><div class="result-list">'+(state.voteError?'<p class="privacy-note">Для просмотра результатов откройте Live-экран в том же браузере, где выполнен вход в CRM.</p>':counts.map((o,i)=>{const pct=total?Math.round(o.count/total*100):0;return '<div class="result-item" style="--delay:'+i*90+'ms"><div class="result-label"><span>'+esc(o.label)+'</span><b>'+o.count+' · '+pct+'%</b></div><div class="result-track"><i style="width:'+pct+'%"></i></div></div>';}).join(''))+'</div></article>';
   }
+  function slideMarkup(control){
+    const slides=Array.isArray(control.slides)?control.slides:[];
+    if(!slides.length)return '<div class="empty-live"><span>▤</span><h2>Презентация пока не создана</h2><p>Добавьте слайды на пульте управления.</p></div>';
+    const index=Math.min(Math.max(0,Number(control.currentSlide)||0),slides.length-1);
+    const slide=slides[index]||{};
+    const body=String(slide.body||'').trim();
+    const bodyMarkup=body?body.split(/\n\s*\n/).map(paragraph=>'<p>'+esc(paragraph)+'</p>').join(''):'';
+    const progress=Math.round((index+1)/slides.length*100);
+    return '<article class="slide-display"><div class="slide-topline"><span class="section-kicker">ПРЕЗЕНТАЦИЯ · СОВЕТ ОБУЧАЮЩИХСЯ</span><span class="slide-counter">'+String(index+1).padStart(2,'0')+' <i>/</i> '+String(slides.length).padStart(2,'0')+'</span></div><div class="slide-content"><div class="slide-mark">✳</div><h1>'+esc(slide.title||'Слайд '+(index+1))+'</h1><div class="slide-body">'+bodyMarkup+'</div></div><div class="slide-bottomline"><span>ВМЕСТЕ К БОЛЬШЕМУ</span><div class="slide-progress"><i style="width:'+progress+'%"></i></div><span>'+progress+'%</span></div></article>';
+  }
+
   function meetingMarkup(meeting){
     if(!meeting){
       const selected=!!(state.control||{}).meetingId;
@@ -36,7 +47,8 @@
     if(!c.enabled){$('#liveStage').innerHTML='<div class="standby"><img src="assets/emblem.png" alt=""><p class="eyebrow">СОВЕТ ОБУЧАЮЩИХСЯ</p><h1>Вместе к большему.</h1><p>Трансляция пока не запущена</p><span class="standby-pulse"></span></div>';$('#liveFooterMessage').textContent='ОЖИДАНИЕ ТРАНСЛЯЦИИ';return;}
     const title=esc(c.title||'Совет обучающихся'),subtitle=c.subtitle?'<p class="screen-subtitle">'+esc(c.subtitle)+'</p>':'';
     const mode=c.mode&&c.mode!=='overview'?c.mode:(c.meetingId?'meeting':c.pollId?'poll':'overview');let content='';
-    if(mode==='poll'){content=pollMarkup(activePoll());}
+    if(mode==='slides'){content=slideMarkup(c);}
+    else if(mode==='poll'){content=pollMarkup(activePoll());}
     else if(mode==='meeting'){content=meetingMarkup(upcomingMeeting());}
     else if(mode==='message'){content='<article class="message-display"><div class="section-kicker">ОБЪЯВЛЕНИЕ</div><h2>'+title+'</h2><p>'+esc(c.subtitle||'Вместе к большему.')+'</p></article>';}
     else {
@@ -44,7 +56,7 @@
       content='<div class="overview-display"><div class="overview-heading"><p class="section-kicker">ПРЯМОЙ ЭФИР · СОВЕТ ОБУЧАЮЩИХСЯ</p><h1>'+title+'</h1>'+subtitle+'</div><div class="overview-columns"><section class="overview-card">'+meetingMarkup(meeting)+'</section><section class="overview-card">'+pollMarkup(poll)+'</section></div></div>';
     }
     $('#liveStage').innerHTML=content;
-    $('#liveFooterMessage').textContent=mode==='poll'?'ГОЛОСОВАНИЕ В РЕАЛЬНОМ ВРЕМЕНИ':mode==='meeting'?'СОБРАНИЕ СОВЕТА':mode==='message'?'ОБЪЯВЛЕНИЕ СОВЕТА':'LIVE · СИНХРОНИЗАЦИЯ';
+    $('#liveFooterMessage').textContent=mode==='slides'?'ПРЕЗЕНТАЦИЯ · СЛАЙД '+(Math.min(Math.max(0,Number(c.currentSlide)||0),(c.slides||[]).length-1)+1)+' / '+((c.slides||[]).length||1):mode==='poll'?'ГОЛОСОВАНИЕ В РЕАЛЬНОМ ВРЕМЕНИ':mode==='meeting'?'СОБРАНИЕ СОВЕТА':mode==='message'?'ОБЪЯВЛЕНИЕ СОВЕТА':'LIVE · СИНХРОНИЗАЦИЯ';
     $('#liveClock').hidden=c.showClock===false;
     document.body.classList.toggle('hide-stats',c.showStats===false);
   }
