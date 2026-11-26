@@ -319,11 +319,13 @@
   }
   function parseLiveSlides(value, fallback=[]) {
     const parsed=String(value||'').split(/^\s*---\s*$/m).map(block=>{
-      const lines=block.trim().split(/\r?\n/);
+      const source=block.trim();
+      if(!source)return null;
+      const lines=source.split(/\r?\n/);
       const title=String(lines.shift()||'').trim().slice(0,100);
       const body=lines.join('\n').trim().slice(0,2000);
       return {title:title||'Слайд',body};
-    }).filter(slide=>slide.title||slide.body).slice(0,12);
+    }).filter(Boolean).slice(0,12);
     if(parsed.length)return parsed;
     return Array.isArray(fallback)&&fallback.length?fallback.slice(0,12):[{title:'Вместе к большему',body:'Совет обучающихся'}];
   }
@@ -374,11 +376,17 @@
     const control=state.liveControl||{},slides=Array.isArray(control.slides)?control.slides:[];
     if(!slides.length){showToast('Нет слайдов','Сначала добавьте и сохраните презентацию.');return;}
     const index=((Number(nextIndex)%slides.length)+slides.length)%slides.length;
+    const previous=state.liveControl;
+    state.liveControl={...control,currentSlide:index};
+    const indicator=$('.live-slide-remote-status b');
+    if(indicator)indicator.textContent=`Слайд ${index+1} из ${slides.length}`;
     try {
       await state.db.collection('liveControl').doc('current').set({currentSlide:index,updatedAt:timestamp(),updatedBy:profile().uid},{merge:true});
       if($('#liveSlideMessage'))$('#liveSlideMessage').textContent=`На экране: слайд ${index+1} из ${slides.length}.`;
     } catch(error) {
+      state.liveControl=previous;
       console.error('Live slide:',error);
+      if(indicator)indicator.textContent=`Слайд ${(Number(previous?.currentSlide)||0)+1} из ${slides.length}`;
       if($('#liveSlideMessage'))$('#liveSlideMessage').textContent='Не удалось переключить слайд. Проверьте опубликованные правила Firestore.';
       showToast('Ошибка переключения','Проверьте правила доступа к Live-табло.');
     }
