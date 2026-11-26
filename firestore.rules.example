@@ -279,7 +279,8 @@ service cloud.firestore {
           && getAfter(/databases/$(database)/documents/polls/$(request.resource.data.recordId)).data.title == request.resource.data.title
           && getAfter(/databases/$(database)/documents/polls/$(request.resource.data.recordId)).data.createdAt == request.resource.data.createdAt)
       );
-      allow update, delete: if false;
+      allow update: if false;
+      allow delete: if isChair() && resource.data.type == 'initiative';
     }
 
     function validMeeting() {
@@ -327,6 +328,85 @@ service cloud.firestore {
         && request.resource.data.published is bool
         && request.resource.data.createdBy == request.auth.uid
         && request.resource.data.createdAt == request.time;
+    }
+
+    function validLiveSlide(slide) {
+      return slide is map
+        && slide.keys().hasAll(['type', 'title', 'body'])
+        && slide.keys().hasOnly(['type', 'title', 'body'])
+        && slide.type in ['title', 'text', 'agenda', 'list', 'quote', 'section', 'announcement', 'closing']
+        && slide.title is string
+        && slide.title.size() >= 1
+        && slide.title.size() <= 100
+        && slide.body is string
+        && slide.body.size() <= 2000;
+    }
+
+    function validLiveSlideList() {
+      return request.resource.data.slides is list
+        && request.resource.data.slides.size() >= 1
+        && request.resource.data.slides.size() <= 30
+        && validLiveSlide(request.resource.data.slides[0])
+        && (request.resource.data.slides.size() <= 1 || validLiveSlide(request.resource.data.slides[1]))
+        && (request.resource.data.slides.size() <= 2 || validLiveSlide(request.resource.data.slides[2]))
+        && (request.resource.data.slides.size() <= 3 || validLiveSlide(request.resource.data.slides[3]))
+        && (request.resource.data.slides.size() <= 4 || validLiveSlide(request.resource.data.slides[4]))
+        && (request.resource.data.slides.size() <= 5 || validLiveSlide(request.resource.data.slides[5]))
+        && (request.resource.data.slides.size() <= 6 || validLiveSlide(request.resource.data.slides[6]))
+        && (request.resource.data.slides.size() <= 7 || validLiveSlide(request.resource.data.slides[7]))
+        && (request.resource.data.slides.size() <= 8 || validLiveSlide(request.resource.data.slides[8]))
+        && (request.resource.data.slides.size() <= 9 || validLiveSlide(request.resource.data.slides[9]))
+        && (request.resource.data.slides.size() <= 10 || validLiveSlide(request.resource.data.slides[10]))
+        && (request.resource.data.slides.size() <= 11 || validLiveSlide(request.resource.data.slides[11]))
+        && (request.resource.data.slides.size() <= 12 || validLiveSlide(request.resource.data.slides[12]))
+        && (request.resource.data.slides.size() <= 13 || validLiveSlide(request.resource.data.slides[13]))
+        && (request.resource.data.slides.size() <= 14 || validLiveSlide(request.resource.data.slides[14]))
+        && (request.resource.data.slides.size() <= 15 || validLiveSlide(request.resource.data.slides[15]))
+        && (request.resource.data.slides.size() <= 16 || validLiveSlide(request.resource.data.slides[16]))
+        && (request.resource.data.slides.size() <= 17 || validLiveSlide(request.resource.data.slides[17]))
+        && (request.resource.data.slides.size() <= 18 || validLiveSlide(request.resource.data.slides[18]))
+        && (request.resource.data.slides.size() <= 19 || validLiveSlide(request.resource.data.slides[19]))
+        && (request.resource.data.slides.size() <= 20 || validLiveSlide(request.resource.data.slides[20]))
+        && (request.resource.data.slides.size() <= 21 || validLiveSlide(request.resource.data.slides[21]))
+        && (request.resource.data.slides.size() <= 22 || validLiveSlide(request.resource.data.slides[22]))
+        && (request.resource.data.slides.size() <= 23 || validLiveSlide(request.resource.data.slides[23]))
+        && (request.resource.data.slides.size() <= 24 || validLiveSlide(request.resource.data.slides[24]))
+        && (request.resource.data.slides.size() <= 25 || validLiveSlide(request.resource.data.slides[25]))
+        && (request.resource.data.slides.size() <= 26 || validLiveSlide(request.resource.data.slides[26]))
+        && (request.resource.data.slides.size() <= 27 || validLiveSlide(request.resource.data.slides[27]))
+        && (request.resource.data.slides.size() <= 28 || validLiveSlide(request.resource.data.slides[28]))
+        && (request.resource.data.slides.size() <= 29 || validLiveSlide(request.resource.data.slides[29]));
+    }
+
+    // Public read-only control state for the separate projector display.
+    // Only the administrative sector can change the active screen.
+    match /liveControl/{controlId} {
+      allow get: if controlId == 'current';
+      allow list: if false;
+      allow create, update: if controlId == 'current'
+        && activeMember() && isAdministrativeSector()
+        && request.resource.data.keys().hasAll(['enabled', 'mode', 'pollId', 'meetingId', 'title', 'subtitle', 'animation', 'showClock', 'showStats', 'slides', 'currentSlide', 'autoAdvance', 'slideInterval', 'updatedAt', 'updatedBy'])
+        && request.resource.data.keys().hasOnly(['enabled', 'mode', 'pollId', 'meetingId', 'title', 'subtitle', 'animation', 'showClock', 'showStats', 'slides', 'currentSlide', 'autoAdvance', 'slideInterval', 'updatedAt', 'updatedBy'])
+        && request.resource.data.enabled is bool
+        && request.resource.data.mode in ['overview', 'poll', 'meeting', 'message', 'slides']
+        && request.resource.data.pollId is string && request.resource.data.pollId.size() <= 150
+        && request.resource.data.meetingId is string && request.resource.data.meetingId.size() <= 150
+        && request.resource.data.title is string && request.resource.data.title.size() <= 100
+        && request.resource.data.subtitle is string && request.resource.data.subtitle.size() <= 240
+        && request.resource.data.animation in ['smooth', 'calm', 'none']
+        && request.resource.data.showClock is bool
+        && request.resource.data.showStats is bool
+        && validLiveSlideList()
+        && request.resource.data.currentSlide is int
+        && request.resource.data.currentSlide >= 0
+        && request.resource.data.currentSlide < request.resource.data.slides.size()
+        && request.resource.data.autoAdvance is bool
+        && request.resource.data.slideInterval is int
+        && request.resource.data.slideInterval >= 5
+        && request.resource.data.slideInterval <= 120
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if controlId == 'current' && isChair();
     }
 
     match /polls/{pollId} {
