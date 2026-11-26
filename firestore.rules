@@ -329,6 +329,35 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time;
     }
 
+    function validLiveSlide(slide) {
+      return slide is map
+        && slide.keys().hasAll(['title', 'body'])
+        && slide.keys().hasOnly(['title', 'body'])
+        && slide.title is string
+        && slide.title.size() >= 1
+        && slide.title.size() <= 100
+        && slide.body is string
+        && slide.body.size() <= 2000;
+    }
+
+    function validLiveSlideList() {
+      return request.resource.data.slides is list
+        && request.resource.data.slides.size() >= 1
+        && request.resource.data.slides.size() <= 12
+        && validLiveSlide(request.resource.data.slides[0])
+        && (request.resource.data.slides.size() <= 1 || validLiveSlide(request.resource.data.slides[1]))
+        && (request.resource.data.slides.size() <= 2 || validLiveSlide(request.resource.data.slides[2]))
+        && (request.resource.data.slides.size() <= 3 || validLiveSlide(request.resource.data.slides[3]))
+        && (request.resource.data.slides.size() <= 4 || validLiveSlide(request.resource.data.slides[4]))
+        && (request.resource.data.slides.size() <= 5 || validLiveSlide(request.resource.data.slides[5]))
+        && (request.resource.data.slides.size() <= 6 || validLiveSlide(request.resource.data.slides[6]))
+        && (request.resource.data.slides.size() <= 7 || validLiveSlide(request.resource.data.slides[7]))
+        && (request.resource.data.slides.size() <= 8 || validLiveSlide(request.resource.data.slides[8]))
+        && (request.resource.data.slides.size() <= 9 || validLiveSlide(request.resource.data.slides[9]))
+        && (request.resource.data.slides.size() <= 10 || validLiveSlide(request.resource.data.slides[10]))
+        && (request.resource.data.slides.size() <= 11 || validLiveSlide(request.resource.data.slides[11]));
+    }
+
     // Public read-only control state for the separate projector display.
     // Only the administrative sector can change the active screen.
     match /liveControl/{controlId} {
@@ -336,10 +365,10 @@ service cloud.firestore {
       allow list: if false;
       allow create, update: if controlId == 'current'
         && activeMember() && isAdministrativeSector()
-        && request.resource.data.keys().hasAll(['enabled', 'mode', 'pollId', 'meetingId', 'title', 'subtitle', 'animation', 'showClock', 'showStats', 'updatedAt', 'updatedBy'])
-        && request.resource.data.keys().hasOnly(['enabled', 'mode', 'pollId', 'meetingId', 'title', 'subtitle', 'animation', 'showClock', 'showStats', 'updatedAt', 'updatedBy'])
+        && request.resource.data.keys().hasAll(['enabled', 'mode', 'pollId', 'meetingId', 'title', 'subtitle', 'animation', 'showClock', 'showStats', 'slides', 'currentSlide', 'autoAdvance', 'slideInterval', 'updatedAt', 'updatedBy'])
+        && request.resource.data.keys().hasOnly(['enabled', 'mode', 'pollId', 'meetingId', 'title', 'subtitle', 'animation', 'showClock', 'showStats', 'slides', 'currentSlide', 'autoAdvance', 'slideInterval', 'updatedAt', 'updatedBy'])
         && request.resource.data.enabled is bool
-        && request.resource.data.mode in ['overview', 'poll', 'meeting', 'message']
+        && request.resource.data.mode in ['overview', 'poll', 'meeting', 'message', 'slides']
         && request.resource.data.pollId is string && request.resource.data.pollId.size() <= 150
         && request.resource.data.meetingId is string && request.resource.data.meetingId.size() <= 150
         && request.resource.data.title is string && request.resource.data.title.size() <= 100
@@ -347,6 +376,14 @@ service cloud.firestore {
         && request.resource.data.animation in ['smooth', 'calm', 'none']
         && request.resource.data.showClock is bool
         && request.resource.data.showStats is bool
+        && validLiveSlideList()
+        && request.resource.data.currentSlide is int
+        && request.resource.data.currentSlide >= 0
+        && request.resource.data.currentSlide < request.resource.data.slides.size()
+        && request.resource.data.autoAdvance is bool
+        && request.resource.data.slideInterval is int
+        && request.resource.data.slideInterval >= 5
+        && request.resource.data.slideInterval <= 120
         && request.resource.data.updatedAt == request.time
         && request.resource.data.updatedBy == request.auth.uid;
       allow delete: if controlId == 'current' && isChair();
