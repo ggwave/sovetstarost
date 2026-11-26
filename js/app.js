@@ -335,7 +335,7 @@
   function ensureLiveDraft() {
     if(!Array.isArray(liveDraftSlides)||!liveDraftSlides.length){
       const saved=state.liveControl?.slides;
-      liveDraftSlides=Array.isArray(saved)&&saved.length?saved.map(x=>({...x})): [liveDefaultSlide('title')];
+      liveDraftSlides=Array.isArray(saved)&&saved.length?saved.map(x=>({type:LIVE_SLIDE_TEMPLATES.some(t=>t.id===x.type)?x.type:'text',title:String(x.title||'Слайд').slice(0,100),body:String(x.body||'').slice(0,2000)})): [liveDefaultSlide('title')];
       liveSelectedSlide=Math.min(Number(state.liveControl?.currentSlide)||0,liveDraftSlides.length-1);
     }
     return liveDraftSlides;
@@ -379,7 +379,7 @@
       + '<section class="workspace-panel"><p class="eyebrow">КАК ИСПОЛЬЗОВАТЬ</p><h3>Пульт и экран</h3><ol class="live-instructions"><li>Настройки эфира сохраняются автоматически.</li><li>Создайте слайды и опубликуйте презентацию.</li><li>Откройте Live-экран на компьютере, подключённом к проектору.</li><li>Переключайте слайды с телефона.</li></ol></section>';
   }
   function liveSettingsPayload(form) {
-    const d=new FormData(form),old=state.liveControl||{},slides=Array.isArray(old.slides)&&old.slides.length?old.slides:[liveDefaultSlide('title')];
+    const d=new FormData(form),old=state.liveControl||{},slides=(Array.isArray(old.slides)&&old.slides.length?old.slides:[liveDefaultSlide('title')]).slice(0,30).map(x=>({type:LIVE_SLIDE_TEMPLATES.some(t=>t.id===x.type)?x.type:'text',title:String(x.title||'Слайд').slice(0,100),body:String(x.body||'').slice(0,2000)}));
     return {enabled:d.has('enabled'),mode:String(d.get('mode')||'overview'),pollId:String(d.get('pollId')||''),meetingId:String(d.get('meetingId')||''),title:String(d.get('title')||'Совет обучающихся').trim().slice(0,100),subtitle:String(d.get('subtitle')||'').trim().slice(0,240),animation:String(d.get('animation')||'smooth'),showClock:d.has('showClock'),showStats:d.has('showStats'),slides,currentSlide:Math.min(Number(old.currentSlide)||0,slides.length-1),autoAdvance:d.has('autoAdvance'),slideInterval:Math.min(120,Math.max(5,Number(d.get('slideInterval'))||12)),updatedAt:timestamp(),updatedBy:profile().uid};
   }
   async function persistLiveSettings() {
