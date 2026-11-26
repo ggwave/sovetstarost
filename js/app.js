@@ -600,7 +600,19 @@
       const ref=isSectorLead()?db.collection('initiatives').where('sectorId','==',currentSectorId()):db.collection('initiatives');
       addListener(ref.onSnapshot(snapshot=>{state.initiatives=sortNewest(mapSnapshot(snapshot));renderIfPage('overview','initiatives','analytics','archive');},err=>console.warn('Initiatives:',err)));
     }
-    addListener(db.collection('liveControl').doc('current').onSnapshot(snapshot=>{state.liveControl=snapshot.exists?snapshot.data():null;syncLiveSlideTimer();renderIfPage('live');},err=>console.warn('Live control:',err)));
+    addListener(db.collection('liveControl').doc('current').onSnapshot(snapshot=>{
+      const previous=state.liveControl||{},next=snapshot.exists?snapshot.data():null;
+      const displayFields=['enabled','mode','pollId','meetingId','title','subtitle','animation','showClock','showStats','slides','autoAdvance','slideInterval'];
+      const settingsChanged=displayFields.some(key=>JSON.stringify(previous[key]??null)!==JSON.stringify(next?.[key]??null));
+      state.liveControl=next;syncLiveSlideTimer();
+      if(settingsChanged)renderIfPage('live');
+      else {
+        const slides=Array.isArray(next?.slides)?next.slides:[];
+        const index=Math.min(Math.max(0,Number(next?.currentSlide)||0),Math.max(0,slides.length-1));
+        const status=$('.live-slide-remote-status b');
+        if(status)status.textContent=slides.length?`Слайд ${index+1} из ${slides.length}`:'Слайды не созданы';
+      }
+    },err=>console.warn('Live control:',err)));
     addListener(db.collection('meetings').orderBy('date','desc').limit(100).onSnapshot(snapshot=>{state.meetings=mapSnapshot(snapshot);renderIfPage('overview','meetings','analytics','archive','live');},err=>console.warn('Meetings:',err)));
     addListener(db.collection('polls').orderBy('createdAt','desc').limit(100).onSnapshot(snapshot=>{state.polls=mapSnapshot(snapshot);syncVoteListeners();renderIfPage('overview','voting','analytics','archive','live');},err=>console.warn('Polls:',err)));
     addListener(db.collection('decisions').orderBy('createdAt','desc').limit(100).onSnapshot(snapshot=>{state.decisions=mapSnapshot(snapshot);renderIfPage('tasks','analytics','archive');},err=>console.warn('Decisions:',err)));
