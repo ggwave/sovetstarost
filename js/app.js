@@ -21,6 +21,8 @@
     feedInitialized: false, publicListeners: [], trackingUrl: '',
     viewedAsPublic: false
   };
+  let liveSlideTimer = null;
+  let liveSlideTimerKey = '';
 
   const INITIATIVE_STATUSES = {
     new: 'Новая', reviewing: 'На рассмотрении', accepted: 'Принята', in_progress: 'В работе', done: 'Реализована', rejected: 'Отклонена'
@@ -310,31 +312,99 @@
       <section class="workspace-panel"><div class="panel-heading"><h3>Рабочий план сектора</h3>${canEdit?'<span class="crm-status">Можно редактировать</span>':''}</div>${canEdit?`<form id="sectorPlanForm" class="crm-form-grid" data-sector="${sector.id}"><label>Цель сектора<input name="goal" maxlength="180" value="${escapeHtml(plan.goal||'')}" placeholder="Главная цель на учебный год"></label><label>План работы<textarea name="plan" rows="7" maxlength="5000" placeholder="Пункты плана, мероприятия, ожидаемые результаты">${escapeHtml(plan.plan||'')}</textarea></label><label class="checkbox-label"><input type="checkbox" name="published" ${plan.published?'checked':''}> Показывать план публично</label><div class="crm-form-actions"><button class="crm-primary" type="submit">Сохранить план</button></div><p class="crm-form-message" id="sectorPlanMessage" role="status"></p></form>`:`<div class="plan-reading"><b>${escapeHtml(plan.goal||'Цель ещё не определена')}</b><p>${escapeHtml(plan.plan||'Руководитель сектора ещё не добавил рабочий план.')}</p></div>`}</section>`;
   }
 
+  function liveSlidesToText(slides) {
+    return (Array.isArray(slides)&&slides.length?slides:[{title:'Вместе к большему',body:'Совет обучающихся'}])
+      .map(slide=>`${String(slide.title||'').trim()}\n${String(slide.body||'').trim()}`.trim())
+      .join('\n\n---\n\n');
+  }
+  function parseLiveSlides(value, fallback=[]) {
+    const parsed=String(value||'').split(/^\s*---\s*$/m).map(block=>{
+      const lines=block.trim().split(/\r?\n/);
+      const title=String(lines.shift()||'').trim().slice(0,100);
+      const body=lines.join('\n').trim().slice(0,2000);
+      return {title:title||'Слайд',body};
+    }).filter(slide=>slide.title||slide.body).slice(0,12);
+    if(parsed.length)return parsed;
+    return Array.isArray(fallback)&&fallback.length?fallback.slice(0,12):[{title:'Вместе к большему',body:'Совет обучающихся'}];
+  }
+
   function renderLiveBoard() {
     const control=state.liveControl||{};
     const screenMode=control.mode==='overview'?(control.meetingId?'meeting':control.pollId?'poll':'overview'):(control.mode||'overview');
     const pollOptions=state.polls.filter(item=>item.published).map(item=>`<option value="${escapeHtml(item.id)}" ${control.pollId===item.id?'selected':''}>${escapeHtml(item.title)} · ${escapeHtml(POLL_STATUSES[item.status]||'')}</option>`).join('');
     const meetingOptions=state.meetings.filter(item=>item.published).map(item=>`<option value="${escapeHtml(item.id)}" ${control.meetingId===item.id?'selected':''}>${escapeHtml(item.title)} · ${escapeHtml(formatDate(item.date))}</option>`).join('');
-    return workspaceWelcome('LIVE / РЕЖИССЁРСКАЯ','Пульт управления трансляцией','Управляйте отдельным экраном Совета. Изменения появятся на Live-табло автоматически.')
-      + `<section class="live-control-hero"><div><span class="live-control-dot ${control.enabled?'is-on':''}"></span><b>${control.enabled?'ТРАНСЛЯЦИЯ ВКЛЮЧЕНА':'ТРАНСЛЯЦИЯ ОСТАНОВЛЕНА'}</b><p>Экран открывается в отдельной вкладке и обновляется в реальном времени.</p></div><div class="live-control-actions"><button type="button" class="crm-primary" data-live-open>Открыть Live-экран ↗</button><button type="button" class="crm-secondary" data-live-copy>Скопировать ссылку</button></div></section>`
-      + `<section class="workspace-panel"><div class="panel-heading"><div><p class="eyebrow">НАСТРОЙКА ЭФИРА</p><h3>Что показывать на экране</h3></div><span class="live-state ${control.enabled?'is-planned':'is-cancelled'}">${control.enabled?'В эфире':'Не в эфире'}</span></div>
+    const slides=Array.isArray(control.slides)&&control.slides.length?control.slides:[{title:'Вместе к большему',body:'Совет обучающихся'}];
+    const currentSlide=Math.min(Math.max(0,Number(control.currentSlide)||0),slides.length-1);
+    return workspaceWelcome('LIVE / РЕЖИССЁРСКАЯ','Пульт управления трансляцией','Управляйте экраном с телефона или компьютера. Изменения передаются на проектор в реальном времени.')
+      + `<section class="live-control-hero"><div><span class="live-control-dot ${control.enabled?'is-on':''}"></span><b>${control.enabled?'ТРАНСЛЯЦИЯ ВКЛЮЧЕНА':'ТРАНСЛЯЦИЯ ОСТАНОВЛЕНА'}</b><p>Отдельный экран для проектора · управление с любого устройства</p></div><div class="live-control-actions"><button type="button" class="crm-primary" data-live-open>Открыть экран ↗</button><button type="button" class="crm-secondary" data-live-quick-toggle>${control.enabled?'Остановить эфир':'Запустить эфир'}</button><button type="button" class="crm-secondary" data-live-copy>Ссылка</button></div></section>`
+      + `<section class="workspace-panel live-mobile-panel"><div class="panel-heading"><div><p class="eyebrow">ПУЛЬТ УПРАВЛЕНИЯ</p><h3>Содержимое эфира</h3></div><span class="live-state ${control.enabled?'is-planned':'is-cancelled'}">${control.enabled?'В эфире':'Ожидание'}</span></div>
       <form id="liveControlForm" class="crm-form-grid live-control-form">
-        <label>Режим экрана<select name="mode"><option value="overview" ${screenMode==='overview'?'selected':''}>Общий экран</option><option value="poll" ${screenMode==='poll'?'selected':''}>Одно голосование</option><option value="meeting" ${screenMode==='meeting'?'selected':''}>Одно собрание</option><option value="message" ${control.mode==='message'?'selected':''}>Объявление / текстовый экран</option></select></label>
-        <label>Активное голосование<select name="pollId"><option value="">Автоматически / не выбрано</option>${pollOptions}</select></label>
-        <label>Активное собрание<select name="meetingId"><option value="">Автоматически / не выбрано</option>${meetingOptions}</select></label>
-        <label>Заголовок экрана<input name="title" maxlength="100" value="${escapeHtml(control.title||'Совет обучающихся')}"></label>
-        <label class="span-two">Подзаголовок / объявление<textarea name="subtitle" rows="2" maxlength="240">${escapeHtml(control.subtitle||'')}</textarea></label>
+        <label class="span-two">Режим экрана<select name="mode"><option value="overview" ${screenMode==='overview'?'selected':''}>Общий экран</option><option value="meeting" ${screenMode==='meeting'?'selected':''}>Собрание</option><option value="poll" ${screenMode==='poll'?'selected':''}>Голосование</option><option value="slides" ${screenMode==='slides'?'selected':''}>Презентация / слайды</option><option value="message" ${control.mode==='message'?'selected':''}>Объявление</option></select></label>
+        <label>Выбрать голосование<select name="pollId"><option value="">Автоматически / не выбрано</option>${pollOptions}</select></label>
+        <label>Выбрать собрание<select name="meetingId"><option value="">Автоматически / не выбрано</option>${meetingOptions}</select></label>
+        <label class="span-two">Заголовок трансляции<input name="title" maxlength="100" value="${escapeHtml(control.title||'Совет обучающихся')}"></label>
+        <label class="span-two">Подзаголовок / объявление<textarea name="subtitle" rows="2" maxlength="240" placeholder="Краткое сообщение для экрана">${escapeHtml(control.subtitle||'')}</textarea></label>
+        <div class="span-two live-slides-editor">
+          <label for="liveSlidesText">Содержание презентации</label>
+          <textarea id="liveSlidesText" name="slidesText" rows="8" maxlength="14000" placeholder="ПЕРВЫЙ СЛАЙД&#10;Краткий текст&#10;&#10;---&#10;&#10;ВТОРОЙ СЛАЙД&#10;Следующая мысль">${escapeHtml(liveSlidesToText(slides))}</textarea>
+          <small>Каждый блок — отдельный слайд: первая строка является заголовком, следующие — текстом. Разделяйте слайды отдельной строкой из трёх дефисов (---). До 12 слайдов.</small>
+          <div class="live-slide-remote">
+            <div class="live-slide-remote-status"><b>Слайд ${currentSlide+1} из ${slides.length}</b><span>Переключение сразу появится на проекторе</span></div>
+            <div class="live-slide-remote-actions">
+              <button type="button" class="crm-secondary" data-live-slide-step="-1" aria-label="Предыдущий слайд">← Назад</button>
+              <button type="button" class="crm-primary" data-live-slide-step="1">Следующий слайд →</button>
+              <button type="button" class="crm-secondary" data-live-slide-first>К началу</button>
+            </div>
+            <p class="crm-form-message" id="liveSlideMessage" role="status"></p>
+          </div>
+        </div>
+        <label>Интервал автопрокрутки, сек.<input type="number" name="slideInterval" min="5" max="120" step="1" value="${Math.min(120,Math.max(5,Number(control.slideInterval)||12))}"></label>
+        <label class="checkbox-label"><input type="checkbox" name="autoAdvance" ${control.autoAdvance?'checked':''}> Автоматически перелистывать</label>
         <label>Анимация<select name="animation"><option value="smooth" ${(control.animation||'smooth')==='smooth'?'selected':''}>Плавная</option><option value="calm" ${control.animation==='calm'?'selected':''}>Спокойная</option><option value="none" ${control.animation==='none'?'selected':''}>Без анимации</option></select></label>
-        <label class="checkbox-label"><input type="checkbox" name="showClock" ${control.showClock===false?'':'checked'}> Показывать часы</label><label class="checkbox-label"><input type="checkbox" name="showStats" ${control.showStats===false?'':'checked'}> Показывать статистику</label><label class="checkbox-label"><input type="checkbox" name="enabled" ${control.enabled?'checked':''}> Включить трансляцию</label>
-        <div class="crm-form-actions span-two"><button class="crm-primary" type="submit">Применить настройки</button><button class="crm-secondary" type="button" data-live-stop>Остановить трансляцию</button></div><p class="crm-form-message span-two" id="liveControlMessage" role="status"></p></form></section>
-      <section class="workspace-panel"><p class="eyebrow">ПОДСКАЗКА</p><h3>Как вывести табло</h3><ol class="live-instructions"><li>Откройте Live-экран.</li><li>Перенесите вкладку на проектор или второй монитор.</li><li>На экране включите полноэкранный режим.</li><li>Управляйте содержимым отсюда — экран обновится автоматически.</li></ol></section>`;
+        <label class="checkbox-label"><input type="checkbox" name="showClock" ${control.showClock===false?'':'checked'}> Показывать часы</label>
+        <label class="checkbox-label"><input type="checkbox" name="showStats" ${control.showStats===false?'':'checked'}> Показывать статистику голосования</label>
+        <label class="checkbox-label"><input type="checkbox" name="enabled" ${control.enabled?'checked':''}> Эфир включён</label>
+        <div class="crm-form-actions span-two live-primary-actions"><button class="crm-primary" type="submit">Сохранить и показать</button><button class="crm-secondary" type="button" data-live-stop>Завершить эфир</button></div>
+        <p class="crm-form-message span-two" id="liveControlMessage" role="status"></p>
+      </form></section>
+      <section class="workspace-panel"><p class="eyebrow">КАК ИСПОЛЬЗОВАТЬ</p><h3>Пульт и экран</h3><ol class="live-instructions"><li>Соберите слайды и нажмите «Сохранить и показать».</li><li>Откройте Live-экран на компьютере, подключённом к проектору.</li><li>Переключайте слайды с телефона — экран обновится автоматически.</li><li>Для автоматической смены слайдов включите автопрокрутку.</li></ol></section>`;
+  }
+
+  async function updateLiveSlideIndex(nextIndex) {
+    const control=state.liveControl||{},slides=Array.isArray(control.slides)?control.slides:[];
+    if(!slides.length){showToast('Нет слайдов','Сначала добавьте и сохраните презентацию.');return;}
+    const index=((Number(nextIndex)%slides.length)+slides.length)%slides.length;
+    try {
+      await state.db.collection('liveControl').doc('current').set({currentSlide:index,updatedAt:timestamp(),updatedBy:profile().uid},{merge:true});
+      if($('#liveSlideMessage'))$('#liveSlideMessage').textContent=`На экране: слайд ${index+1} из ${slides.length}.`;
+    } catch(error) {
+      console.error('Live slide:',error);
+      if($('#liveSlideMessage'))$('#liveSlideMessage').textContent='Не удалось переключить слайд. Проверьте опубликованные правила Firestore.';
+      showToast('Ошибка переключения','Проверьте правила доступа к Live-табло.');
+    }
+  }
+
+  function syncLiveSlideTimer() {
+    const c=state.liveControl||{},slides=Array.isArray(c.slides)?c.slides:[];
+    const interval=Math.min(120,Math.max(5,Number(c.slideInterval)||12));
+    const shouldRun=!!(state.profile&&c.enabled&&c.mode==='slides'&&c.autoAdvance&&slides.length>1);
+    const key=shouldRun?`${slides.length}:${interval}`:'';
+    if(key===liveSlideTimerKey)return;
+    if(liveSlideTimer)clearInterval(liveSlideTimer);
+    liveSlideTimer=null;liveSlideTimerKey=key;
+    if(shouldRun)liveSlideTimer=setInterval(()=>{
+      const latest=state.liveControl||{},total=Array.isArray(latest.slides)?latest.slides.length:0;
+      if(total>1)updateLiveSlideIndex(((Number(latest.currentSlide)||0)+1)%total);
+    },interval*1000);
   }
 
   async function saveLiveControl(event) {
     event.preventDefault(); if(!isAdministrativeRole()) return;
     const form=event.currentTarget, data=new FormData(form);
-    const payload={enabled:data.has('enabled'),mode:String(data.get('mode')||'overview'),pollId:String(data.get('pollId')||''),meetingId:String(data.get('meetingId')||''),title:String(data.get('title')||'Совет обучающихся').trim().slice(0,100),subtitle:String(data.get('subtitle')||'').trim().slice(0,240),animation:String(data.get('animation')||'smooth'),showClock:data.has('showClock'),showStats:data.has('showStats'),updatedAt:timestamp(),updatedBy:profile().uid};
-    try { await state.db.collection('liveControl').doc('current').set(payload,{merge:true}); state.liveControl=payload; $('#liveControlMessage').textContent='Настройки применены. Live-экран обновится автоматически.'; showToast('Live-табло обновлено',payload.enabled?'Трансляция включена.':'Трансляция остановлена.'); renderIfPage('live'); }
+    const slides=parseLiveSlides(data.get('slidesText'),state.liveControl?.slides||[]);
+    const interval=Math.min(120,Math.max(5,Number(data.get('slideInterval'))||12));
+    const payload={enabled:data.has('enabled'),mode:String(data.get('mode')||'overview'),pollId:String(data.get('pollId')||''),meetingId:String(data.get('meetingId')||''),title:String(data.get('title')||'Совет обучающихся').trim().slice(0,100),subtitle:String(data.get('subtitle')||'').trim().slice(0,240),animation:String(data.get('animation')||'smooth'),showClock:data.has('showClock'),showStats:data.has('showStats'),slides,currentSlide:Math.min(Number(state.liveControl?.currentSlide)||0,slides.length-1),autoAdvance:data.has('autoAdvance'),slideInterval:interval,updatedAt:timestamp(),updatedBy:profile().uid};
+    try { await state.db.collection('liveControl').doc('current').set(payload,{merge:true}); state.liveControl=payload; syncLiveSlideTimer(); $('#liveControlMessage').textContent='Настройки применены. Live-экран обновится автоматически.'; showToast('Live-табло обновлено',payload.enabled?'Трансляция включена.':'Трансляция остановлена.'); renderIfPage('live'); }
     catch(error) { console.error('Live control:',error); $('#liveControlMessage').textContent='Не удалось сохранить настройки. Проверьте права доступа к liveControl/current в Firestore.'; }
   }
 
@@ -530,7 +600,7 @@
       const ref=isSectorLead()?db.collection('initiatives').where('sectorId','==',currentSectorId()):db.collection('initiatives');
       addListener(ref.onSnapshot(snapshot=>{state.initiatives=sortNewest(mapSnapshot(snapshot));renderIfPage('overview','initiatives','analytics','archive');},err=>console.warn('Initiatives:',err)));
     }
-    addListener(db.collection('liveControl').doc('current').onSnapshot(snapshot=>{state.liveControl=snapshot.exists?snapshot.data():null;renderIfPage('live');},err=>console.warn('Live control:',err)));
+    addListener(db.collection('liveControl').doc('current').onSnapshot(snapshot=>{state.liveControl=snapshot.exists?snapshot.data():null;syncLiveSlideTimer();renderIfPage('live');},err=>console.warn('Live control:',err)));
     addListener(db.collection('meetings').orderBy('date','desc').limit(100).onSnapshot(snapshot=>{state.meetings=mapSnapshot(snapshot);renderIfPage('overview','meetings','analytics','archive','live');},err=>console.warn('Meetings:',err)));
     addListener(db.collection('polls').orderBy('createdAt','desc').limit(100).onSnapshot(snapshot=>{state.polls=mapSnapshot(snapshot);syncVoteListeners();renderIfPage('overview','voting','analytics','archive','live');},err=>console.warn('Polls:',err)));
     addListener(db.collection('decisions').orderBy('createdAt','desc').limit(100).onSnapshot(snapshot=>{state.decisions=mapSnapshot(snapshot);renderIfPage('tasks','analytics','archive');},err=>console.warn('Decisions:',err)));
@@ -578,6 +648,7 @@
   function stopCRMListeners() {
     state.listeners.forEach(unsubscribe=>{try{unsubscribe()}catch(_){}});state.listeners=[];
     for(const unsubscribe of state.voteUnsubs.values()){try{unsubscribe()}catch(_){}}state.voteUnsubs.clear();
+    if(liveSlideTimer)clearInterval(liveSlideTimer);liveSlideTimer=null;liveSlideTimerKey='';
     state.feedInitialized=false;state.initiatives=[];state.users=[];state.meetings=[];state.polls=[];state.votes={};state.tasks=[];state.decisions=[];state.announcements=[];state.documents=[];state.projects=[];state.reports=[];state.sectorPlans={};state.feed=[];
   }
 
@@ -860,6 +931,10 @@
       if(event.target.closest('[data-open-workspace]'))showWorkspace();
       if(event.target.closest('[data-open-initiative]'))showInitiativeForm();
       if(event.target.closest('[data-live-open]'))openLiveBoard();
+      if(event.target.closest('[data-live-quick-toggle]')){const form=$('#liveControlForm');if(form){const toggle=form.querySelector('[name=enabled]');if(toggle){toggle.checked=!toggle.checked;form.requestSubmit();}}}
+      const slideStep=event.target.closest('[data-live-slide-step]');
+      if(slideStep){const current=Number(state.liveControl?.currentSlide)||0;updateLiveSlideIndex(current+Number(slideStep.dataset.liveSlideStep||0));}
+      if(event.target.closest('[data-live-slide-first]'))updateLiveSlideIndex(0);
       if(event.target.closest('[data-live-stop]')){const form=$('#liveControlForm');if(form){const toggle=form.querySelector('[name=enabled]');if(toggle)toggle.checked=false;form.requestSubmit();}}
       if(event.target.closest('[data-live-copy]')){const url=new URL('live.html',window.location.href).toString();navigator.clipboard?.writeText(url).then(()=>showToast('Ссылка скопирована',url)).catch(()=>showToast('Ссылка Live-экрана',url));}
     });
