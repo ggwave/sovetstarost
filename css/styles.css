@@ -265,3 +265,52 @@ html,body{max-width:100%;overflow-x:hidden}
 .live-control-actions{display:flex;flex-wrap:wrap;gap:8px}
 .live-instructions{padding-left:20px;color:#806d5a;font-size:10px;line-height:2.1}
 @media(max-width:780px){.live-control-hero{align-items:flex-start;flex-direction:column;padding:16px}.live-control-actions{width:100%}.live-control-actions button{flex:1}.live-control-form .span-two{grid-column:auto}}
+
+/* Live control — responsive mobile director console */
+.live-slides-editor>label{display:block;margin-bottom:7px;color:#68482f;font-size:10px;font-weight:700}
+.live-slides-editor>small{display:block;margin-top:8px;color:#927f6c;font-size:8px;line-height:1.7}
+.live-slide-remote{margin-top:13px;padding:15px;background:#f6efe6;border:1px solid #e6d8c8}
+.live-slide-remote-status{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.live-slide-remote-status b{color:#68482f;font-size:11px}
+.live-slide-remote-status span{color:#907e6c;font-size:8px}
+.live-slide-remote-actions{display:flex;gap:8px;flex-wrap:wrap}
+.live-slide-remote-actions button{min-height:42px}
+.live-mobile-panel .live-control-form{gap:15px}
+.live-mobile-panel .live-control-form>label{min-width:0}
+.live-primary-actions{display:flex;gap:9px;flex-wrap:wrap}
+.live-primary-actions button{min-height:46px}
+@media(max-width:780px){
+  .live-mobile-panel{padding:18px 15px!important}
+  .live-control-hero{position:relative;gap:13px}
+  .live-control-hero>div:first-child{width:100%}
+  .live-control-hero b{font-size:10px;line-height:1.6}
+  .live-control-hero p{font-size:10px;line-height:1.65}
+  .live-control-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .live-control-actions button{min-height:47px;font-size:10px}
+  .live-control-actions [data-live-open]{grid-column:1/-1}
+  .live-mobile-panel .live-control-form{gap:14px}
+  .live-mobile-panel .live-control-form label{font-size:11px;gap:8px}
+  .live-mobile-panel .live-control-form input:not([type=checkbox]),
+  .live-mobile-panel .live-control-form select{height:50px;padding-inline:12px;font-size:16px;border-radius:3px}
+  .live-mobile-panel .live-control-form textarea{min-height:150px;padding:12px;font-size:14px;line-height:1.6}
+  .live-mobile-panel .live-control-form .checkbox-label{min-height:48px;padding:10px 12px;background:#f7f1e9;border:1px solid #e7dccf;font-size:10px;line-height:1.4}
+  .live-mobile-panel .live-control-form .checkbox-label input{width:20px;height:20px;flex:none}
+  .live-slides-editor>label{font-size:12px}
+  .live-slides-editor>small{font-size:9px}
+  .live-slide-remote{padding:13px}
+  .live-slide-remote-status{align-items:flex-start;flex-direction:column;gap:4px}
+  .live-slide-remote-status b{font-size:13px}
+  .live-slide-remote-status span{font-size:9px}
+  .live-slide-remote-actions{display:grid;grid-template-columns:1fr 1fr}
+  .live-slide-remote-actions button{min-height:48px;font-size:10px}
+  .live-slide-remote-actions [data-live-slide-first]{grid-column:1/-1}
+  .live-primary-actions{display:grid;grid-template-columns:1fr}
+  .live-primary-actions button{width:100%;min-height:50px;font-size:11px}
+  #liveControlMessage,#liveSlideMessage{font-size:10px;line-height:1.6}
+}
+@media(max-width:390px){
+  .live-control-actions{grid-template-columns:1fr}
+  .live-control-actions [data-live-open]{grid-column:auto}
+  .live-slide-remote-actions{grid-template-columns:1fr}
+  .live-slide-remote-actions [data-live-slide-first]{grid-column:auto}
+}
