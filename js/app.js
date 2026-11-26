@@ -728,7 +728,7 @@
     event.preventDefault();if(!canManageDocuments())return;const form=event.currentTarget,data=Object.fromEntries(new FormData(form).entries()),url=String(data.url||'').trim();
     let parsed;try{parsed=new URL(url);}catch(_){$('#documentMessage').textContent='Вставьте корректную ссылку Google Drive.';return;}
     if(parsed.protocol!=='https:'||!['drive.google.com','docs.google.com'].includes(parsed.hostname)){ $('#documentMessage').textContent='Используйте ссылку Google Drive или Google Docs.';return;}
-    try{await state.db.collection('documents').add({title:String(data.title).trim().slice(0,150),category:String(data.category||'').trim().slice(0,60),description:String(data.description||'').trim().slice(0,1600),url,published:!!form.querySelector('[name="published"]')?.checked,sectorId:currentSectorId()||'administrative',createdBy:profile().uid,createdAt:timestamp()});form.reset();$('#documentMessage').textContent='Ссылка добавлена в библиотеку.';}
+    try{await state.db.collection('documents').add({title:String(data.title).trim().slice(0,150),category:String(data.category||'').trim().slice(0,60),description:String(data.description||'').trim().slice(0,1600),url,content:'',published:!!form.querySelector('[name="published"]')?.checked,sectorId:currentSectorId()||'administrative',createdBy:profile().uid,createdAt:timestamp()});form.reset();$('#documentMessage').textContent='Ссылка добавлена в библиотеку.';}
     catch(error){console.error(error);$('#documentMessage').textContent='Не удалось добавить ссылку. Проверьте правила Firestore.';}
   }
   async function saveSectorReport(event){
