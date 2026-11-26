@@ -951,11 +951,19 @@
       if(event.target.closest('[data-open-workspace]'))showWorkspace();
       if(event.target.closest('[data-open-initiative]'))showInitiativeForm();
       if(event.target.closest('[data-live-open]'))openLiveBoard();
-      if(event.target.closest('[data-live-quick-toggle]')){const form=$('#liveControlForm');if(form){const toggle=form.querySelector('[name=enabled]');if(toggle){toggle.checked=!toggle.checked;form.requestSubmit();}}}
+      if(event.target.closest('[data-live-quick-toggle]')){const form=$('#liveControlForm');if(form){const toggle=form.querySelector('[name=enabled]');if(toggle){toggle.checked=!toggle.checked;scheduleLiveSettingsSave(true);}}}
       const slideStep=event.target.closest('[data-live-slide-step]');
       if(slideStep){const current=Number(state.liveControl?.currentSlide)||0;updateLiveSlideIndex(current+Number(slideStep.dataset.liveSlideStep||0));}
       if(event.target.closest('[data-live-slide-first]'))updateLiveSlideIndex(0);
-      if(event.target.closest('[data-live-stop]')){const form=$('#liveControlForm');if(form){const toggle=form.querySelector('[name=enabled]');if(toggle)toggle.checked=false;form.requestSubmit();}}
+      const selectSlide=event.target.closest('[data-live-select-slide]');
+      if(selectSlide){liveSelectedSlide=Number(selectSlide.dataset.liveSelectSlide)||0;renderIfPage('live');}
+      if(event.target.closest('[data-live-add-slide]')){const draft=ensureLiveDraft();if(draft.length>=30){showToast('Достигнут лимит','В презентации может быть до 30 слайдов.');return;}draft.push(liveDefaultSlide('text'));liveSelectedSlide=draft.length-1;renderIfPage('live');}
+      if(event.target.closest('[data-live-duplicate-slide]')){const draft=ensureLiveDraft();if(draft.length>=30){showToast('Достигнут лимит','В презентации может быть до 30 слайдов.');return;}draft.splice(liveSelectedSlide+1,0,{...draft[liveSelectedSlide]});liveSelectedSlide++;renderIfPage('live');}
+      if(event.target.closest('[data-live-delete-slide]')){const draft=ensureLiveDraft();if(draft.length<=1){showToast('Нужен хотя бы один слайд','Измени его или добавь новый.');return;}draft.splice(liveSelectedSlide,1);liveSelectedSlide=Math.max(0,liveSelectedSlide-1);renderIfPage('live');}
+      const moveSlide=event.target.closest('[data-live-move-slide]');
+      if(moveSlide){const draft=ensureLiveDraft(),to=liveSelectedSlide+Number(moveSlide.dataset.liveMoveSlide||0);if(to>=0&&to<draft.length){[draft[liveSelectedSlide],draft[to]]=[draft[to],draft[liveSelectedSlide]];liveSelectedSlide=to;renderIfPage('live');}}
+      if(event.target.closest('[data-live-publish-slides]'))publishLiveSlides();
+      if(event.target.closest('[data-live-stop]')){const form=$('#liveControlForm');if(form){const toggle=form.querySelector('[name=enabled]');if(toggle){toggle.checked=false;scheduleLiveSettingsSave(true);}}}
       if(event.target.closest('[data-live-copy]')){const url=new URL('live.html',window.location.href).toString();navigator.clipboard?.writeText(url).then(()=>showToast('Ссылка скопирована',url)).catch(()=>showToast('Ссылка Live-экрана',url));}
     });
     $('#closeLogin')?.addEventListener('click',hideLogin);$('#loginOverlay')?.addEventListener('click',event=>{if(event.target.id==='loginOverlay')hideLogin();});$('#loginForm')?.addEventListener('submit',submitLogin);
@@ -965,15 +973,26 @@
     // Choosing an item should also switch the Live screen to its dedicated mode.
     document.addEventListener('change',event=>{
       const field=event.target;
-      const mode=$('#liveControlForm [name="mode"]');
-      if(!mode)return;
+      if(field.matches('[data-live-slide-type]')){const slide=ensureLiveDraft()[liveSelectedSlide];if(slide){slide.type=field.value;renderIfPage('live');}return;}
       if(field.matches('#liveControlForm [name="meetingId"]')){
-        if(field.value)mode.value='meeting';
-        else if(mode.value==='meeting')mode.value='overview';
+        const mode=$('#liveControlForm [name="mode"]');
+        if(mode){if(field.value)mode.value='meeting';else if(mode.value==='meeting')mode.value='overview';}
       }
       if(field.matches('#liveControlForm [name="pollId"]')){
-        if(field.value)mode.value='poll';
-        else if(mode.value==='poll')mode.value='overview';
+        const mode=$('#liveControlForm [name="mode"]');
+        if(mode){if(field.value)mode.value='poll';else if(mode.value==='poll')mode.value='overview';}
+      }
+      if(field.matches('#liveControlForm input,#liveControlForm select,#liveControlForm textarea'))scheduleLiveSettingsSave(true);
+    });
+    document.addEventListener('input',event=>{
+      const field=event.target;
+      if(field.matches('#liveControlForm input:not([type="checkbox"]),#liveControlForm textarea')){scheduleLiveSettingsSave();return;}
+      if(field.matches('[data-live-slide-title],[data-live-slide-body]')){
+        const slide=ensureLiveDraft()[liveSelectedSlide];if(!slide)return;
+        if(field.matches('[data-live-slide-title]'))slide.title=field.value.slice(0,100);else slide.body=field.value.slice(0,2000);
+        const preview=$('.live-slide-preview-wrap');if(preview)preview.innerHTML='<div class="live-slide-preview-label">ПРЕДПРОСМОТР</div>'+liveSlidePreview(slide,liveSelectedSlide,ensureLiveDraft().length);
+        const title=$('.live-slide-list-item.is-active .live-slide-list-copy b');if(title)title.textContent=slide.title||'Без заголовка';
+        const message=$('#liveSlideMessage');if(message)message.textContent='Есть неопубликованные изменения.';
       }
     });
     document.addEventListener('keydown',event=>{if(event.key==='Escape'){hideLogin();hideInitiativeForm();$('#notificationPanel').hidden=true;$('#workspace')?.classList.remove('menu-open');$('#workspaceMenuToggle')?.setAttribute('aria-expanded','false');}});
