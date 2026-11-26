@@ -314,3 +314,7 @@ html,body{max-width:100%;overflow-x:hidden}
   .live-slide-remote-actions{grid-template-columns:1fr}
   .live-slide-remote-actions [data-live-slide-first]{grid-column:auto}
 }
+@media(max-width:780px){
+  .live-slide-remote{position:sticky;top:82px;z-index:18;box-shadow:0 10px 24px rgba(70,45,26,.1)}
+  .live-slide-remote-actions button{touch-action:manipulation}
+}
