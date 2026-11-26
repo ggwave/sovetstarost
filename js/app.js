@@ -13,7 +13,7 @@
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
   const state = {
-    auth: null, db: null, profile: null, activePage: 'overview', taskTab: 'tasks',
+    auth: null, db: null, profile: null, activePage: 'overview', taskTab: 'tasks', calendarMonth: localDateISO().slice(0, 7),
     listeners: [], voteUnsubs: new Map(),
     initiatives: [], users: [], meetings: [], polls: [], votes: {}, tasks: [], decisions: [],
     announcements: [], documents: [], projects: [], reports: [], sectorPlan: null, sectorPlans: {}, feed: [], liveControl: null,
@@ -245,7 +245,7 @@
   function selectOptions(options, selected) { return Object.entries(options).map(([value,label])=>`<option value="${value}" ${selected===value?'selected':''}>${label}</option>`).join(''); }
 
   const workspacePages = {
-    overview: 'Обзор CRM', initiatives: 'Инициативы и обращения', sector: 'Мой сектор', people: 'Участники',
+    overview: 'Обзор CRM', leadership: 'Панель руководителя', calendar: 'Календарь Совета', structure: 'Структура Совета', initiatives: 'Инициативы и обращения', sector: 'Мой сектор', people: 'Участники',
     sectors: 'Управление секторами', live: 'Live-табло', meetings: 'Собрания', voting: 'Голосования', projects: 'Проекты',
     tasks: 'Задачи и решения', announcements: 'Объявления', documents: 'Документы', reports: 'Отчёты секторов',
     analytics: 'Аналитика', archive: 'Архив', account: 'Мой профиль', settings: 'Настройки аккаунта'
@@ -255,7 +255,7 @@
     const myTasks = state.tasks.filter(item => item.assigneeUid === profile().uid && !['done','cancelled'].includes(item.status));
     const upcoming = state.meetings.filter(item => item.status !== 'cancelled' && item.date >= localDateISO()).sort((a,b) => String(a.date).localeCompare(String(b.date))).slice(0, 3);
     const openPolls = state.polls.filter(item => item.status === 'open');
-    const quickTools = [['sector','◈','Мой сектор'],['meetings','◷','Собрания'],['voting','◉','Голосования'],['projects','◇','Проекты'],['tasks','✓','Задачи'],['documents','▧','Документы'],['archive','▧','Архив'],...(canManageInitiatives()?[['initiatives','✳','Инициативы'],['reports','▤','Отчёты']]:[]),...(isAdministrativeRole()?[['analytics','▥','Аналитика']]:[])];
+    const quickTools = [['sector','◈','Мой сектор'],['calendar','▦','Календарь'],['structure','♙','Структура'],['meetings','◷','Собрания'],['voting','◉','Голосования'],['projects','◇','Проекты'],['tasks','✓','Поручения'],['documents','▧','Документы'],['archive','▧','Архив'],...(canManageInitiatives()?[['initiatives','✳','Инициативы'],['reports','▤','Отчёты']]:[]),...(isAdministrativeRole()?[['leadership','⌘','Панель руководителя'],['analytics','▥','Аналитика']]:[])];
     return `${workspaceWelcome('CRM / РАБОЧИЙ ЦЕНТР', `Здравствуйте, ${profile().name || 'участник'}.`, 'Рабочее пространство Совета: инициативы, собрания, проекты, голосования, поручения и документы.')}
       <div class="workspace-stat-grid"><article><span>МОЙ СЕКТОР</span><b>${escapeHtml(currentSector()?.title || 'Не назначен')}</b><small>Ваше направление деятельности</small></article><article><span>МОИ ЗАДАЧИ</span><b>${myTasks.length}</b><small>Активные поручения</small></article><article><span>ГОЛОСОВАНИЯ</span><b>${openPolls.length}</b><small>Открытые голосования</small></article><article><span>СОБРАНИЯ</span><b>${upcoming.length}</b><small>Ближайшие события</small></article></div>
       <div class="workspace-columns"><section class="workspace-panel"><div class="panel-heading"><div><p class="eyebrow">РАБОЧИЕ ИНСТРУМЕНТЫ</p><h3>Модули CRM</h3></div></div><div class="quick-grid">${quickTools.map(([id,icon,label]) => `<button type="button" data-go-page="${id}"><span>${icon}</span>${label}<b>↗</b></button>`).join('')}</div></section><section class="workspace-panel"><p class="eyebrow">ПРИНЦИПЫ СОВЕТА</p><h3>Вместе к результату</h3><ul class="principles-list"><li>Ответственность</li><li>Инициативность</li><li>Командная работа</li><li>Открытость</li><li>Равноправие</li></ul></section></div>
@@ -451,15 +451,135 @@
     return `${workspaceWelcome('CRM / РЕАЛИЗАЦИЯ ИДЕЙ','Проекты Совета','От инициативы и планирования до реализации и отчёта. Каждый проект закрепляется за сектором.')}${form}<section class="workspace-panel"><div class="panel-heading"><h3>Список проектов (${state.projects.length})</h3></div>${state.projects.length?state.projects.map(item=>`<article class="crm-record"><div class="crm-record-top"><span class="crm-record-sector">${escapeHtml(sectorName(item.sectorId))}</span><span class="crm-record-date">${escapeHtml(PROJECT_STATUSES[item.status]||'Проект')}</span></div><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.description)}</p><div class="crm-record-meta"><span>Ответственный: ${escapeHtml(item.leadName||'Не назначен')}</span><span>${escapeHtml(item.startDate||'—')} → ${escapeHtml(item.endDate||'—')}</span></div>${(isAdministrativeRole()||(isSectorLead()&&item.sectorId===currentSectorId()))?`${recordEditForm('projects',item.id,`<label>Название<input name="title" required maxlength="140" value="${escapeHtml(item.title)}"></label><label>Ответственный<input name="leadName" maxlength="100" value="${escapeHtml(item.leadName||'')}"></label><label class="span-two">Описание<textarea name="description" rows="3" maxlength="3000">${escapeHtml(item.description||'')}</textarea></label><label>Начало<input type="date" name="startDate" value="${escapeHtml(item.startDate||'')}"></label><label>Завершение<input type="date" name="endDate" value="${escapeHtml(item.endDate||'')}"></label><label class="checkbox-label"><input type="checkbox" name="published" ${item.published?'checked':''}> Публичный</label>`)}<div class="crm-record-controls"><label>Статус<select data-project-status="${item.id}">${Object.entries(PROJECT_STATUSES).map(([v,l])=>`<option value="${v}" ${item.status===v?'selected':''}>${l}</option>`).join('')}</select></label><button class="crm-danger" data-delete-project="${item.id}">Удалить</button></div>`:''}</article>`).join(''):emptyState('◇','Проектов пока нет','Создайте первый проект или преобразуйте инициативу в проект.')}</section>`;
   }
 
-  function renderTasks() {
-    const isAdmin = isAdministrativeRole();
-    const form = canManageTasks()?`<section class="workspace-panel"><h3>Создать задачу</h3><form id="taskForm" class="crm-form-grid"><label>Название поручения<input name="title" required maxlength="140"></label><label>Сектор<select name="sectorId" ${isSectorLead()?'disabled':''}>${sectorOptions(isSectorLead()?currentSectorId():'administrative')}</select></label><label class="span-two">Описание<textarea name="description" rows="3" maxlength="3000"></textarea></label><label>Ответственный${(isAdministrativeRole()||isSectorLead())?`<select name="assigneeUid"><option value="">Не назначен</option>${state.users.map(u=>`<option value="${u.uid}">${escapeHtml(u.name||u.email)}</option>`).join('')}</select>`:`<select name="assigneeUid"><option value="">Не назначен</option><option value="${profile().uid}" selected>Назначить мне</option></select>`}</label><label>Срок<input type="date" name="dueDate"></label><label>Приоритет<select name="priority"><option value="normal">Обычный</option><option value="high">Высокий</option><option value="low">Низкий</option></select></label><div class="crm-form-actions"><button class="crm-primary" type="submit">Создать задачу</button></div><p class="crm-form-message" id="taskMessage" role="status"></p></form></section>`:'';
-    const tasks = state.tasks.slice().sort((a,b)=>String(a.dueDate||'9999').localeCompare(String(b.dueDate||'9999')));
-    return `${workspaceWelcome('CRM / ИСПОЛНЕНИЕ','Задачи и решения','Поручения распределяются по секторам и ответственным участникам. Исполнение фиксируется в единой системе.')}
-      <div class="module-tabs"><button type="button" data-task-tab="tasks" class="${state.taskTab==='tasks'?'active':''}">Задачи (${tasks.length})</button><button type="button" data-task-tab="decisions" class="${state.taskTab==='decisions'?'active':''}">Решения (${state.decisions.length})</button></div>
-      ${state.taskTab==='tasks'?`${form}<section class="workspace-panel"><div class="panel-heading"><h3>Поручения</h3></div>${tasks.length?tasks.map(task=>`<article class="crm-record compact-record"><div class="crm-record-top"><span class="crm-record-sector">${escapeHtml(sectorName(task.sectorId))} · ${task.priority==='high'?'Высокий приоритет':task.priority==='low'?'Низкий приоритет':'Обычный приоритет'}</span><span class="crm-record-date">Срок: ${escapeHtml(task.dueDate||'не указан')}</span></div><h3>${escapeHtml(task.title)}</h3><p>${escapeHtml(task.description||'')}</p><div class="crm-record-meta"><span>Ответственный: ${escapeHtml(task.assigneeName||'Не назначен')}</span><span>Статус: ${escapeHtml(TASK_STATUSES[task.status]||'Новая')}</span></div>${(isAdministrativeRole()||(isSectorLead()&&task.sectorId===currentSectorId()))?recordEditForm('tasks',task.id,`<label>Название<input name="title" required maxlength="140" value="${escapeHtml(task.title)}"></label><label>Срок<input type="date" name="dueDate" value="${escapeHtml(task.dueDate||'')}"></label><label class="span-two">Описание<textarea name="description" rows="3" maxlength="3000">${escapeHtml(task.description||'')}</textarea></label><label>Приоритет<select name="priority">${selectOptions({low:'Низкий',normal:'Обычный',high:'Высокий'},task.priority||'normal')}</select></label><label>Ответственный<select name="assigneeUid"><option value="">Не назначен</option>${state.users.map(user=>`<option value="${user.uid}" ${task.assigneeUid===user.uid?'selected':''}>${escapeHtml(user.name||user.email)}</option>`).join('')}${task.assigneeUid&&!state.users.some(user=>user.uid===task.assigneeUid)?`<option value="${task.assigneeUid}" selected>${escapeHtml(task.assigneeName||'Текущий ответственный')}</option>`:''}</select></label>`):''}<div class="crm-record-controls"><label>Статус<select data-task-status="${task.id}" ${!(canManageTasks()||task.assigneeUid===profile().uid)?'disabled':''}>${Object.entries(TASK_STATUSES).map(([v,l])=>`<option value="${v}" ${task.status===v?'selected':''}>${l}</option>`).join('')}</select></label>${(isAdministrativeRole()||(isSectorLead()&&task.sectorId===currentSectorId()))?`<button class="crm-danger" data-delete-task="${task.id}">Удалить</button>`:''}</div></article>`).join(''):emptyState('✓','Задач пока нет','Председатель или руководитель сектора может создать поручение.')}</section>`:renderDecisionsSection()}`;
+  function renderTaskCard(task) {
+    const canEdit = isAdministrativeRole() || (isSectorLead() && task.sectorId === currentSectorId());
+    const canDelete = canEdit;
+    const overdue = task.dueDate && task.dueDate < localDateISO() && !['done','cancelled'].includes(task.status);
+    const priority = task.priority === 'high' ? 'Высокий' : task.priority === 'low' ? 'Низкий' : 'Обычный';
+    const editFields = '<label>Название<input name="title" required maxlength="140" value="' + escapeHtml(task.title) + '"></label>' +
+      '<label>Срок<input type="date" name="dueDate" value="' + escapeHtml(task.dueDate || '') + '"></label>' +
+      '<label class="span-two">Описание<textarea name="description" rows="3" maxlength="3000">' + escapeHtml(task.description || '') + '</textarea></label>' +
+      '<label>Приоритет<select name="priority">' + selectOptions({low:'Низкий',normal:'Обычный',high:'Высокий'}, task.priority || 'normal') + '</select></label>' +
+      '<label>Ответственный<select name="assigneeUid"><option value="">Не назначен</option>' +
+      state.users.map(user => '<option value="' + escapeHtml(user.uid) + '" ' + (task.assigneeUid === user.uid ? 'selected' : '') + '>' + escapeHtml(user.name || user.email) + '</option>').join('') +
+      (task.assigneeUid && !state.users.some(user => user.uid === task.assigneeUid) ? '<option value="' + escapeHtml(task.assigneeUid) + '" selected>' + escapeHtml(task.assigneeName || 'Текущий ответственный') + '</option>' : '') +
+      '</select></label>';
+    return '<article class="task-board-card' + (overdue ? ' is-overdue' : '') + '">' +
+      '<div class="task-board-card-top"><span>' + escapeHtml(sectorName(task.sectorId)) + '</span><b class="task-priority priority-' + escapeHtml(task.priority || 'normal') + '">' + priority + '</b></div>' +
+      '<h4>' + escapeHtml(task.title) + '</h4>' +
+      (task.description ? '<p>' + escapeHtml(task.description) + '</p>' : '') +
+      '<div class="task-board-card-meta"><span>Ответственный: ' + escapeHtml(task.assigneeName || 'Не назначен') + '</span><span class="' + (overdue ? 'task-overdue-label' : '') + '">' + (task.dueDate ? (overdue ? 'Просрочено · ' : 'Срок · ') + escapeHtml(formatDate(task.dueDate)) : 'Без срока') + '</span></div>' +
+      (canEdit ? recordEditForm('tasks', task.id, editFields) : '') +
+      '<div class="task-board-card-actions"><label>Статус<select data-task-status="' + escapeHtml(task.id) + '" ' + (!(canManageTasks() || task.assigneeUid === profile().uid) ? 'disabled' : '') + '>' +
+      Object.entries(TASK_STATUSES).map(([value,label]) => '<option value="' + value + '" ' + (task.status === value ? 'selected' : '') + '>' + label + '</option>').join('') +
+      '</select></label>' + (canDelete ? '<button class="crm-danger" data-delete-task="' + escapeHtml(task.id) + '">Удалить</button>' : '') + '</div></article>';
   }
 
+  function renderTasks() {
+    const canCreate = canManageTasks();
+    const form = canCreate ? '<section class="workspace-panel"><h3>Создать поручение</h3><form id="taskForm" class="crm-form-grid">' +
+      '<label>Название поручения<input name="title" required maxlength="140"></label>' +
+      '<label>Сектор<select name="sectorId" ' + (isSectorLead() ? 'disabled' : '') + '>' + sectorOptions(isSectorLead() ? currentSectorId() : 'administrative') + '</select></label>' +
+      '<label class="span-two">Описание<textarea name="description" rows="3" maxlength="3000"></textarea></label>' +
+      '<label>Ответственный<select name="assigneeUid"><option value="">Не назначен</option>' +
+      state.users.map(user => '<option value="' + escapeHtml(user.uid) + '">' + escapeHtml(user.name || user.email) + '</option>').join('') +
+      '</select></label><label>Срок<input type="date" name="dueDate"></label>' +
+      '<label>Приоритет<select name="priority"><option value="normal">Обычный</option><option value="high">Высокий</option><option value="low">Низкий</option></select></label>' +
+      '<div class="crm-form-actions"><button class="crm-primary" type="submit">Создать задачу</button></div><p class="crm-form-message" id="taskMessage" role="status"></p></form></section>' : '';
+    const tasks = state.tasks.slice().sort((a,b) => String(a.dueDate || '9999').localeCompare(String(b.dueDate || '9999')));
+    const columns = Object.entries(TASK_STATUSES).map(([status,label]) => {
+      const items = tasks.filter(task => (task.status || 'new') === status);
+      return '<section class="task-kanban-column"><header><h3>' + label + '</h3><span>' + items.length + '</span></header>' +
+        (items.length ? items.map(renderTaskCard).join('') : '<div class="task-kanban-empty">Пока пусто</div>') + '</section>';
+    }).join('');
+    return workspaceWelcome('CRM / ЦЕНТР ПОРУЧЕНИЙ','Задачи Совета','Поручения распределены по статусам. Ответственные участники могут менять ход исполнения, а руководители — управлять задачами своего направления.') +
+      '<div class="module-tabs"><button type="button" data-task-tab="tasks" class="' + (state.taskTab === 'tasks' ? 'active' : '') + '">Центр поручений (' + tasks.length + ')</button><button type="button" data-task-tab="decisions" class="' + (state.taskTab === 'decisions' ? 'active' : '') + '">Решения (' + state.decisions.length + ')</button></div>' +
+      (state.taskTab === 'tasks' ? form + '<div class="task-kanban-board">' + (tasks.length ? columns : emptyState('✓','Поручений пока нет','Председатель или руководитель сектора может создать первое поручение.')) + '</div>' : renderDecisionsSection());
+  }
+
+  function shiftCalendarMonth(monthKey, delta) {
+    const parts = String(monthKey || localDateISO().slice(0,7)).split('-').map(Number);
+    const date = new Date(parts[0], parts[1] - 1 + delta, 1);
+    return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2,'0');
+  }
+
+  function renderCalendar() {
+    const monthKey = state.calendarMonth || localDateISO().slice(0,7);
+    const parts = monthKey.split('-').map(Number);
+    const year = parts[0], month = parts[1];
+    const first = new Date(year, month - 1, 1);
+    const offset = (first.getDay() + 6) % 7;
+    const days = new Date(year, month, 0).getDate();
+    const total = Math.ceil((offset + days) / 7) * 7;
+    const events = [];
+    state.meetings.filter(item => item.date && item.status !== 'cancelled').forEach(item => events.push({date:item.date,kind:'meeting',title:item.title,detail:item.time || 'Собрание',page:'meetings'}));
+    state.tasks.filter(item => item.dueDate && item.status !== 'cancelled').forEach(item => events.push({date:item.dueDate,kind:'task',title:item.title,detail:item.assigneeName || 'Поручение',page:'tasks',status:item.status}));
+    const byDate = {};
+    events.forEach(item => { if (!byDate[item.date]) byDate[item.date] = []; byDate[item.date].push(item); });
+    const monthEvents = events.filter(item => item.date.slice(0,7) === monthKey).sort((a,b) => a.date.localeCompare(b.date));
+    const week = ['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'].map(day => '<div class="calendar-weekday">' + day + '</div>').join('');
+    const cells = Array.from({length:total},(_,index) => {
+      const day = index - offset + 1;
+      if (day < 1 || day > days) return '<div class="calendar-day is-empty"></div>';
+      const dateKey = year + '-' + String(month).padStart(2,'0') + '-' + String(day).padStart(2,'0');
+      const dayEvents = (byDate[dateKey] || []).slice(0,3);
+      return '<div class="calendar-day' + (dateKey === localDateISO() ? ' is-today' : '') + '">' +
+        '<span class="calendar-day-number">' + day + '</span>' +
+        dayEvents.map(item => '<button type="button" class="calendar-event ' + item.kind + '" data-go-page="' + item.page + '" title="' + escapeHtml(item.title) + '">' +
+          '<b>' + (item.kind === 'meeting' ? '◷' : '✓') + '</b><span>' + escapeHtml(item.title) + '</span></button>').join('') +
+        (byDate[dateKey] && byDate[dateKey].length > 3 ? '<small class="calendar-more">+' + (byDate[dateKey].length - 3) + ' ещё</small>' : '') +
+        '</div>';
+    }).join('');
+    const monthTitle = new Date(year, month - 1, 1).toLocaleDateString('ru-RU',{month:'long',year:'numeric'});
+    const upcoming = monthEvents.slice(0,10).map(item => '<article class="calendar-agenda-item"><time>' + escapeHtml(formatDate(item.date)) + '</time><div><b>' + escapeHtml(item.title) + '</b><small>' + (item.kind === 'meeting' ? 'Собрание' : 'Поручение') + ' · ' + escapeHtml(item.detail) + '</small></div><button type="button" data-go-page="' + item.page + '">Открыть →</button></article>').join('');
+    return workspaceWelcome('CRM / ПЛАНИРОВАНИЕ','Календарь Совета','Единая картина ближайших собраний и сроков поручений. События автоматически берутся из рабочих разделов CRM.') +
+      '<section class="workspace-panel calendar-panel"><div class="calendar-toolbar"><button type="button" class="crm-secondary" data-calendar-shift="-1" aria-label="Предыдущий месяц">←</button><h3>' + escapeHtml(monthTitle) + '</h3><button type="button" class="crm-secondary" data-calendar-today>Сегодня</button><button type="button" class="crm-secondary" data-calendar-shift="1" aria-label="Следующий месяц">→</button></div>' +
+      '<div class="calendar-grid">' + week + cells + '</div><div class="calendar-legend"><span><i class="meeting"></i>Собрания</span><span><i class="task"></i>Сроки поручений</span></div></section>' +
+      '<section class="workspace-panel"><div class="panel-heading"><h3>Повестка месяца</h3><span class="crm-record-date">' + monthEvents.length + ' событий</span></div>' +
+      (upcoming || '<p class="calendar-empty-note">На этот месяц пока ничего не запланировано.</p>') + '</section>';
+  }
+
+  function renderStructure() {
+    const roster = isAdministrativeRole() ? state.users : state.publicTeam;
+    const personCard = person => '<div class="structure-person"><span>' + escapeHtml((person.name || 'У').trim().charAt(0).toUpperCase()) + '</span><div><b>' + escapeHtml(person.name || 'Участник Совета') + '</b><small>' + escapeHtml(roleLabel(person.role)) + '</small></div></div>';
+    const adminRoles = ['chair','deputy_chair','secretary','administrative'];
+    const leadership = roster.filter(person => adminRoles.includes(person.role));
+    const sectorCards = sectors.filter(sector => sector.id !== 'administrative').map(sector => {
+      const members = roster.filter(person => person.sectorId === sector.id);
+      return '<article class="structure-sector-card"><div class="structure-sector-heading"><span>' + sector.number + '</span><div><h3>' + escapeHtml(sector.title) + '</h3><small>' + escapeHtml(sector.short) + '</small></div><b>' + members.length + '</b></div>' +
+        (members.length ? '<div class="structure-people-list">' + members.map(personCard).join('') + '</div>' : '<p class="structure-no-people">' + (isAdministrativeRole() ? 'Участники пока не назначены.' : 'Нет опубликованных участников.') + '</p>') +
+        '</article>';
+    }).join('');
+    return workspaceWelcome('CRM / КОМАНДА','Структура Совета','Административный сектор координирует работу направлений. Каждый сектор отвечает за своё направление и взаимодействует с остальными.') +
+      '<section class="workspace-panel structure-root"><p class="eyebrow">КООРДИНАЦИЯ И РУКОВОДСТВО</p><h3>Административный сектор</h3><p>Председатель руководит Советом и координирует работу всех секторов.</p>' +
+      (leadership.length ? '<div class="structure-people-list">' + leadership.map(personCard).join('') + '</div>' : '<p class="structure-no-people">Состав руководства будет показан после публикации профилей.</p>') + '</section>' +
+      '<div class="structure-connector"><span>КООРДИНИРУЕТ ШЕСТЬ НАПРАВЛЕНИЙ</span></div><div class="structure-sector-grid">' + sectorCards + '</div>' +
+      '<p class="crm-hint">Публичные профили отображаются только после того, как участник включён председателем в открытый состав Совета. Административный сектор видит полный внутренний состав.</p>';
+  }
+
+  function renderLeadershipPanel() {
+    if (!isAdministrativeRole()) return emptyState('⌘','Нет доступа','Панель руководителя доступна административному сектору.');
+    const today = localDateISO();
+    const activeTasks = state.tasks.filter(item => !['done','cancelled'].includes(item.status));
+    const overdue = activeTasks.filter(item => item.dueDate && item.dueDate < today).sort((a,b) => a.dueDate.localeCompare(b.dueDate));
+    const upcomingMeetings = state.meetings.filter(item => item.status === 'planned' && item.date >= today).sort((a,b) => a.date.localeCompare(b.date)).slice(0,5);
+    const activeInitiatives = state.initiatives.filter(item => !['done','rejected'].includes(item.status));
+    const sectorRows = sectors.map(sector => {
+      const sectorTasks = activeTasks.filter(item => item.sectorId === sector.id);
+      const sectorMembers = state.users.filter(user => user.sectorId === sector.id && user.active !== false);
+      const done = state.tasks.filter(item => item.sectorId === sector.id && item.status === 'done').length;
+      return '<div class="leadership-sector-row"><div><b>' + escapeHtml(sector.title) + '</b><small>' + sectorMembers.length + ' участников · ' + done + ' выполнено</small></div><span>' + sectorTasks.length + ' активных</span></div>';
+    }).join('');
+    return workspaceWelcome('CRM / РУКОВОДСТВО','Панель руководителя','Контроль поручений, обращений, работы секторов и ближайших событий. Показатели обновляются вместе с данными Firestore.') +
+      '<div class="workspace-stat-grid leadership-stats"><article><span>АКТИВНЫЕ ПОРУЧЕНИЯ</span><b>' + activeTasks.length + '</b><small>В работе и ожидают начала</small></article><article><span>ПРОСРОЧЕНО</span><b>' + overdue.length + '</b><small>Требуют внимания</small></article><article><span>ОБРАЩЕНИЯ В РАБОТЕ</span><b>' + activeInitiatives.length + '</b><small>Не закрыты и не отклонены</small></article><article><span>УЧАСТНИКИ</span><b>' + state.users.filter(user => user.active !== false).length + '</b><small>Активный состав Совета</small></article></div>' +
+      '<div class="workspace-columns"><section class="workspace-panel"><div class="panel-heading"><h3>Просроченные поручения</h3><button class="crm-secondary" data-go-page="tasks">Все задачи</button></div>' +
+      (overdue.length ? overdue.slice(0,8).map(item => '<div class="leadership-overdue-item"><div><b>' + escapeHtml(item.title) + '</b><small>' + escapeHtml(sectorName(item.sectorId)) + ' · ' + escapeHtml(item.assigneeName || 'Без ответственного') + '</small></div><span>' + escapeHtml(formatDate(item.dueDate)) + '</span></div>').join('') : '<p class="calendar-empty-note">Просроченных поручений нет.</p>') + '</section>' +
+      '<section class="workspace-panel"><div class="panel-heading"><h3>Ближайшие собрания</h3><button class="crm-secondary" data-go-page="calendar">Календарь</button></div>' +
+      (upcomingMeetings.length ? upcomingMeetings.map(item => '<div class="leadership-overdue-item"><div><b>' + escapeHtml(item.title) + '</b><small>' + escapeHtml(item.time || 'Время не указано') + '</small></div><span>' + escapeHtml(formatDate(item.date)) + '</span></div>').join('') : '<p class="calendar-empty-note">Ближайших собраний нет.</p>') + '</section></div>' +
+      '<section class="workspace-panel"><div class="panel-heading"><h3>Нагрузка секторов</h3><button class="crm-secondary" data-go-page="structure">Структура Совета</button></div><div class="leadership-sector-list">' + sectorRows + '</div></section>' +
+      '<section class="workspace-panel"><div class="panel-heading"><h3>Обращения, ожидающие решения</h3><button class="crm-secondary" data-go-page="initiatives">Открыть обращения</button></div>' +
+      (activeInitiatives.length ? activeInitiatives.slice(0,6).map(item => '<div class="leadership-overdue-item"><div><b>' + escapeHtml(item.title) + '</b><small>' + escapeHtml(sectorName(item.sectorId)) + ' · ' + escapeHtml(statusText(item.status)) + '</small></div><span>' + escapeHtml(formatDate(item.createdAt)) + '</span></div>').join('') : '<p class="calendar-empty-note">Нет открытых обращений.</p>') + '</section>';
+  }
   function renderDecisionsSection() {
     const form = isAdministrativeRole()?`<section class="workspace-panel"><h3>Зафиксировать решение</h3><form id="decisionForm" class="crm-form-grid"><label>Название решения<input name="title" required maxlength="160"></label><label>Ответственный сектор<select name="sectorId">${sectorOptions(currentSectorId()||'administrative')}</select></label><label class="span-two">Содержание / поручение<textarea name="description" required rows="4" maxlength="3000"></textarea></label><label>Статус<select name="status">${Object.entries(DECISION_STATUSES).map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select></label><label>Связанное собрание<input name="meetingTitle" maxlength="140" placeholder="Название собрания (необязательно)"></label><div class="crm-form-actions"><button class="crm-primary" type="submit">Сохранить решение</button></div><p class="crm-form-message" id="decisionMessage" role="status"></p></form></section>`:'';
     return `${form}<section class="workspace-panel"><div class="panel-heading"><h3>Решения Совета</h3></div>${state.decisions.length?state.decisions.map(item=>`<article class="crm-record compact-record"><div class="crm-record-top"><span class="crm-record-sector">${escapeHtml(sectorName(item.sectorId))}</span><span class="crm-record-date">${escapeHtml(DECISION_STATUSES[item.status]||'Решение')}</span></div><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.description)}</p>${item.meetingTitle?`<small>Собрание: ${escapeHtml(item.meetingTitle)}</small>`:''}${isAdministrativeRole()?`${recordEditForm('decisions',item.id,`<label>Название<input name="title" required maxlength="160" value="${escapeHtml(item.title)}"></label><label>Собрание<input name="meetingTitle" maxlength="140" value="${escapeHtml(item.meetingTitle||'')}"></label><label class="span-two">Содержание<textarea name="description" required rows="3" maxlength="3000">${escapeHtml(item.description)}</textarea></label>`)}<div class="crm-record-controls"><label>Статус<select data-decision-status="${item.id}">${Object.entries(DECISION_STATUSES).map(([v,l])=>`<option value="${v}" ${item.status===v?'selected':''}>${l}</option>`).join('')}</select></label><button class="crm-danger" data-delete-decision="${item.id}">Удалить</button></div>`:''}</article>`).join(''):emptyState('☑','Решений пока нет','Принятые решения и поручения по итогам собраний появятся здесь.')}</section>`;
@@ -524,6 +644,7 @@
   function renderWorkspacePage(page) {
     if (!workspacePages[page]) page='overview';
     if (page==='people'&&!isChair()) page='overview';
+    if (page==='leadership'&&!isAdministrativeRole()) page='overview';
     if (page==='sectors'&&!isAdministrativeRole()) page='overview';
     if (page==='reports'&&!(isAdministrativeRole()||isSectorLead())) page='overview';
     if (page==='analytics'&&!isAdministrativeRole()) page='overview';
@@ -535,6 +656,9 @@
     $$('.workspace-nav [data-workpage]').forEach(button=>button.classList.toggle('active',button.dataset.workpage===page));
     const content=$('#workspaceContent');
     if (page==='overview') content.innerHTML=renderOverview();
+    else if (page==='leadership') content.innerHTML=renderLeadershipPanel();
+    else if (page==='calendar') content.innerHTML=renderCalendar();
+    else if (page==='structure') content.innerHTML=renderStructure();
     else if (page==='initiatives') content.innerHTML=renderInitiatives();
     else if (page==='people') content.innerHTML=renderPeople();
     else if (page==='sectors') content.innerHTML=renderSectorsManagement();
@@ -562,7 +686,7 @@
     if (!state.db || state.publicListeners.length) return;
     const attach=(collection, target, renderer)=>{
       state.publicListeners.push(state.db.collection(collection).where('published','==',true).limit(20).onSnapshot(snapshot=>{
-        state[target]=sortNewest(mapSnapshot(snapshot)).slice(0,8); renderer();
+        state[target]=sortNewest(mapSnapshot(snapshot)).slice(0,8); renderer(); if(target==='publicTeam')renderIfPage('structure');
       },error=>console.warn(`Public ${collection} feed:`,error)));
     };
     attach('announcements','publicAnnouncements',renderPublicNews);
@@ -608,7 +732,7 @@
     const db=state.db;
     if(canManageInitiatives()){
       const ref=isSectorLead()?db.collection('initiatives').where('sectorId','==',currentSectorId()):db.collection('initiatives');
-      addListener(ref.onSnapshot(snapshot=>{state.initiatives=sortNewest(mapSnapshot(snapshot));renderIfPage('overview','initiatives','analytics','archive');},err=>console.warn('Initiatives:',err)));
+      addListener(ref.onSnapshot(snapshot=>{state.initiatives=sortNewest(mapSnapshot(snapshot));renderIfPage('overview','leadership','initiatives','analytics','archive');},err=>console.warn('Initiatives:',err)));
     }
     addListener(db.collection('liveControl').doc('current').onSnapshot(snapshot=>{
       const previous=state.liveControl||{},next=snapshot.exists?snapshot.data():null;
@@ -623,7 +747,7 @@
         if(status)status.textContent=slides.length?`Слайд ${index+1} из ${slides.length}`:'Слайды не созданы';
       }
     },err=>console.warn('Live control:',err)));
-    addListener(db.collection('meetings').orderBy('date','desc').limit(100).onSnapshot(snapshot=>{state.meetings=mapSnapshot(snapshot);renderIfPage('overview','meetings','analytics','archive','live');},err=>console.warn('Meetings:',err)));
+    addListener(db.collection('meetings').orderBy('date','desc').limit(100).onSnapshot(snapshot=>{state.meetings=mapSnapshot(snapshot);renderIfPage('overview','calendar','leadership','meetings','analytics','archive','live');},err=>console.warn('Meetings:',err)));
     addListener(db.collection('polls').orderBy('createdAt','desc').limit(100).onSnapshot(snapshot=>{state.polls=mapSnapshot(snapshot);syncVoteListeners();renderIfPage('overview','voting','analytics','archive','live');},err=>console.warn('Polls:',err)));
     addListener(db.collection('decisions').orderBy('createdAt','desc').limit(100).onSnapshot(snapshot=>{state.decisions=mapSnapshot(snapshot);renderIfPage('tasks','analytics','archive');},err=>console.warn('Decisions:',err)));
     addListener(db.collection('announcements').orderBy('createdAt','desc').limit(100).onSnapshot(snapshot=>{state.announcements=mapSnapshot(snapshot);renderIfPage('announcements');},err=>console.warn('Announcements:',err)));
@@ -631,16 +755,16 @@
     addListener(db.collection('projects').orderBy('createdAt','desc').limit(100).onSnapshot(snapshot=>{state.projects=mapSnapshot(snapshot);renderIfPage('projects','analytics','archive');},err=>console.warn('Projects:',err)));
     if(isAdministrativeRole()) addListener(db.collection('users').onSnapshot(snapshot=>{
       state.users=mapSnapshot(snapshot).map(user=>({...user,uid:user.id,sectorId:forcedSectorId(user.role)||user.sectorId||''}));
-      renderIfPage('people','sectors','sector','tasks','reports');
+      renderIfPage('people','sectors','sector','structure','leadership','tasks','reports');
     },err=>console.warn('Users:',err)));
     else if(currentSectorId()) addListener(db.collection('users').where('sectorId','==',currentSectorId()).onSnapshot(snapshot=>{
       state.users=mapSnapshot(snapshot).map(user=>({...user,uid:user.id,sectorId:forcedSectorId(user.role)||user.sectorId||''}));
-      renderIfPage('sector','tasks');
+      renderIfPage('sector','structure','tasks');
     },err=>console.warn('Sector users:',err)));
-    if(isAdministrativeRole()) addListener(db.collection('tasks').orderBy('createdAt','desc').limit(200).onSnapshot(snapshot=>{state.tasks=mapSnapshot(snapshot);renderIfPage('overview','tasks','analytics','archive');},err=>console.warn('Tasks:',err)));
+    if(isAdministrativeRole()) addListener(db.collection('tasks').orderBy('createdAt','desc').limit(200).onSnapshot(snapshot=>{state.tasks=mapSnapshot(snapshot);renderIfPage('overview','leadership','calendar','tasks','analytics','archive');},err=>console.warn('Tasks:',err)));
     else {
       const taskSources=[new Map(),new Map()];
-      const updateTasks=(index,snapshot)=>{taskSources[index].clear();snapshot.docs.forEach(doc=>taskSources[index].set(doc.id,{id:doc.id,...doc.data()}));state.tasks=[...new Map([...taskSources[0],...taskSources[1]]).values()];renderIfPage('overview','tasks','analytics','archive');};
+      const updateTasks=(index,snapshot)=>{taskSources[index].clear();snapshot.docs.forEach(doc=>taskSources[index].set(doc.id,{id:doc.id,...doc.data()}));state.tasks=[...new Map([...taskSources[0],...taskSources[1]]).values()];renderIfPage('overview','calendar','tasks','analytics','archive');};
       if(currentSectorId()) addListener(db.collection('tasks').where('sectorId','==',currentSectorId()).limit(200).onSnapshot(snapshot=>updateTasks(0,snapshot),err=>console.warn('Sector tasks:',err)));
       addListener(db.collection('tasks').where('assigneeUid','==',profile().uid).limit(200).onSnapshot(snapshot=>updateTasks(1,snapshot),err=>console.warn('Assigned tasks:',err)));
     }
@@ -919,6 +1043,8 @@
     $('#workspaceContent')?.addEventListener('click',event=>{
       const button=event.target.closest('[data-go-page]');if(button)renderWorkspacePage(button.dataset.goPage);
       const taskTab=event.target.closest('[data-task-tab]');if(taskTab){state.taskTab=taskTab.dataset.taskTab;renderWorkspacePage('tasks');}
+      const calendarShift=event.target.closest('[data-calendar-shift]');if(calendarShift){state.calendarMonth=shiftCalendarMonth(state.calendarMonth,Number(calendarShift.dataset.calendarShift)||0);renderWorkspacePage('calendar');}
+      if(event.target.closest('[data-calendar-today]')){state.calendarMonth=localDateISO().slice(0,7);renderWorkspacePage('calendar');}
       const savePerson=event.target.closest('[data-save-person]');if(savePerson)saveParticipantAssignment(savePerson.dataset.savePerson);
       const reportNoteButton=event.target.closest('[data-save-report-note]');if(reportNoteButton)saveReportNote(reportNoteButton.dataset.saveReportNote);
       const remove=event.target.closest('[data-delete-initiative],[data-delete-meeting],[data-delete-poll],[data-delete-project],[data-delete-task],[data-delete-decision],[data-delete-announcement],[data-delete-document]');
