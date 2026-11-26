@@ -506,8 +506,9 @@
   }
   function renderPublicDocuments() {
     const node=$('#publicDocuments'); if(!node)return;
-    node.innerHTML=state.publicDocuments.length?state.publicDocuments.map(item=>`<article class="public-document-card"><span>▧</span><div><b>${escapeHtml(item.title)}</b><small>${escapeHtml(item.category||'Материал')} · ${escapeHtml(item.description||'')}</small>${item.url?`<a href="${escapeHtml(item.url)}" target="_blank" rel="noopener">Открыть документ ↗</a>`:''}</div></article>`).join(''):`<div class="materials-placeholder"><span>▧</span><div><b>Библиотека документов</b><small>Опубликованные материалы появятся здесь.</small></div></div>`;
+    node.innerHTML=state.publicDocuments.length?state.publicDocuments.map(item=>`<article class="public-document-card"><span>▧</span><div><b>${escapeHtml(item.title)}</b><small>${escapeHtml(item.category||'Материал')} · ${escapeHtml(item.description||'')}</small>${item.url?`<a href="${escapeHtml(item.url)}" target="_blank" rel="noopener">Открыть в Google Drive ↗</a>`:''}</div></article>`).join(''):`<div class="materials-placeholder"><span>▧</span><div><b>Библиотека документов</b><small>Опубликованные материалы появятся здесь.</small></div></div>`;
   }
+  
   function renderPublicSectorPlans() {
     const node=$('#publicSectorPlans'); if(!node)return;
     const plans=sectors.map(sector=>({sector,...state.publicSectorPlans.find(item=>item.sectorId===sector.id)||{}})).filter(item=>item.goal||item.plan);
