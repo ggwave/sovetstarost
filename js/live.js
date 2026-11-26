@@ -9,7 +9,7 @@
   function updateClock(){const d=new Date();$('#liveClock').textContent=d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',second:'2-digit'});}
   function setConnection(ok,msg){$('#connectionDot').classList.toggle('online',!!ok);$('#connectionText').textContent=msg;}
   function activePoll(){const c=state.control||{};return state.polls.find(p=>p.id===c.pollId)||state.polls.find(p=>p.status==='open')||null;}
-  function upcomingMeeting(){const now=new Date(),c=state.control||{};return state.meetings.find(m=>m.id===c.meetingId)||state.meetings.filter(m=>m.status!=='cancelled'&&parseDate(m.date+'T'+(m.time||'23:59'))>=now).sort((a,b)=>String(a.date).localeCompare(String(b.date)))[0]||null;}
+  function upcomingMeeting(){const now=new Date(),c=state.control||{};if(c.meetingId)return state.meetings.find(m=>m.id===c.meetingId)||null;return state.meetings.filter(m=>m.status!=='cancelled'&&parseDate(m.date+'T'+(m.time||'23:59'))>=now).sort((a,b)=>String(a.date).localeCompare(String(b.date)))[0]||null;}
   function syncVotes(poll){
     if(state.voteUnsub){state.voteUnsub();state.voteUnsub=null;}
     state.votes=[];state.voteError=false;
@@ -23,7 +23,10 @@
     return '<article class="poll-display"><div class="section-kicker">ГОЛОСОВАНИЕ · '+(poll.status==='open'?'ИДЁТ СЕЙЧАС':'ЗАВЕРШЕНО')+'</div><h2>'+esc(poll.title)+'</h2>'+(poll.description?'<p class="poll-description">'+esc(poll.description)+'</p>':'')+'<div class="vote-total"><b>'+ (state.voteError?'—':total) +'</b><span>участников проголосовали</span></div><div class="result-list">'+(state.voteError?'<p class="privacy-note">Для просмотра результатов откройте Live-экран в том же браузере, где выполнен вход в CRM.</p>':counts.map((o,i)=>{const pct=total?Math.round(o.count/total*100):0;return '<div class="result-item" style="--delay:'+i*90+'ms"><div class="result-label"><span>'+esc(o.label)+'</span><b>'+o.count+' · '+pct+'%</b></div><div class="result-track"><i style="width:'+pct+'%"></i></div></div>';}).join(''))+'</div></article>';
   }
   function meetingMarkup(meeting){
-    if(!meeting)return '<div class="empty-live"><span>◷</span><h2>Нет выбранного собрания</h2><p>Выберите событие на пульте управления.</p></div>';
+    if(!meeting){
+      const selected=!!(state.control||{}).meetingId;
+      return '<div class="empty-live"><span>◷</span><h2>'+(selected?'Выбранное собрание не загружено':'Нет выбранного собрания')+'</h2><p>'+(selected?'Проверьте, что собрание опубликовано и доступно для показа.':'Выберите событие на пульте управления.')+'</p></div>';
+    }
     const date=meeting.date?new Date(meeting.date+'T'+(meeting.time||'00:00')):null;
     return '<article class="meeting-display"><div class="section-kicker">СОБРАНИЕ СОВЕТА</div><div class="meeting-date">'+esc(fmtDate(date))+' <span>'+esc(meeting.time||'Время не указано')+'</span></div><h2>'+esc(meeting.title||'Собрание Совета')+'</h2><p class="meeting-location">'+esc(meeting.location||'Место проведения уточняется')+'</p>'+(meeting.agenda?'<div class="agenda"><span>ПОВЕСТКА</span><p>'+esc(meeting.agenda)+'</p></div>':'')+'</article>';
   }
@@ -52,7 +55,7 @@
     firebase.auth().onAuthStateChanged(user=>{state.authenticated=!!user;if(user){setConnection(true,'Синхронизация активна');syncVotes(activePoll());}else{state.votes=[];state.voteError=true;setConnection(true,'Войдите в CRM для результатов');render();}});
     state.db.collection('liveControl').doc('current').onSnapshot(s=>{state.control=s.exists?s.data():null;const poll=activePoll();syncVotes(poll);setConnection(true,'Синхронизация активна');render();},e=>{console.error(e);setConnection(false,'Нет доступа к Live-настройкам');});
     state.db.collection('polls').where('published','==',true).limit(100).onSnapshot(s=>{state.polls=s.docs.map(d=>({id:d.id,...d.data()}));syncVotes(activePoll());render();},e=>console.warn('Polls:',e));
-    state.db.collection('meetings').where('published','==',true).limit(100).onSnapshot(s=>{state.meetings=s.docs.map(d=>({id:d.id,...d.data()}));render();},e=>console.warn('Meetings:',e));
+    state.db.collection('meetings').where('published','==',true).limit(100).onSnapshot(s=>{state.meetings=s.docs.map(d=>({...d.data(),id:d.id}));render();},e=>{console.error('Live meetings:',e);setConnection(false,'Не удалось загрузить собрания');});
   }
   $('#fullscreenButton').addEventListener('click',()=>{if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.();});
   updateClock();setInterval(updateClock,1000);start();
