@@ -241,3 +241,27 @@ html,body{max-width:100%;overflow-x:hidden}
   #workspace .live-poll-list .poll-result-row>div:first-child{align-items:flex-start}
   #workspace .live-poll-list .poll-result-row>div:first-child b{white-space:nowrap}
 }
+
+
+/* CRM desktop navigation stays fixed while only the content scrolls */
+@media(min-width:781px){
+  #workspace.workspace{display:grid!important;grid-template-columns:minmax(0,1fr);align-items:start}
+  #workspace .workspace-sidebar{position:fixed;left:0;top:0;bottom:0;width:255px;height:100vh;height:100dvh;min-height:0;overflow-x:hidden;overflow-y:auto;z-index:100;overscroll-behavior:contain}
+  #workspace .workspace-main{margin-left:255px;width:calc(100% - 255px);min-height:100vh;min-width:0}
+}
+@media(min-width:781px) and (max-width:1050px){
+  #workspace .workspace-sidebar{width:225px;padding-inline:13px}
+  #workspace .workspace-main{margin-left:225px;width:calc(100% - 225px)}
+}
+@media(max-width:780px){
+  #workspace .workspace-main{margin-left:0!important;width:100%!important}
+  #workspace .workspace-sidebar{position:fixed!important}
+}
+.live-control-hero{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:20px 23px;margin-bottom:16px;background:#eee3d6;border:1px solid #dfcfbd}
+.live-control-hero b{display:inline-block;color:#68482f;font-size:10px;letter-spacing:.13em}
+.live-control-hero p{margin:8px 0 0;color:#897764;font-size:9px}
+.live-control-dot{display:inline-block;width:9px;height:9px;margin-right:9px;border-radius:50%;background:#a56c5e;vertical-align:1px}
+.live-control-dot.is-on{background:#66865d;box-shadow:0 0 0 5px #66865d20;animation:live-pulse 1.8s infinite}
+.live-control-actions{display:flex;flex-wrap:wrap;gap:8px}
+.live-instructions{padding-left:20px;color:#806d5a;font-size:10px;line-height:2.1}
+@media(max-width:780px){.live-control-hero{align-items:flex-start;flex-direction:column;padding:16px}.live-control-actions{width:100%}.live-control-actions button{flex:1}.live-control-form .span-two{grid-column:auto}}
