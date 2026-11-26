@@ -16,7 +16,7 @@
     auth: null, db: null, profile: null, activePage: 'overview', taskTab: 'tasks',
     listeners: [], voteUnsubs: new Map(),
     initiatives: [], users: [], meetings: [], polls: [], votes: {}, tasks: [], decisions: [],
-    announcements: [], documents: [], projects: [], reports: [], sectorPlan: null, sectorPlans: {}, feed: [],
+    announcements: [], documents: [], projects: [], reports: [], sectorPlan: null, sectorPlans: {}, feed: [], liveControl: null,
     publicAnnouncements: [], publicMeetings: [], publicDocuments: [], publicProjects: [], publicSectorPlans: [], publicTeam: [],
     feedInitialized: false, publicListeners: [], trackingUrl: '',
     viewedAsPublic: false
@@ -311,42 +311,33 @@
   }
 
   function renderLiveBoard() {
-    const now = new Date();
-    const dateValue = value => {
-      if (!value) return null;
-      if (typeof value === 'string') return new Date(value.length === 10 ? value + 'T00:00:00' : value);
-      if (value.toDate) return value.toDate();
-      return new Date(value);
-    };
-    const futureMeetings = state.meetings
-      .filter(item => item.status !== 'cancelled' && item.date)
-      .map(item => ({...item, _date: dateValue(item.date + (item.time ? 'T' + item.time : 'T23:59'))}))
-      .filter(item => item._date && !Number.isNaN(item._date.getTime()) && item._date >= now)
-      .sort((a,b) => a._date - b._date);
-    const meetingItems = (futureMeetings.length ? futureMeetings : state.meetings
-      .filter(item => item.status !== 'cancelled')
-      .sort((a,b) => String(b.date || '').localeCompare(String(a.date || '')))).slice(0,6);
-    const activePolls = state.polls.filter(poll => {
-      const end = dateValue(poll.endsAt);
-      return poll.status === 'open' && (!end || Number.isNaN(end.getTime()) || end > now);
-    });
-    const pollItems = state.polls.slice().sort((a,b) => {
-      const aOpen = activePolls.some(item => item.id === a.id) ? 1 : 0;
-      const bOpen = activePolls.some(item => item.id === b.id) ? 1 : 0;
-      return bOpen - aOpen || ((b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
-    }).slice(0,6);
-    const totalVotes = state.polls.reduce((sum,poll) => sum + votesFor(poll.id).length,0);
-    const meetingMarkup = meetingItems.length ? meetingItems.map(item => {
-      const date = dateValue(item.date);
-      const statusClass = item.status === 'planned' ? 'is-planned' : item.status === 'held' ? 'is-done' : 'is-cancelled';
-      return '<article class="live-meeting-card"><div class="live-meeting-date"><b>' + escapeHtml(date && !Number.isNaN(date.getTime()) ? date.toLocaleDateString('ru-RU',{day:'2-digit'}) : '—') + '</b><span>' + escapeHtml(date && !Number.isNaN(date.getTime()) ? date.toLocaleDateString('ru-RU',{month:'short'}) : 'дата') + '</span></div><div class="live-meeting-info"><div class="live-card-meta"><span class="live-state ' + statusClass + '">' + escapeHtml(MEETING_STATUSES[item.status] || 'Собрание') + '</span><small>' + escapeHtml(item.time || 'Время не указано') + '</small></div><h4>' + escapeHtml(item.title || 'Собрание Совета') + '</h4><p>' + escapeHtml(item.location || 'Место не указано') + '</p>' + (item.agenda ? '<details><summary>Повестка собрания</summary><p>' + escapeHtml(item.agenda) + '</p></details>' : '') + '</div></article>';
-    }).join('') : emptyState('◷','Собраний пока нет','Созданные собрания появятся здесь автоматически.');
-    const pollMarkup = pollItems.length ? pollItems.map(poll => renderPollCard(poll)).join('') : emptyState('◉','Голосований пока нет','Созданные голосования и результаты появятся здесь автоматически.');
-    return workspaceWelcome('LIVE / ПРЯМОЙ ЭФИР','Табло Совета','Собрания и голосования в одном месте. Данные обновляются автоматически при изменениях в Firebase.')
-      + '<section class="live-overview-strip"><div class="live-indicator"><i></i><span>LIVE · СИНХРОНИЗАЦИЯ ВКЛЮЧЕНА</span></div><div class="live-overview-stats"><div><b>' + activePolls.length + '</b><span>открытых голосований</span></div><div><b>' + futureMeetings.length + '</b><span>предстоящих собраний</span></div><div><b>' + totalVotes + '</b><span>учтённых голосов</span></div></div></section>'
-      + '<div class="live-board-grid"><section class="workspace-panel live-meetings-panel"><div class="panel-heading"><div><p class="eyebrow">КАЛЕНДАРЬ / ВСТРЕЧИ</p><h3>Собрания Совета</h3></div><button class="crm-secondary" type="button" data-go-page="meetings">Все собрания ↗</button></div><div class="live-meeting-list">' + meetingMarkup + '</div></section><section class="workspace-panel live-polls-panel"><div class="panel-heading"><div><p class="eyebrow">РЕШЕНИЯ / ГОЛОСОВАНИЯ</p><h3>Голосования в реальном времени</h3></div><button class="crm-secondary" type="button" data-go-page="voting">Все голосования ↗</button></div><div class="live-poll-list">' + pollMarkup + '</div></section></div>';
+    const control=state.liveControl||{};
+    const pollOptions=state.polls.map(item=>`<option value="${escapeHtml(item.id)}" ${control.pollId===item.id?'selected':''}>${escapeHtml(item.title)} · ${escapeHtml(POLL_STATUSES[item.status]||'')}</option>`).join('');
+    const meetingOptions=state.meetings.map(item=>`<option value="${escapeHtml(item.id)}" ${control.meetingId===item.id?'selected':''}>${escapeHtml(item.title)} · ${escapeHtml(formatDate(item.date))}</option>`).join('');
+    return workspaceWelcome('LIVE / РЕЖИССЁРСКАЯ','Пульт управления трансляцией','Управляйте отдельным экраном Совета. Изменения появятся на Live-табло автоматически.')
+      + `<section class="live-control-hero"><div><span class="live-control-dot ${control.enabled?'is-on':''}"></span><b>${control.enabled?'ТРАНСЛЯЦИЯ ВКЛЮЧЕНА':'ТРАНСЛЯЦИЯ ОСТАНОВЛЕНА'}</b><p>Экран открывается в отдельной вкладке и обновляется в реальном времени.</p></div><div class="live-control-actions"><button type="button" class="crm-primary" data-live-open>Открыть Live-экран ↗</button><button type="button" class="crm-secondary" data-live-copy>Скопировать ссылку</button></div></section>`
+      + `<section class="workspace-panel"><div class="panel-heading"><div><p class="eyebrow">НАСТРОЙКА ЭФИРА</p><h3>Что показывать на экране</h3></div><span class="live-state ${control.enabled?'is-planned':'is-cancelled'}">${control.enabled?'В эфире':'Не в эфире'}</span></div>
+      <form id="liveControlForm" class="crm-form-grid live-control-form">
+        <label>Режим экрана<select name="mode"><option value="overview" ${(control.mode||'overview')==='overview'?'selected':''}>Общий экран</option><option value="poll" ${control.mode==='poll'?'selected':''}>Одно голосование</option><option value="meeting" ${control.mode==='meeting'?'selected':''}>Одно собрание</option><option value="message" ${control.mode==='message'?'selected':''}>Объявление / текстовый экран</option></select></label>
+        <label>Активное голосование<select name="pollId"><option value="">Автоматически / не выбрано</option>${pollOptions}</select></label>
+        <label>Активное собрание<select name="meetingId"><option value="">Автоматически / не выбрано</option>${meetingOptions}</select></label>
+        <label>Заголовок экрана<input name="title" maxlength="100" value="${escapeHtml(control.title||'Совет обучающихся')}"></label>
+        <label class="span-two">Подзаголовок / объявление<textarea name="subtitle" rows="2" maxlength="240">${escapeHtml(control.subtitle||'')}</textarea></label>
+        <label>Анимация<select name="animation"><option value="smooth" ${(control.animation||'smooth')==='smooth'?'selected':''}>Плавная</option><option value="calm" ${control.animation==='calm'?'selected':''}>Спокойная</option><option value="none" ${control.animation==='none'?'selected':''}>Без анимации</option></select></label>
+        <label class="checkbox-label"><input type="checkbox" name="showClock" ${control.showClock===false?'':'checked'}> Показывать часы</label><label class="checkbox-label"><input type="checkbox" name="showStats" ${control.showStats===false?'':'checked'}> Показывать статистику</label><label class="checkbox-label"><input type="checkbox" name="enabled" ${control.enabled?'checked':''}> Включить трансляцию</label>
+        <div class="crm-form-actions span-two"><button class="crm-primary" type="submit">Применить настройки</button><button class="crm-secondary" type="button" data-live-stop>Остановить трансляцию</button></div><p class="crm-form-message span-two" id="liveControlMessage" role="status"></p></form></section>
+      <section class="workspace-panel"><p class="eyebrow">ПОДСКАЗКА</p><h3>Как вывести табло</h3><ol class="live-instructions"><li>Откройте Live-экран.</li><li>Перенесите вкладку на проектор или второй монитор.</li><li>На экране включите полноэкранный режим.</li><li>Управляйте содержимым отсюда — экран обновится автоматически.</li></ol></section>`;
   }
 
+  async function saveLiveControl(event) {
+    event.preventDefault(); if(!isAdministrativeRole()) return;
+    const form=event.currentTarget, data=new FormData(form);
+    const payload={enabled:data.has('enabled'),mode:String(data.get('mode')||'overview'),pollId:String(data.get('pollId')||''),meetingId:String(data.get('meetingId')||''),title:String(data.get('title')||'Совет обучающихся').trim().slice(0,100),subtitle:String(data.get('subtitle')||'').trim().slice(0,240),animation:String(data.get('animation')||'smooth'),showClock:data.has('showClock'),showStats:data.has('showStats'),updatedAt:timestamp(),updatedBy:profile().uid};
+    try { await state.db.collection('liveControl').doc('current').set(payload,{merge:true}); state.liveControl=payload; $('#liveControlMessage').textContent='Настройки применены. Live-экран обновится автоматически.'; showToast('Live-табло обновлено',payload.enabled?'Трансляция включена.':'Трансляция остановлена.'); renderIfPage('live'); }
+    catch(error) { console.error('Live control:',error); $('#liveControlMessage').textContent='Не удалось сохранить настройки. Проверьте права доступа к liveControl/current в Firestore.'; }
+  }
+
+  function openLiveBoard() { window.open(new URL('live.html',window.location.href).toString(),'sovetLiveBoard','popup=yes,width=1440,height=900'); }
   function renderMeetings() {
     const form = canManageMeetings() ? `<section class="workspace-panel"><h3>Создать собрание</h3><form id="meetingForm" class="crm-form-grid"><label>Название<input name="title" required maxlength="140" placeholder="Например, Ежемесячное собрание Совета"></label><label>Дата<input type="date" name="date" required></label><label>Время<input type="time" name="time"></label><label>Место / формат<input name="location" maxlength="120" placeholder="Кабинет, актовый зал или онлайн"></label><label class="span-two">Повестка<textarea name="agenda" rows="4" maxlength="4000" placeholder="Вопросы к обсуждению"></textarea></label><label>Статус<select name="status"><option value="planned">Запланировано</option><option value="held">Проведено</option><option value="cancelled">Отменено</option></select></label><label class="checkbox-label"><input type="checkbox" name="published" checked> Показывать на публичной главной</label><div class="crm-form-actions"><button class="crm-primary" type="submit">Создать собрание</button></div><p class="crm-form-message" id="meetingMessage" role="status"></p></form></section>` : '';
     const list = state.meetings.slice().sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')));
@@ -399,8 +390,8 @@
   }
 
   function renderDocuments() {
-    const form = canManageDocuments()?`<section class="workspace-panel"><h3>Добавить документ или материал</h3><form id="documentForm" class="crm-form-grid"><label>Название<input name="title" required maxlength="150"></label><label>Категория<input name="category" maxlength="60" placeholder="Положение, план, протокол, отчёт"></label><label class="span-two">Описание<textarea name="description" rows="3" maxlength="1600"></textarea></label><label class="span-two">Ссылка на документ (необязательно)<input type="url" name="url" maxlength="1000" placeholder="https://..."></label><label class="span-two">Текст материала (необязательно)<textarea name="content" rows="5" maxlength="12000" placeholder="Можно вставить текст протокола, плана или положения"></textarea></label><label class="checkbox-label"><input type="checkbox" name="published"> Публиковать для всех учащихся</label><div class="crm-form-actions"><button class="crm-primary" type="submit">Добавить материал</button></div><p class="crm-form-message" id="documentMessage" role="status"></p></form><p class="crm-hint">В этой версии хранятся ссылки и текстовые материалы. Загрузка файлов с компьютера потребует отдельного подключения Firebase Storage.</p></section>`:'';
-    return `${workspaceWelcome('CRM / БИБЛИОТЕКА','Документы и материалы','Планы секторов, протоколы, положения, отчёты и другие материалы Совета.')}${form}<section class="workspace-panel"><div class="panel-heading"><h3>Библиотека (${state.documents.length})</h3></div>${state.documents.length?state.documents.map(item=>`<article class="crm-record compact-record"><div class="crm-record-top"><span class="crm-record-sector">${escapeHtml(item.category||'Материал')}</span><span class="crm-record-date">${item.published?'Публичный':'Внутренний'} · ${escapeHtml(formatDate(item.createdAt))}</span></div><h3>${escapeHtml(item.title)}</h3>${item.description?`<p>${escapeHtml(item.description)}</p>`:''}${item.content?`<details class="document-content"><summary>Открыть текст материала</summary><p>${escapeHtml(item.content)}</p></details>`:''}${item.url?`<a class="text-link" href="${escapeHtml(item.url)}" target="_blank" rel="noopener">Открыть документ ↗</a>`:''}${(isAdministrativeRole()||(isSectorLead()&&item.sectorId===currentSectorId()))?`${recordEditForm('documents',item.id,`<label>Название<input name="title" required maxlength="150" value="${escapeHtml(item.title)}"></label><label>Категория<input name="category" maxlength="60" value="${escapeHtml(item.category||'')}"></label><label class="span-two">Описание<textarea name="description" rows="2" maxlength="1600">${escapeHtml(item.description||'')}</textarea></label><label class="span-two">Ссылка<input type="url" name="url" maxlength="1000" value="${escapeHtml(item.url||'')}"></label><label class="span-two">Текст<textarea name="content" rows="4" maxlength="12000">${escapeHtml(item.content||'')}</textarea></label>`)}<div class="crm-record-controls"><label class="checkbox-label"><input type="checkbox" data-document-published="${item.id}" ${item.published?'checked':''}> Публичный</label><button class="crm-danger" data-delete-document="${item.id}">Удалить</button></div>`:''}</article>`).join(''):emptyState('▧','Библиотека пока пуста','Добавьте первый документ или текстовый материал.')}</section>`;
+    const form=canManageDocuments()?'<section class="workspace-panel"><h3>Добавить ссылку на документ Google Drive</h3><form id="documentForm" class="crm-form-grid"><label>Название<input name="title" required maxlength="150"></label><label>Категория<input name="category" maxlength="60" placeholder="Положение, план, протокол, отчёт"></label><label class="span-two">Описание<textarea name="description" rows="3" maxlength="1600"></textarea></label><label class="span-two">Ссылка Google Drive<input type="url" name="url" maxlength="1000" placeholder="https://drive.google.com/..." required></label><label class="checkbox-label"><input type="checkbox" name="published"> Публиковать для всех учащихся</label><div class="crm-form-actions"><button class="crm-primary" type="submit">Добавить ссылку</button></div><p class="crm-form-message" id="documentMessage" role="status"></p></form><p class="crm-hint">Файлы хранятся в Google Drive. В библиотеке Совета сохраняются только название, описание и ссылка. Настройте доступ к файлу в Google Drive перед публикацией.</p></section>':'';
+    return `${workspaceWelcome('CRM / БИБЛИОТЕКА','Документы и материалы','Библиотека содержит ссылки на файлы Google Drive — сами файлы на сайте не хранятся.')}${form}<section class="workspace-panel"><div class="panel-heading"><h3>Библиотека (${state.documents.length})</h3></div>${state.documents.length?state.documents.map(item=>`<article class="crm-record compact-record"><div class="crm-record-top"><span class="crm-record-sector">${escapeHtml(item.category||'Материал')}</span><span class="crm-record-date">${item.published?'Публичный':'Внутренний'} · ${escapeHtml(formatDate(item.createdAt))}</span></div><h3>${escapeHtml(item.title)}</h3>${item.description?`<p>${escapeHtml(item.description)}</p>`:''}${item.url?`<a class="text-link" href="${escapeHtml(item.url)}" target="_blank" rel="noopener">Открыть в Google Drive ↗</a>`:''}${(isAdministrativeRole()||(isSectorLead()&&item.sectorId===currentSectorId()))?`${recordEditForm('documents',item.id,`<label>Название<input name="title" required maxlength="150" value="${escapeHtml(item.title)}"></label><label>Категория<input name="category" maxlength="60" value="${escapeHtml(item.category||'')}"></label><label class="span-two">Описание<textarea name="description" rows="2" maxlength="1600">${escapeHtml(item.description||'')}</textarea></label><label class="span-two">Ссылка Google Drive<input type="url" name="url" maxlength="1000" required value="${escapeHtml(item.url||'')}"></label>`)}<div class="crm-record-controls"><label class="checkbox-label"><input type="checkbox" data-document-published="${item.id}" ${item.published?'checked':''}> Публичный</label><button class="crm-danger" data-delete-document="${item.id}">Удалить</button></div>`:''}</article>`).join(''):emptyState('▧','Библиотека пока пуста','Добавьте ссылку на первый файл Google Drive.')}</section>`;
   }
 
   function renderReports() {
@@ -515,7 +506,7 @@
   }
   function renderPublicDocuments() {
     const node=$('#publicDocuments'); if(!node)return;
-    node.innerHTML=state.publicDocuments.length?state.publicDocuments.map(item=>`<article class="public-document-card"><span>▧</span><div><b>${escapeHtml(item.title)}</b><small>${escapeHtml(item.category||'Материал')} · ${escapeHtml(item.description||'')}</small>${item.url?`<a href="${escapeHtml(item.url)}" target="_blank" rel="noopener">Открыть документ ↗</a>`:''}${item.content?`<details><summary>Читать текст</summary><p>${escapeHtml(item.content)}</p></details>`:''}</div></article>`).join(''):`<div class="materials-placeholder"><span>▧</span><div><b>Библиотека документов</b><small>Опубликованные материалы появятся здесь.</small></div></div>`;
+    node.innerHTML=state.publicDocuments.length?state.publicDocuments.map(item=>`<article class="public-document-card"><span>▧</span><div><b>${escapeHtml(item.title)}</b><small>${escapeHtml(item.category||'Материал')} · ${escapeHtml(item.description||'')}</small>${item.url?`<a href="${escapeHtml(item.url)}" target="_blank" rel="noopener">Открыть документ ↗</a>`:''}</div></article>`).join(''):`<div class="materials-placeholder"><span>▧</span><div><b>Библиотека документов</b><small>Опубликованные материалы появятся здесь.</small></div></div>`;
   }
   function renderPublicSectorPlans() {
     const node=$('#publicSectorPlans'); if(!node)return;
@@ -536,6 +527,7 @@
       const ref=isSectorLead()?db.collection('initiatives').where('sectorId','==',currentSectorId()):db.collection('initiatives');
       addListener(ref.onSnapshot(snapshot=>{state.initiatives=sortNewest(mapSnapshot(snapshot));renderIfPage('overview','initiatives','analytics','archive');},err=>console.warn('Initiatives:',err)));
     }
+    addListener(db.collection('liveControl').doc('current').onSnapshot(snapshot=>{state.liveControl=snapshot.exists?snapshot.data():null;renderIfPage('live');},err=>console.warn('Live control:',err)));
     addListener(db.collection('meetings').orderBy('date','desc').limit(100).onSnapshot(snapshot=>{state.meetings=mapSnapshot(snapshot);renderIfPage('overview','meetings','analytics','archive','live');},err=>console.warn('Meetings:',err)));
     addListener(db.collection('polls').orderBy('createdAt','desc').limit(100).onSnapshot(snapshot=>{state.polls=mapSnapshot(snapshot);syncVoteListeners();renderIfPage('overview','voting','analytics','archive','live');},err=>console.warn('Polls:',err)));
     addListener(db.collection('decisions').orderBy('createdAt','desc').limit(100).onSnapshot(snapshot=>{state.decisions=mapSnapshot(snapshot);renderIfPage('tasks','analytics','archive');},err=>console.warn('Decisions:',err)));
@@ -731,9 +723,11 @@
     catch(error){console.error(error);$('#announcementMessage').textContent='Не удалось сохранить объявление. Проверьте правила Firestore.';}
   }
   async function saveDocument(event){
-    event.preventDefault();if(!canManageDocuments())return;const form=event.currentTarget,data=Object.fromEntries(new FormData(form).entries()),url=String(data.url||'').trim();if(url&&!/^https?:\/\//i.test(url)){ $('#documentMessage').textContent='Ссылка должна начинаться с https:// или http://';return;}
-    try{await state.db.collection('documents').add({title:String(data.title).trim().slice(0,150),category:String(data.category||'').trim().slice(0,60),description:String(data.description||'').trim().slice(0,1600),url,content:String(data.content||'').trim().slice(0,12000),published:!!form.querySelector('[name="published"]')?.checked,sectorId:currentSectorId()||'administrative',createdBy:profile().uid,createdAt:timestamp()});form.reset();$('#documentMessage').textContent='Материал добавлен.';}
-    catch(error){console.error(error);$('#documentMessage').textContent='Не удалось добавить документ. Проверьте правила Firestore.';}
+    event.preventDefault();if(!canManageDocuments())return;const form=event.currentTarget,data=Object.fromEntries(new FormData(form).entries()),url=String(data.url||'').trim();
+    let parsed;try{parsed=new URL(url);}catch(_){$('#documentMessage').textContent='Вставьте корректную ссылку Google Drive.';return;}
+    if(parsed.protocol!=='https:'||!['drive.google.com','docs.google.com'].includes(parsed.hostname)){ $('#documentMessage').textContent='Используйте ссылку Google Drive или Google Docs.';return;}
+    try{await state.db.collection('documents').add({title:String(data.title).trim().slice(0,150),category:String(data.category||'').trim().slice(0,60),description:String(data.description||'').trim().slice(0,1600),url,published:!!form.querySelector('[name="published"]')?.checked,sectorId:currentSectorId()||'administrative',createdBy:profile().uid,createdAt:timestamp()});form.reset();$('#documentMessage').textContent='Ссылка добавлена в библиотеку.';}
+    catch(error){console.error(error);$('#documentMessage').textContent='Не удалось добавить ссылку. Проверьте правила Firestore.';}
   }
   async function saveSectorReport(event){
     event.preventDefault();if(!isSectorLead())return;const form=event.currentTarget,data=Object.fromEntries(new FormData(form).entries());
@@ -774,7 +768,7 @@
     else if(collection==='announcements'&&canManageAnnouncements())patch={title:String(data.title||'').trim().slice(0,140),content:String(data.content||'').trim().slice(0,5000)};
     else if(collection==='documents'&&canManageDocuments()){
       const url=String(data.url||'').trim();if(url&&!/^https?:\/\//i.test(url)){form.querySelector('[role="status"]').textContent='Ссылка должна начинаться с http:// или https://';return;}
-      patch={title:String(data.title||'').trim().slice(0,150),category:String(data.category||'').trim().slice(0,60),description:String(data.description||'').trim().slice(0,1600),url,content:String(data.content||'').trim().slice(0,12000)};
+      patch={title:String(data.title||'').trim().slice(0,150),category:String(data.category||'').trim().slice(0,60),description:String(data.description||'').trim().slice(0,1600),url};
     }
     else if(collection==='sectorReports'&&isSectorLead()){
       const report=state.reports.find(item=>item.id===id);if(!report||report.status!=='revision'||report.createdBy!==profile().uid||report.sectorId!==currentSectorId()){form.querySelector('[role="status"]').textContent='Этот отчёт нельзя отправить повторно.';return;}
@@ -834,7 +828,7 @@
     document.addEventListener('submit',event=>{
       const form=event.target;
       if(!(form instanceof HTMLFormElement))return;
-      const handlers={participantForm:saveParticipantProfile,sectorPlanForm:saveSectorPlan,sectorReportForm:saveSectorReport,meetingForm:saveMeeting,pollForm:savePoll,projectForm:saveProject,taskForm:saveTask,decisionForm:saveDecision,announcementForm:saveAnnouncement,documentForm:saveDocument,accountForm:saveAccount,settingsForm:saveSettings};
+      const handlers={participantForm:saveParticipantProfile,sectorPlanForm:saveSectorPlan,sectorReportForm:saveSectorReport,meetingForm:saveMeeting,pollForm:savePoll,projectForm:saveProject,taskForm:saveTask,decisionForm:saveDecision,announcementForm:saveAnnouncement,documentForm:saveDocument,liveControlForm:saveLiveControl,accountForm:saveAccount,settingsForm:saveSettings};
       const handler=handlers[form.id] || (form.matches('.sector-plan-form')?saveSectorPlan:form.matches('[data-vote-poll]')?castVote:form.matches('[data-edit-collection]')?saveRecordEdit:null);
       if(!handler)return;
       event.preventDefault();
@@ -862,6 +856,9 @@
       if(event.target.closest('[data-open-login]'))showLogin();
       if(event.target.closest('[data-open-workspace]'))showWorkspace();
       if(event.target.closest('[data-open-initiative]'))showInitiativeForm();
+      if(event.target.closest('[data-live-open]'))openLiveBoard();
+      if(event.target.closest('[data-live-stop]')){const form=$('#liveControlForm');if(form){const toggle=form.querySelector('[name=enabled]');if(toggle)toggle.checked=false;form.requestSubmit();}}
+      if(event.target.closest('[data-live-copy]')){const url=new URL('live.html',window.location.href).toString();navigator.clipboard?.writeText(url).then(()=>showToast('Ссылка скопирована',url)).catch(()=>showToast('Ссылка Live-экрана',url));}
     });
     $('#closeLogin')?.addEventListener('click',hideLogin);$('#loginOverlay')?.addEventListener('click',event=>{if(event.target.id==='loginOverlay')hideLogin();});$('#loginForm')?.addEventListener('submit',submitLogin);
     $('#logoutButton')?.addEventListener('click',()=>state.auth?.signOut());
