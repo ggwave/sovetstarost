@@ -25,12 +25,15 @@
   function slideMarkup(control){
     const slides=Array.isArray(control.slides)?control.slides:[];
     if(!slides.length)return '<div class="empty-live"><span>▤</span><h2>Презентация пока не создана</h2><p>Добавьте слайды на пульте управления.</p></div>';
-    const index=Math.min(Math.max(0,Number(control.currentSlide)||0),slides.length-1);
-    const slide=slides[index]||{};
-    const body=String(slide.body||'').trim();
-    const bodyMarkup=body?body.split(/\n\s*\n/).map(paragraph=>'<p>'+esc(paragraph)+'</p>').join(''):'';
+    const index=Math.min(Math.max(0,Number(control.currentSlide)||0),slides.length-1),slide=slides[index]||{};
+    const type=['title','text','agenda','list','quote','section','announcement','closing'].includes(slide.type)?slide.type:'text';
+    const body=String(slide.body||'').trim(),lines=body.split(/\r?\n/).filter(Boolean);
+    let bodyMarkup='';
+    if(type==='agenda'||type==='list')bodyMarkup='<ul>'+lines.map(line=>'<li>'+esc(line)+'</li>').join('')+'</ul>';
+    else if(type==='quote')bodyMarkup='<blockquote>'+esc(body)+'</blockquote>';
+    else bodyMarkup=body.split(/\n\s*\n/).filter(Boolean).map(paragraph=>'<p>'+esc(paragraph)+'</p>').join('');
     const progress=Math.round((index+1)/slides.length*100);
-    return '<article class="slide-display"><div class="slide-topline"><span class="section-kicker">ПРЕЗЕНТАЦИЯ · СОВЕТ ОБУЧАЮЩИХСЯ</span><span class="slide-counter">'+String(index+1).padStart(2,'0')+' <i>/</i> '+String(slides.length).padStart(2,'0')+'</span></div><div class="slide-content"><div class="slide-mark">✳</div><h1>'+esc(slide.title||'Слайд '+(index+1))+'</h1><div class="slide-body">'+bodyMarkup+'</div></div><div class="slide-bottomline"><span>ВМЕСТЕ К БОЛЬШЕМУ</span><div class="slide-progress"><i style="width:'+progress+'%"></i></div><span>'+progress+'%</span></div></article>';
+    return '<article class="slide-display slide-type-'+type+'"><div class="slide-topline"><span class="section-kicker">СОВЕТ ОБУЧАЮЩИХСЯ · ПЕТЕРГОФСКАЯ ГИМНАЗИЯ</span><span class="slide-counter">'+String(index+1).padStart(2,'0')+' <i>/</i> '+String(slides.length).padStart(2,'0')+'</span></div><div class="slide-content"><div class="slide-mark">'+(type==='quote'?'❝':type==='section'?'／':type==='closing'?'✧':'✳')+'</div><h1>'+esc(slide.title||'Слайд '+(index+1))+'</h1><div class="slide-body">'+bodyMarkup+'</div></div><div class="slide-bottomline"><span>ВМЕСТЕ К БОЛЬШЕМУ</span><div class="slide-progress"><i style="width:'+progress+'%"></i></div><span>'+progress+'%</span></div></article>';
   }
 
   function meetingMarkup(meeting){
@@ -46,7 +49,7 @@
     root.dataset.animation=c.animation||'smooth';
     if(!c.enabled){$('#liveStage').innerHTML='<div class="standby"><img src="assets/emblem.png" alt=""><p class="eyebrow">СОВЕТ ОБУЧАЮЩИХСЯ</p><h1>Вместе к большему.</h1><p>Трансляция пока не запущена</p><span class="standby-pulse"></span></div>';$('#liveFooterMessage').textContent='ОЖИДАНИЕ ТРАНСЛЯЦИИ';return;}
     const title=esc(c.title||'Совет обучающихся'),subtitle=c.subtitle?'<p class="screen-subtitle">'+esc(c.subtitle)+'</p>':'';
-    const mode=c.mode&&c.mode!=='overview'?c.mode:(c.meetingId?'meeting':c.pollId?'poll':'overview');let content='';
+    const mode=c.mode&&c.mode!=='overview'?c.mode:(c.meetingId?'meeting':c.pollId?'poll':'overview');root.classList.toggle('is-slides',mode==='slides');let content='';
     if(mode==='slides'){content=slideMarkup(c);}
     else if(mode==='poll'){content=pollMarkup(activePoll());}
     else if(mode==='meeting'){content=meetingMarkup(upcomingMeeting());}
