@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#20170f">
+  <title>Live — Совет обучающихся</title>
+  <link rel="icon" href="assets/emblem.png">
+  <link rel="stylesheet" href="css/live.css?v=20261126-1">
+  <script src="https://www.gstatic.com/firebasejs/13.4.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <main class="live-screen" id="liveScreen">
+    <div class="live-grain"></div><div class="live-orbit orbit-a"></div><div class="live-orbit orbit-b"></div>
+    <header class="live-header">
+      <div class="live-brand"><img src="assets/emblem.png" alt=""><div><b>СОВЕТ ОБУЧАЮЩИХСЯ</b><span>ВМЕСТЕ К БОЛЬШЕМУ</span></div></div>
+      <div class="live-header-right"><span class="connection"><i id="connectionDot"></i><span id="connectionText">Подключение…</span></span><time id="liveClock">--:--:--</time><button id="fullscreenButton" type="button" aria-label="Полноэкранный режим">⛶</button></div>
+    </header>
+    <section class="live-stage" id="liveStage" aria-live="polite">
+      <div class="standby"><img src="assets/emblem.png" alt=""><p class="eyebrow">СОВЕТ ОБУЧАЮЩИХСЯ</p><h1>Вместе к большему.</h1><p>Ожидание начала трансляции</p><span class="standby-pulse"></span></div>
+    </section>
+    <footer class="live-footer"><span>ПЕТЕРГОФСКАЯ ГИМНАЗИЯ</span><span id="liveFooterMessage">ОФИЦИАЛЬНОЕ LIVE-ТАБЛО</span><span>2026</span></footer>
+  </main>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/live.js?v=20261126-1"></script>
+</body>
+</html>
