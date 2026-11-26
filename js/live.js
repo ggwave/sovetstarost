@@ -50,8 +50,8 @@
     if(!firebase.apps.length)firebase.initializeApp(window.SOVET_FIREBASE_CONFIG);
     state.db=firebase.firestore();
     state.db.collection('liveControl').doc('current').onSnapshot(s=>{state.control=s.exists?s.data():null;const poll=activePoll();syncVotes(poll);setConnection(true,'Синхронизация активна');render();},e=>{console.error(e);setConnection(false,'Нет доступа к Live-настройкам');});
-    state.db.collection('polls').limit(100).onSnapshot(s=>{state.polls=s.docs.map(d=>({id:d.id,...d.data()}));syncVotes(activePoll());render();},e=>console.warn('Polls:',e));
-    state.db.collection('meetings').limit(100).onSnapshot(s=>{state.meetings=s.docs.map(d=>({id:d.id,...d.data()}));render();},e=>console.warn('Meetings:',e));
+    state.db.collection('polls').where('published','==',true).limit(100).onSnapshot(s=>{state.polls=s.docs.map(d=>({id:d.id,...d.data()}));syncVotes(activePoll());render();},e=>console.warn('Polls:',e));
+    state.db.collection('meetings').where('published','==',true).limit(100).onSnapshot(s=>{state.meetings=s.docs.map(d=>({id:d.id,...d.data()}));render();},e=>console.warn('Meetings:',e));
   }
   $('#fullscreenButton').addEventListener('click',()=>{if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.();});
   updateClock();setInterval(updateClock,1000);start();
