@@ -312,8 +312,8 @@
 
   function renderLiveBoard() {
     const control=state.liveControl||{};
-    const pollOptions=state.polls.map(item=>`<option value="${escapeHtml(item.id)}" ${control.pollId===item.id?'selected':''}>${escapeHtml(item.title)} · ${escapeHtml(POLL_STATUSES[item.status]||'')}</option>`).join('');
-    const meetingOptions=state.meetings.map(item=>`<option value="${escapeHtml(item.id)}" ${control.meetingId===item.id?'selected':''}>${escapeHtml(item.title)} · ${escapeHtml(formatDate(item.date))}</option>`).join('');
+    const pollOptions=state.polls.filter(item=>item.published).map(item=>`<option value="${escapeHtml(item.id)}" ${control.pollId===item.id?'selected':''}>${escapeHtml(item.title)} · ${escapeHtml(POLL_STATUSES[item.status]||'')}</option>`).join('');
+    const meetingOptions=state.meetings.filter(item=>item.published).map(item=>`<option value="${escapeHtml(item.id)}" ${control.meetingId===item.id?'selected':''}>${escapeHtml(item.title)} · ${escapeHtml(formatDate(item.date))}</option>`).join('');
     return workspaceWelcome('LIVE / РЕЖИССЁРСКАЯ','Пульт управления трансляцией','Управляйте отдельным экраном Совета. Изменения появятся на Live-табло автоматически.')
       + `<section class="live-control-hero"><div><span class="live-control-dot ${control.enabled?'is-on':''}"></span><b>${control.enabled?'ТРАНСЛЯЦИЯ ВКЛЮЧЕНА':'ТРАНСЛЯЦИЯ ОСТАНОВЛЕНА'}</b><p>Экран открывается в отдельной вкладке и обновляется в реальном времени.</p></div><div class="live-control-actions"><button type="button" class="crm-primary" data-live-open>Открыть Live-экран ↗</button><button type="button" class="crm-secondary" data-live-copy>Скопировать ссылку</button></div></section>`
       + `<section class="workspace-panel"><div class="panel-heading"><div><p class="eyebrow">НАСТРОЙКА ЭФИРА</p><h3>Что показывать на экране</h3></div><span class="live-state ${control.enabled?'is-planned':'is-cancelled'}">${control.enabled?'В эфире':'Не в эфире'}</span></div>
@@ -447,6 +447,7 @@
     if (page==='reports'&&!(isAdministrativeRole()||isSectorLead())) page='overview';
     if (page==='analytics'&&!isAdministrativeRole()) page='overview';
     if (page==='initiatives'&&!canManageInitiatives()) page='overview';
+    if (page==='live'&&!isAdministrativeRole()) page='overview';
     if (page==='meetings'&&!state.profile) page='overview';
     state.activePage=page;
     $('#workspaceTitle').textContent=workspacePages[page];
