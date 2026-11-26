@@ -279,7 +279,8 @@ service cloud.firestore {
           && getAfter(/databases/$(database)/documents/polls/$(request.resource.data.recordId)).data.title == request.resource.data.title
           && getAfter(/databases/$(database)/documents/polls/$(request.resource.data.recordId)).data.createdAt == request.resource.data.createdAt)
       );
-      allow update, delete: if false;
+      allow update: if false;
+      allow delete: if isChair() && resource.data.type == 'initiative';
     }
 
     function validMeeting() {
