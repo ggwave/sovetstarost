@@ -47,7 +47,7 @@
   function render(){
     const c=state.control||{},root=$('#liveScreen');
     root.dataset.animation=c.animation||'smooth';
-    if(!c.enabled){$('#liveStage').innerHTML='<div class="standby"><img src="assets/emblem.png" alt=""><p class="eyebrow">СОВЕТ ОБУЧАЮЩИХСЯ</p><h1>Вместе к большему.</h1><p>Трансляция пока не запущена</p><span class="standby-pulse"></span></div>';$('#liveFooterMessage').textContent='ОЖИДАНИЕ ТРАНСЛЯЦИИ';return;}
+    if(!c.enabled){root.classList.remove('is-slides');$('#liveStage').innerHTML='<div class="standby"><img src="assets/emblem.png" alt=""><p class="eyebrow">СОВЕТ ОБУЧАЮЩИХСЯ</p><h1>Вместе к большему.</h1><p>Трансляция пока не запущена</p><span class="standby-pulse"></span></div>';$('#liveFooterMessage').textContent='ОЖИДАНИЕ ТРАНСЛЯЦИИ';return;}
     const title=esc(c.title||'Совет обучающихся'),subtitle=c.subtitle?'<p class="screen-subtitle">'+esc(c.subtitle)+'</p>':'';
     const mode=c.mode&&c.mode!=='overview'?c.mode:(c.meetingId?'meeting':c.pollId?'poll':'overview');root.classList.toggle('is-slides',mode==='slides');let content='';
     if(mode==='slides'){content=slideMarkup(c);}
