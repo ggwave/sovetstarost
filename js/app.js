@@ -866,6 +866,20 @@
     $('#logoutButton')?.addEventListener('click',()=>state.auth?.signOut());
     $('#closeInitiative')?.addEventListener('click',hideInitiativeForm);$('#initiativeOverlay')?.addEventListener('click',event=>{if(event.target.id==='initiativeOverlay')hideInitiativeForm();});$('#initiativeForm')?.addEventListener('submit',submitPublicInitiative);
     $('#trackingForm')?.addEventListener('submit',submitTracking);
+    // Choosing an item should also switch the Live screen to its dedicated mode.
+    document.addEventListener('change',event=>{
+      const field=event.target;
+      const mode=$('#liveControlForm [name="mode"]');
+      if(!mode)return;
+      if(field.matches('#liveControlForm [name="meetingId"]')){
+        if(field.value)mode.value='meeting';
+        else if(mode.value==='meeting')mode.value='overview';
+      }
+      if(field.matches('#liveControlForm [name="pollId"]')){
+        if(field.value)mode.value='poll';
+        else if(mode.value==='poll')mode.value='overview';
+      }
+    });
     document.addEventListener('keydown',event=>{if(event.key==='Escape'){hideLogin();hideInitiativeForm();$('#notificationPanel').hidden=true;$('#workspace')?.classList.remove('menu-open');$('#workspaceMenuToggle')?.setAttribute('aria-expanded','false');}});
   }
 
