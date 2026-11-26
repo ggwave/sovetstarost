@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   const $=s=>document.querySelector(s);
-  const state={db:null,control:null,polls:[],meetings:[],votes:[],voteUnsub:null,voteError:false};
+  const state={db:null,control:null,polls:[],meetings:[],votes:[],voteUnsub:null,voteError:false,authenticated:false};
   const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const parseDate=value=>{if(!value)return null;const d=value.toDate?value.toDate():new Date(value);return Number.isNaN(d.getTime())?null:d;};
   const fmtDate=value=>{const d=parseDate(value);return d?d.toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'}):'Дата уточняется';};
@@ -13,14 +13,14 @@
   function syncVotes(poll){
     if(state.voteUnsub){state.voteUnsub();state.voteUnsub=null;}
     state.votes=[];state.voteError=false;
-    if(!poll||!state.db)return;
+    if(!poll||!state.db)return;if(!state.authenticated){state.voteError=true;return;}
     state.voteUnsub=state.db.collection('polls').doc(poll.id).collection('votes').onSnapshot(snap=>{state.votes=snap.docs.map(d=>d.data());state.voteError=false;render();},err=>{console.warn('Live vote read:',err);state.voteError=true;render();});
   }
   function pollMarkup(poll){
     if(!poll)return '<div class="empty-live"><span>◉</span><h2>Пока нет активного голосования</h2><p>Когда пульт выберет голосование, оно появится здесь.</p></div>';
     const votes=state.votes, total=votes.length;
     const counts=(poll.options||[]).map(o=>({label:o.label,count:votes.filter(v=>(v.selectedOptionIds||[]).includes(o.id)).length}));
-    return '<article class="poll-display"><div class="section-kicker">ГОЛОСОВАНИЕ · '+(poll.status==='open'?'ИДЁТ СЕЙЧАС':'ЗАВЕРШЕНО')+'</div><h2>'+esc(poll.title)+'</h2>'+(poll.description?'<p class="poll-description">'+esc(poll.description)+'</p>':'')+'<div class="vote-total"><b>'+ (state.voteError?'—':total) +'</b><span>участников проголосовали</span></div><div class="result-list">'+(state.voteError?'<p class="privacy-note">Результаты скрыты текущими правилами доступа Firebase.</p>':counts.map((o,i)=>{const pct=total?Math.round(o.count/total*100):0;return '<div class="result-item" style="--delay:'+i*90+'ms"><div class="result-label"><span>'+esc(o.label)+'</span><b>'+o.count+' · '+pct+'%</b></div><div class="result-track"><i style="width:'+pct+'%"></i></div></div>';}).join(''))+'</div></article>';
+    return '<article class="poll-display"><div class="section-kicker">ГОЛОСОВАНИЕ · '+(poll.status==='open'?'ИДЁТ СЕЙЧАС':'ЗАВЕРШЕНО')+'</div><h2>'+esc(poll.title)+'</h2>'+(poll.description?'<p class="poll-description">'+esc(poll.description)+'</p>':'')+'<div class="vote-total"><b>'+ (state.voteError?'—':total) +'</b><span>участников проголосовали</span></div><div class="result-list">'+(state.voteError?'<p class="privacy-note">Для просмотра результатов откройте Live-экран в том же браузере, где выполнен вход в CRM.</p>':counts.map((o,i)=>{const pct=total?Math.round(o.count/total*100):0;return '<div class="result-item" style="--delay:'+i*90+'ms"><div class="result-label"><span>'+esc(o.label)+'</span><b>'+o.count+' · '+pct+'%</b></div><div class="result-track"><i style="width:'+pct+'%"></i></div></div>';}).join(''))+'</div></article>';
   }
   function meetingMarkup(meeting){
     if(!meeting)return '<div class="empty-live"><span>◷</span><h2>Нет выбранного собрания</h2><p>Выберите событие на пульте управления.</p></div>';
@@ -49,6 +49,7 @@
     if(!window.firebase||!window.SOVET_FIREBASE_CONFIG){setConnection(false,'Firebase недоступен');return;}
     if(!firebase.apps.length)firebase.initializeApp(window.SOVET_FIREBASE_CONFIG);
     state.db=firebase.firestore();
+    firebase.auth().onAuthStateChanged(user=>{state.authenticated=!!user;if(user){setConnection(true,'Синхронизация активна');syncVotes(activePoll());}else{state.votes=[];state.voteError=true;setConnection(true,'Войдите в CRM для результатов');render();}});
     state.db.collection('liveControl').doc('current').onSnapshot(s=>{state.control=s.exists?s.data():null;const poll=activePoll();syncVotes(poll);setConnection(true,'Синхронизация активна');render();},e=>{console.error(e);setConnection(false,'Нет доступа к Live-настройкам');});
     state.db.collection('polls').where('published','==',true).limit(100).onSnapshot(s=>{state.polls=s.docs.map(d=>({id:d.id,...d.data()}));syncVotes(activePoll());render();},e=>console.warn('Polls:',e));
     state.db.collection('meetings').where('published','==',true).limit(100).onSnapshot(s=>{state.meetings=s.docs.map(d=>({id:d.id,...d.data()}));render();},e=>console.warn('Meetings:',e));
