@@ -396,6 +396,8 @@
   }
   async function publishLiveSlides() {
     if(!isAdministrativeRole()||!state.db)return;
+    if(liveSettingsSaveTimer){clearTimeout(liveSettingsSaveTimer);liveSettingsSaveTimer=null;}
+    await persistLiveSettings();
     const slides=ensureLiveDraft().slice(0,30).map(x=>({type:LIVE_SLIDE_TEMPLATES.some(t=>t.id===x.type)?x.type:'text',title:String(x.title||'Слайд').trim().slice(0,100),body:String(x.body||'').trim().slice(0,2000)}));
     const old=state.liveControl||{},current=Math.min(Number(old.currentSlide)||0,slides.length-1);
     const payload={enabled:old.enabled===true,mode:'slides',pollId:old.pollId||'',meetingId:old.meetingId||'',title:old.title||'Совет обучающихся',subtitle:old.subtitle||'',animation:old.animation||'smooth',showClock:old.showClock!==false,showStats:old.showStats!==false,slides,currentSlide:current,autoAdvance:old.autoAdvance===true,slideInterval:Math.min(120,Math.max(5,Number(old.slideInterval)||12)),updatedAt:timestamp(),updatedBy:profile().uid};
