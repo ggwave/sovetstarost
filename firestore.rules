@@ -331,8 +331,9 @@ service cloud.firestore {
 
     function validLiveSlide(slide) {
       return slide is map
-        && slide.keys().hasAll(['title', 'body'])
-        && slide.keys().hasOnly(['title', 'body'])
+        && slide.keys().hasAll(['type', 'title', 'body'])
+        && slide.keys().hasOnly(['type', 'title', 'body'])
+        && slide.type in ['title', 'text', 'agenda', 'list', 'quote', 'section', 'announcement', 'closing']
         && slide.title is string
         && slide.title.size() >= 1
         && slide.title.size() <= 100
@@ -343,7 +344,7 @@ service cloud.firestore {
     function validLiveSlideList() {
       return request.resource.data.slides is list
         && request.resource.data.slides.size() >= 1
-        && request.resource.data.slides.size() <= 12
+        && request.resource.data.slides.size() <= 30
         && validLiveSlide(request.resource.data.slides[0])
         && (request.resource.data.slides.size() <= 1 || validLiveSlide(request.resource.data.slides[1]))
         && (request.resource.data.slides.size() <= 2 || validLiveSlide(request.resource.data.slides[2]))
@@ -355,7 +356,25 @@ service cloud.firestore {
         && (request.resource.data.slides.size() <= 8 || validLiveSlide(request.resource.data.slides[8]))
         && (request.resource.data.slides.size() <= 9 || validLiveSlide(request.resource.data.slides[9]))
         && (request.resource.data.slides.size() <= 10 || validLiveSlide(request.resource.data.slides[10]))
-        && (request.resource.data.slides.size() <= 11 || validLiveSlide(request.resource.data.slides[11]));
+        && (request.resource.data.slides.size() <= 11 || validLiveSlide(request.resource.data.slides[11]))
+        && (request.resource.data.slides.size() <= 12 || validLiveSlide(request.resource.data.slides[12]))
+        && (request.resource.data.slides.size() <= 13 || validLiveSlide(request.resource.data.slides[13]))
+        && (request.resource.data.slides.size() <= 14 || validLiveSlide(request.resource.data.slides[14]))
+        && (request.resource.data.slides.size() <= 15 || validLiveSlide(request.resource.data.slides[15]))
+        && (request.resource.data.slides.size() <= 16 || validLiveSlide(request.resource.data.slides[16]))
+        && (request.resource.data.slides.size() <= 17 || validLiveSlide(request.resource.data.slides[17]))
+        && (request.resource.data.slides.size() <= 18 || validLiveSlide(request.resource.data.slides[18]))
+        && (request.resource.data.slides.size() <= 19 || validLiveSlide(request.resource.data.slides[19]))
+        && (request.resource.data.slides.size() <= 20 || validLiveSlide(request.resource.data.slides[20]))
+        && (request.resource.data.slides.size() <= 21 || validLiveSlide(request.resource.data.slides[21]))
+        && (request.resource.data.slides.size() <= 22 || validLiveSlide(request.resource.data.slides[22]))
+        && (request.resource.data.slides.size() <= 23 || validLiveSlide(request.resource.data.slides[23]))
+        && (request.resource.data.slides.size() <= 24 || validLiveSlide(request.resource.data.slides[24]))
+        && (request.resource.data.slides.size() <= 25 || validLiveSlide(request.resource.data.slides[25]))
+        && (request.resource.data.slides.size() <= 26 || validLiveSlide(request.resource.data.slides[26]))
+        && (request.resource.data.slides.size() <= 27 || validLiveSlide(request.resource.data.slides[27]))
+        && (request.resource.data.slides.size() <= 28 || validLiveSlide(request.resource.data.slides[28]))
+        && (request.resource.data.slides.size() <= 29 || validLiveSlide(request.resource.data.slides[29]));
     }
 
     // Public read-only control state for the separate projector display.
