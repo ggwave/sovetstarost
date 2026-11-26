@@ -312,13 +312,14 @@
 
   function renderLiveBoard() {
     const control=state.liveControl||{};
+    const screenMode=control.mode==='overview'?(control.meetingId?'meeting':control.pollId?'poll':'overview'):(control.mode||'overview');
     const pollOptions=state.polls.filter(item=>item.published).map(item=>`<option value="${escapeHtml(item.id)}" ${control.pollId===item.id?'selected':''}>${escapeHtml(item.title)} · ${escapeHtml(POLL_STATUSES[item.status]||'')}</option>`).join('');
     const meetingOptions=state.meetings.filter(item=>item.published).map(item=>`<option value="${escapeHtml(item.id)}" ${control.meetingId===item.id?'selected':''}>${escapeHtml(item.title)} · ${escapeHtml(formatDate(item.date))}</option>`).join('');
     return workspaceWelcome('LIVE / РЕЖИССЁРСКАЯ','Пульт управления трансляцией','Управляйте отдельным экраном Совета. Изменения появятся на Live-табло автоматически.')
       + `<section class="live-control-hero"><div><span class="live-control-dot ${control.enabled?'is-on':''}"></span><b>${control.enabled?'ТРАНСЛЯЦИЯ ВКЛЮЧЕНА':'ТРАНСЛЯЦИЯ ОСТАНОВЛЕНА'}</b><p>Экран открывается в отдельной вкладке и обновляется в реальном времени.</p></div><div class="live-control-actions"><button type="button" class="crm-primary" data-live-open>Открыть Live-экран ↗</button><button type="button" class="crm-secondary" data-live-copy>Скопировать ссылку</button></div></section>`
       + `<section class="workspace-panel"><div class="panel-heading"><div><p class="eyebrow">НАСТРОЙКА ЭФИРА</p><h3>Что показывать на экране</h3></div><span class="live-state ${control.enabled?'is-planned':'is-cancelled'}">${control.enabled?'В эфире':'Не в эфире'}</span></div>
       <form id="liveControlForm" class="crm-form-grid live-control-form">
-        <label>Режим экрана<select name="mode"><option value="overview" ${(control.mode||'overview')==='overview'?'selected':''}>Общий экран</option><option value="poll" ${control.mode==='poll'?'selected':''}>Одно голосование</option><option value="meeting" ${control.mode==='meeting'?'selected':''}>Одно собрание</option><option value="message" ${control.mode==='message'?'selected':''}>Объявление / текстовый экран</option></select></label>
+        <label>Режим экрана<select name="mode"><option value="overview" ${screenMode==='overview'?'selected':''}>Общий экран</option><option value="poll" ${screenMode==='poll'?'selected':''}>Одно голосование</option><option value="meeting" ${screenMode==='meeting'?'selected':''}>Одно собрание</option><option value="message" ${control.mode==='message'?'selected':''}>Объявление / текстовый экран</option></select></label>
         <label>Активное голосование<select name="pollId"><option value="">Автоматически / не выбрано</option>${pollOptions}</select></label>
         <label>Активное собрание<select name="meetingId"><option value="">Автоматически / не выбрано</option>${meetingOptions}</select></label>
         <label>Заголовок экрана<input name="title" maxlength="100" value="${escapeHtml(control.title||'Совет обучающихся')}"></label>
