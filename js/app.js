@@ -514,6 +514,10 @@
     const events = [];
     state.meetings.filter(item => item.date && item.status !== 'cancelled').forEach(item => events.push({date:item.date,kind:'meeting',title:item.title,detail:item.time || 'Собрание',page:'meetings'}));
     state.tasks.filter(item => item.dueDate && item.status !== 'cancelled').forEach(item => events.push({date:item.dueDate,kind:'task',title:item.title,detail:item.assigneeName || 'Поручение',page:'tasks',status:item.status}));
+    state.projects.forEach(item => {
+      if (item.startDate) events.push({date:item.startDate,kind:'project',title:item.title,detail:'Начало проекта',page:'projects'});
+      if (item.endDate) events.push({date:item.endDate,kind:'project',title:item.title,detail:'Завершение проекта',page:'projects'});
+    });
     const byDate = {};
     events.forEach(item => { if (!byDate[item.date]) byDate[item.date] = []; byDate[item.date].push(item); });
     const monthEvents = events.filter(item => item.date.slice(0,7) === monthKey).sort((a,b) => a.date.localeCompare(b.date));
@@ -526,15 +530,15 @@
       return '<div class="calendar-day' + (dateKey === localDateISO() ? ' is-today' : '') + '">' +
         '<span class="calendar-day-number">' + day + '</span>' +
         dayEvents.map(item => '<button type="button" class="calendar-event ' + item.kind + '" data-go-page="' + item.page + '" title="' + escapeHtml(item.title) + '">' +
-          '<b>' + (item.kind === 'meeting' ? '◷' : '✓') + '</b><span>' + escapeHtml(item.title) + '</span></button>').join('') +
+          '<b>' + (item.kind === 'meeting' ? '◷' : item.kind === 'project' ? '◇' : '✓') + '</b><span>' + escapeHtml(item.title) + '</span></button>').join('') +
         (byDate[dateKey] && byDate[dateKey].length > 3 ? '<small class="calendar-more">+' + (byDate[dateKey].length - 3) + ' ещё</small>' : '') +
         '</div>';
     }).join('');
     const monthTitle = new Date(year, month - 1, 1).toLocaleDateString('ru-RU',{month:'long',year:'numeric'});
-    const upcoming = monthEvents.slice(0,10).map(item => '<article class="calendar-agenda-item"><time>' + escapeHtml(formatDate(item.date)) + '</time><div><b>' + escapeHtml(item.title) + '</b><small>' + (item.kind === 'meeting' ? 'Собрание' : 'Поручение') + ' · ' + escapeHtml(item.detail) + '</small></div><button type="button" data-go-page="' + item.page + '">Открыть →</button></article>').join('');
+    const upcoming = monthEvents.slice(0,10).map(item => '<article class="calendar-agenda-item"><time>' + escapeHtml(formatDate(item.date)) + '</time><div><b>' + escapeHtml(item.title) + '</b><small>' + (item.kind === 'meeting' ? 'Собрание' : item.kind === 'project' ? 'Этап проекта' : 'Поручение') + ' · ' + escapeHtml(item.detail) + '</small></div><button type="button" data-go-page="' + item.page + '">Открыть →</button></article>').join('');
     return workspaceWelcome('CRM / ПЛАНИРОВАНИЕ','Календарь Совета','Единая картина ближайших собраний и сроков поручений. События автоматически берутся из рабочих разделов CRM.') +
       '<section class="workspace-panel calendar-panel"><div class="calendar-toolbar"><button type="button" class="crm-secondary" data-calendar-shift="-1" aria-label="Предыдущий месяц">←</button><h3>' + escapeHtml(monthTitle) + '</h3><button type="button" class="crm-secondary" data-calendar-today>Сегодня</button><button type="button" class="crm-secondary" data-calendar-shift="1" aria-label="Следующий месяц">→</button></div>' +
-      '<div class="calendar-grid">' + week + cells + '</div><div class="calendar-legend"><span><i class="meeting"></i>Собрания</span><span><i class="task"></i>Сроки поручений</span></div></section>' +
+      '<div class="calendar-grid">' + week + cells + '</div><div class="calendar-legend"><span><i class="meeting"></i>Собрания</span><span><i class="task"></i>Поручения</span><span><i class="project"></i>Этапы проектов</span></div></section>' +
       '<section class="workspace-panel"><div class="panel-heading"><h3>Повестка месяца</h3><span class="crm-record-date">' + monthEvents.length + ' событий</span></div>' +
       (upcoming || '<p class="calendar-empty-note">На этот месяц пока ничего не запланировано.</p>') + '</section>';
   }
@@ -752,7 +756,7 @@
     addListener(db.collection('decisions').orderBy('createdAt','desc').limit(100).onSnapshot(snapshot=>{state.decisions=mapSnapshot(snapshot);renderIfPage('tasks','analytics','archive');},err=>console.warn('Decisions:',err)));
     addListener(db.collection('announcements').orderBy('createdAt','desc').limit(100).onSnapshot(snapshot=>{state.announcements=mapSnapshot(snapshot);renderIfPage('announcements');},err=>console.warn('Announcements:',err)));
     addListener(db.collection('documents').orderBy('createdAt','desc').limit(100).onSnapshot(snapshot=>{state.documents=mapSnapshot(snapshot);renderIfPage('documents');},err=>console.warn('Documents:',err)));
-    addListener(db.collection('projects').orderBy('createdAt','desc').limit(100).onSnapshot(snapshot=>{state.projects=mapSnapshot(snapshot);renderIfPage('projects','analytics','archive');},err=>console.warn('Projects:',err)));
+    addListener(db.collection('projects').orderBy('createdAt','desc').limit(100).onSnapshot(snapshot=>{state.projects=mapSnapshot(snapshot);renderIfPage('projects','calendar','leadership','analytics','archive');},err=>console.warn('Projects:',err)));
     if(isAdministrativeRole()) addListener(db.collection('users').onSnapshot(snapshot=>{
       state.users=mapSnapshot(snapshot).map(user=>({...user,uid:user.id,sectorId:forcedSectorId(user.role)||user.sectorId||''}));
       renderIfPage('people','sectors','sector','structure','leadership','tasks','reports');
