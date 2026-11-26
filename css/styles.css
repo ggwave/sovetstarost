@@ -412,6 +412,7 @@ html,body{max-width:100%;overflow-x:hidden}
 .calendar-day-number{display:block;margin-bottom:6px;color:#6b5138;font:600 15px var(--serif)}
 .calendar-event{display:flex;align-items:center;gap:4px;width:100%;min-width:0;margin-top:4px;padding:4px 5px;border:0;text-align:left;background:#e9dfd2;color:#68482f;font-size:7px;line-height:1.25;cursor:pointer}
 .calendar-event.task{background:#e9eee5;color:#536b4b}
+.calendar-event.project{background:#e9e9ef;color:#5d5e7a}
 .calendar-event b{flex:none}
 .calendar-event span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .calendar-more{display:block;margin-top:4px;color:#947d65;font-size:7px}
@@ -419,6 +420,7 @@ html,body{max-width:100%;overflow-x:hidden}
 .calendar-legend span{display:flex;align-items:center;gap:6px}
 .calendar-legend i{width:8px;height:8px;display:inline-block;background:#e9dfd2}
 .calendar-legend i.task{background:#e9eee5}
+.calendar-legend i.project{background:#e9e9ef}
 .calendar-agenda-item,.leadership-overdue-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid #eee5dc}
 .calendar-agenda-item time{flex:none;color:#987b5b;font-size:8px}
 .calendar-agenda-item>div,.leadership-overdue-item>div{display:grid;gap:4px;flex:1;min-width:0}
