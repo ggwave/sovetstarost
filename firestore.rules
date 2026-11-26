@@ -329,6 +329,29 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time;
     }
 
+    // Public read-only control state for the separate projector display.
+    // Only the administrative sector can change the active screen.
+    match /liveControl/{controlId} {
+      allow get: if controlId == 'current';
+      allow list: if false;
+      allow create, update: if controlId == 'current'
+        && activeMember() && isAdministrativeSector()
+        && request.resource.data.keys().hasAll(['enabled', 'mode', 'pollId', 'meetingId', 'title', 'subtitle', 'animation', 'showClock', 'showStats', 'updatedAt', 'updatedBy'])
+        && request.resource.data.keys().hasOnly(['enabled', 'mode', 'pollId', 'meetingId', 'title', 'subtitle', 'animation', 'showClock', 'showStats', 'updatedAt', 'updatedBy'])
+        && request.resource.data.enabled is bool
+        && request.resource.data.mode in ['overview', 'poll', 'meeting', 'message']
+        && request.resource.data.pollId is string && request.resource.data.pollId.size() <= 150
+        && request.resource.data.meetingId is string && request.resource.data.meetingId.size() <= 150
+        && request.resource.data.title is string && request.resource.data.title.size() <= 100
+        && request.resource.data.subtitle is string && request.resource.data.subtitle.size() <= 240
+        && request.resource.data.animation in ['smooth', 'calm', 'none']
+        && request.resource.data.showClock is bool
+        && request.resource.data.showStats is bool
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if controlId == 'current' && isChair();
+    }
+
     match /polls/{pollId} {
       allow get, list: if activeMember() || resource.data.published == true;
       allow create: if activeMember() && isAdministrativeSector() && validPoll();
