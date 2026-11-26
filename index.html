@@ -7,7 +7,7 @@
   <meta name="description" content="Официальная цифровая платформа Совета обучающихся.">
   <title>Совет обучающихся — Вместе к большему</title>
   <link rel="icon" type="image/png" href="assets/emblem.png">
-  <link rel="stylesheet" href="css/styles.css?v=20261126-livepanel3">
+  <link rel="stylesheet" href="css/styles.css?v=20261126-phase1">
   <script src="https://www.gstatic.com/firebasejs/13.4.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/13.4.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore-compat.js"></script>
@@ -144,6 +144,9 @@
       <nav class="workspace-nav" id="workspaceNav">
         <button type="button" data-show-public-home><span>↗</span>Главная сайта</button>
         <button class="active" data-workpage="overview"><span>⌂</span>Обзор CRM</button>
+        <button data-workpage="leadership" data-administrative-only><span>⌘</span>Панель руководителя</button>
+        <button data-workpage="calendar"><span>▦</span>Календарь Совета</button>
+        <button data-workpage="structure"><span>♙</span>Структура Совета</button>
         <button data-workpage="initiatives" data-management-only><span>✳</span>Инициативы</button>
         <button data-workpage="sector"><span>◈</span>Мой сектор</button>
         <button data-workpage="people" data-chair-only><span>♙</span>Участники</button>
@@ -152,7 +155,7 @@
         <button data-workpage="meetings"><span>◷</span>Собрания</button>
         <button data-workpage="voting"><span>◉</span>Голосования</button>
         <button data-workpage="projects"><span>◇</span>Проекты</button>
-        <button data-workpage="tasks"><span>✓</span>Задачи и решения</button>
+        <button data-workpage="tasks"><span>✓</span>Центр поручений и решения</button>
         <button data-workpage="announcements"><span>▤</span>Объявления</button>
         <button data-workpage="documents"><span>▧</span>Документы</button>
         <button data-workpage="reports" data-management-only><span>▤</span>Отчёты секторов</button>
@@ -173,6 +176,6 @@
   <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="false"></div>
 
   <script src="js/firebase-config.js"></script>
-  <script src="js/app.js?v=20261126-livepanel8"></script>
+  <script src="js/app.js?v=20261126-phase1"></script>
 </body>
 </html>
